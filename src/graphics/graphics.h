@@ -15,16 +15,16 @@ typedef struct {
 	float x, y, z;
 } vec;
 
-extern void vec_new(vec * out, float x, float y, float z);
-extern void vec_add(vec * out, vec a, vec b);
-extern void vec_sub(vec * out, vec a, vec b);
-extern void vec_scale(vec * out, vec in, float factor);
-extern void vec_mul(vec * out, vec a, vec b);
-extern float vec_dot(vec a, vec b);
-extern void vec_cross(vec * out, vec a, vec b);
-extern float vec_mag(vec in);
-extern void vec_normal(vec * out);
-extern void vec_print(vec in);
+extern void     vec_new(vec * out, float x, float y, float z);
+extern void     vec_add(vec * out, vec a, vec b);
+extern void     vec_sub(vec * out, vec a, vec b);
+extern void     vec_scale(vec * out, vec in, float factor);
+extern void     vec_mul(vec * out, vec a, vec b);
+extern float    vec_dot(vec a, vec b);
+extern void     vec_cross(vec * out, vec a, vec b);
+extern float    vec_mag(vec in);
+extern void     vec_normal(vec * out);
+extern void     vec_print(vec in);
 
 typedef struct {
 	int r, g, b;
