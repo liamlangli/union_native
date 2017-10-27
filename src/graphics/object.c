@@ -12,7 +12,7 @@ extern void sphere_normal(vec * normal, sphere s, vec pos) {
 }
 
 // assume ray = pos + t * dir
-extern bool sphere_intersect(sphere s, ray r, float * t) {
+extern int sphere_intersect(sphere s, ray r, float * t) {
 	vec os;
 	vec_sub(&os, s.pos, r.pos);				// vec origin to sphere
 	float om = vec_dot(os, r.dir);

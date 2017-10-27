@@ -1,15 +1,16 @@
 #ifndef Graphics_H
 #define Graphics_H
 
-#include <fstream>
-#include <cmath>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-using namespace std;
+#define true 1
+#define false 0
 
-template <typename T>
-T clamp(T in, T b, T t) {
-	return in < b ? b : in > t ? t : in;
-}
+extern int 		iclamp(int  in, int b, int  t);
+extern float 	fclamp(float  in, float b, float  t);
 
 typedef struct {
 	float x, y, z;
@@ -46,8 +47,8 @@ typedef struct sphere {
 	color c;
 } sphere;
 
-extern void sphere_new(sphere * s, vec pos, float radius, color c);
-extern void sphere_normal(vec * normal, sphere s, vec pos);
-extern bool sphere_intersect(sphere s, ray r, float * t);
+extern void 	sphere_new(sphere * s, vec pos, float radius, color c);
+extern void 	sphere_normal(vec * normal, sphere s, vec pos);
+extern int 		sphere_intersect(sphere s, ray r, float * t);
 
 #endif

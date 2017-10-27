@@ -5,8 +5,11 @@ const int H = 512;
 
 int main () {
 
-	ofstream out("out.ppm");
-	out << "P3\n" << W << ' ' << H << ' ' << "255\n";
+	// ofstream out("out.ppm");
+	// out << "P3\n" << W << ' ' << H << ' ' << "255\n";
+
+	FILE * out = fopen("out.ppm", "w");
+	fprintf(out, "P3\n%d %d 255\n", W, H);
 
 	vec light_dir;
 	vec_new(&light_dir, 0, 0.2, 0.8);
@@ -48,19 +51,18 @@ int main () {
 					color_new(&c, 0, 0, 0);
 				} else {
 					color_new(&c, 255, 0, 0);
-					color_scale(&c, c, sin(abs(p)));
+					color_scale(&c, c, sin(fabsf(p)));
 				}
 
 			} else {
 				c = clear_color;
 			}
 
-
-			out << (int)c.r << ' '
-				<< (int)c.g << ' '
-				<< (int)c.b << '\n';
+			fprintf(out, "%d %d %d\n", c.r, c.g, c.b);
 		}
 	}
+
+	fclose(out);
 
 	return 0;
 }
