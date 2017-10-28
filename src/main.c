@@ -5,9 +5,6 @@ const int H = 512;
 
 int main () {
 
-	// ofstream out("out.ppm");
-	// out << "P3\n" << W << ' ' << H << ' ' << "255\n";
-
 	FILE * out = fopen("out.ppm", "w");
 	fprintf(out, "P3\n%d %d 255\n", W, H);
 
@@ -27,6 +24,7 @@ int main () {
 	color clear_color;
 	color_new(&clear_color, 120, 130, 150);
 
+	// perspective viewing mode
 	for (int y = 0; y < H; ++y) {
 		for (int x = 0; x < W; ++x) {
 			vec e, dir;
@@ -38,7 +36,7 @@ int main () {
 
 			color c;
 			float t;
-			if (sphere_intersect(s, r, &t)) {
+			if (sphere_intersect(&t, s, r)) {
 				vec hit;
 				vec_scale(&hit, r.dir, t);
 				vec_add(&hit, r.pos, hit);
@@ -46,7 +44,6 @@ int main () {
 				sphere_normal(&n, s, hit);
 				float p;
 				p = vec_dot(n, light_dir);
-				// vec_print(n);
 				if (p > 0) {
 					color_new(&c, 0, 0, 0);
 				} else {
