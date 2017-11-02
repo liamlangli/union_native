@@ -19,10 +19,7 @@ extern intersect scene_intersect(scene scn, ray r) {
             plane * p = (plane *)scn.things.items[i];
             isec = plane_intersect(p, r);
         }
-
-        if(isec.t < FLT_MAX)
-            printf("%5.2f\n", isec.t);
-
+        
         if (isec.t < oisec.t) {
             oisec = isec;
         }

@@ -41,9 +41,19 @@ void array_case() {
 
 }
 
+void vec_reflect_case() {
+    vec n   = {0,  1,  0};
+    vec in  = {1, -2,  0};
+    vec out;
+    vec_reflect(&out, in, n);
+    vec_print(out);
+}
+
 int main() {
 
-    array_case();
+    // vec_barycoordinate_locate_case();
+    // array_case();
+    vec_reflect_case();
 
     return 0;
 }

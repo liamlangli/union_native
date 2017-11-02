@@ -50,7 +50,15 @@ extern void vec_normal(vec * out) {
 }
 
 extern void vec_reflect(vec * out, vec in, vec n) {
+	vec map;
+	vec_normal(&in);
+	vec_normal(&n);
 
+	vec_mul(&map, n, in);
+	vec_scale(&map, map, 2);
+	vec_sub(out, in, map);
+
+	vec_normal(out);
 }
 
 extern void vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c) {

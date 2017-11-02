@@ -12,6 +12,7 @@
 #define false 0
 
 void error(const char * msg);
+float max(float a, float b);
 
 extern const int Type_Sphere;
 extern const int Type_Plane;

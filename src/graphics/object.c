@@ -1,5 +1,9 @@
 #include "graphics.h"
 
+extern void surface_shader(color * c, surface s, ray r, vec point, array lights) {
+	
+}
+
 extern void sphere_new(sphere * s, const char * name, vec pos, float radius, color c) {
 	s->head.type = Type_Sphere;
 	sprintf(s->head.name, "%s", name);
@@ -40,7 +44,7 @@ extern void plane_new(plane * p, vec pos, vec normal, color c) {
 
 }
 
-extern void plane_normal(vec * out, plane p) {
+extern void plane_normal(vec * out, plane p, vec pos) {
 
 }
 
@@ -48,4 +52,14 @@ extern intersect plane_intersect(plane * p, ray r) {
 	intersect i;
 	i.t = FLT_MAX;
 	return i;
+}
+
+extern void thing_normal(vec * normal, ThingHead * head, vec pos) {
+	if (head->type == Type_Sphere) {
+		sphere_normal(normal, *((sphere *)head), pos);
+	} else if (head->type == Type_Plane) {
+		plane_normal(normal, *((plane *)head), pos);
+	} else {
+		// TODO: other object type
+	}
 }

@@ -30,6 +30,7 @@ typedef struct {
 
 extern void 	color_clamp(color * c);
 extern void 	color_new(color * c, int r, int g, int b);
+extern void 	color_add(color * c, color a, color b);
 extern void 	color_scale(color * out, color c, float factor);
 
 typedef struct {
@@ -58,6 +59,15 @@ typedef struct {
 } ThingHead;
 
 typedef struct {
+	color c;
+	float diffuse;
+	float specular;
+	float refaction_factor;
+} surface;
+
+extern void surface_shader(color * c, surface s, ray r, vec point, array lights);
+
+typedef struct {
 	ThingHead head;
 	vec pos;
 	float radius;
@@ -76,8 +86,10 @@ typedef struct {
 } plane;
 
 extern void 		plane_new(plane * p, vec pos, vec normal, color c);
-extern void 		plane_normal(vec * out, plane p);
+extern void 		plane_normal(vec * out, plane p, vec pos);
 extern intersect 	plane_intersect(plane * p, ray r);
+
+extern void 		thing_normal(vec * normal, ThingHead * head, vec pos);
 
 typedef struct {
 	char name[127];
