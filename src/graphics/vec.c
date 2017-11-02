@@ -50,7 +50,7 @@ extern void vec_normal(vec * out) {
 }
 
 extern void vec_reflect(vec * out, vec in, vec n) {
-	
+
 }
 
 extern void vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c) {
@@ -88,5 +88,5 @@ extern void vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c) {
 }
 
 extern void vec_print(vec in) {
-	fprintf(stdout, "(%.2f, %.2f, %.2f)\n", in.x, in.y, in.z);
+	fprintf(stdout, "<vec x:%.2f y:%.2f z:%.2f>\n", in.x, in.y, in.z);
 }

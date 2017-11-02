@@ -22,8 +22,10 @@ objs=$(common) \
 	 $(graphics)vec.c \
 	 $(graphics)color.c  \
 	 $(graphics)ray.c \
+	 $(graphics)light.c \
 	 $(graphics)object.c \
 	 $(graphics)math.c \
+	 $(graphics)scene.c \
 	 $(dtype)array.c
 
 all:

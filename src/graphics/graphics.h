@@ -2,6 +2,7 @@
 #define Graphics_H
 
 #include "../common/common.h"
+#include "../dtype/dtype.h"
 
 extern int 		iclamp(int  in, int b, int  t);
 extern float 	fclamp(float  in, float b, float  t);
@@ -37,13 +38,22 @@ typedef struct {
 
 extern void 	ray_new(ray * r, vec pos, vec dir);
 
-typedef enum {
-	Sphere,
-	Plane
-} ThingType;
+typedef struct {
+	void * thing;
+	ray r;
+	float t;
+} intersect;
 
 typedef struct {
-	ThingType type;
+	vec pos;
+	color c;
+	int type;
+} light;
+
+extern void 	light_new(light * l, vec pos, color c, int type);
+
+typedef struct {
+	int type;
 	char name[123];
 } ThingHead;
 
@@ -54,9 +64,9 @@ typedef struct {
 	color c;
 } sphere;
 
-extern void 	sphere_new(sphere * s, const char * name, vec pos, float radius, color c);
-extern void 	sphere_normal(vec * normal, sphere s, vec pos);
-extern int 		sphere_intersect(float * t, sphere s, ray r);
+extern void 		sphere_new(sphere * s, const char * name, vec pos, float radius, color c);
+extern void 		sphere_normal(vec * normal, sphere s, vec pos);
+extern intersect	sphere_intersect(sphere * s, ray r);
 
 typedef struct {
 	ThingHead head;
@@ -65,7 +75,17 @@ typedef struct {
 	color c;
 } plane;
 
-extern void 	plane_new(plane * p, vec pos, vec normal, color c);
-extern void 	plane_normal(vec * out, plane p);
-extern void 	plane_intersect(float * t, plane, ray r);
+extern void 		plane_new(plane * p, vec pos, vec normal, color c);
+extern void 		plane_normal(vec * out, plane p);
+extern intersect 	plane_intersect(plane * p, ray r);
+
+typedef struct {
+	char name[127];
+	array things;
+	array lights;
+	color clear_color;
+} scene;
+
+extern void  		scene_new(scene * scn, const char * name);
+extern intersect	scene_intersect(scene scne, ray r);
 #endif

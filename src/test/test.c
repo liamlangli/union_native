@@ -1,6 +1,7 @@
 #include "../graphics/graphics.h"
 #include "../io/io.h"
 #include "../dtype/dtype.h"
+#include "../common/common.h"
 
 void vec_barycoordinate_locate_case() {
     vec ax, ay, az, p;
@@ -22,8 +23,21 @@ void array_case() {
     sphere s;
     sphere_new(&s, "demo sphere", s_v, 10, s_c);
 
-    array * arr = array_new();
-    array_print(*arr);
+    array arr;
+    array_new(&arr);
+    array_push_back(&arr, &s);
+    printf("%s\n", s.head.name);
+    array_print(arr);
+
+    ThingHead * head = (ThingHead *)(arr.items[0]);
+
+    fprintf(stdout, "item_name:%s  item_type:%d\n", head->name, head->type);
+    if (head->type == Type_Sphere) {
+        sphere * s = (sphere *) (arr.items[0]);
+        vec_print(s->pos);
+    }
+
+    array_free(&arr);
 
 }
 
