@@ -5,7 +5,7 @@ v0.0.1 Alpha
 
 ##### output
 pic 01 simple sphere render
-![](http://li-lang.oss-cn-shanghai.aliyuncs.com/out.png)
+image missed, you `make run` the init commit to build that.
 
 pic 02 reconstruct data structure and render two sphere
 ![](http://li-lang.oss-cn-shanghai.aliyuncs.com/scene.png)
