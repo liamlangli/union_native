@@ -10,6 +10,9 @@ pic 01 simple sphere render
 pic 02 reconstruct data structure and render two sphere
 ![](http://li-lang.oss-cn-shanghai.aliyuncs.com/scene.png)
 
+pic 03 render real light and shadow
+![](http://li-lang.oss-cn-shanghai.aliyuncs.com/out.png)
+
 
 ##### Basic Ray tracing algorithm
 1. ray generation

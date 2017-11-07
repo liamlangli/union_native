@@ -1,15 +1,27 @@
 #include "graphics.h"
 
-extern void surface_shader(color * c, surface s, ray r, vec point, array lights) {
-	
+extern void surface_new(surface * s, color c, float diffuse, float specular, float refaction_factor) {
+	s->c = c;
+	s->diffuse = diffuse;
+	s->specular = specular;
+	s->refaction_factor = refaction_factor;
 }
 
-extern void sphere_new(sphere * s, const char * name, vec pos, float radius, color c) {
+extern void surface_shader(color * c, surface s, vec pos, vec normal, ray r, array lights) {
+	// L = k_d * I * max(0, dot(n, l))
+	for(int l = 0; l < lights.nItems; ++l) {
+		color lc;
+		light_reduce(&lc, *c, r.dir, pos, normal, s, *(light *)lights.items[l]);
+		color_add(c, *c, lc);
+	}
+}
+
+extern void sphere_new(sphere * s, const char * name, vec pos, float radius, surface sf) {
 	s->head.type = Type_Sphere;
 	sprintf(s->head.name, "%s", name);
 	s->pos = pos;
 	s->radius = radius;
-	s->c = c;
+	s->head.sface = sf;
 }
 
 extern void sphere_normal(vec * normal, sphere s, vec pos) {
@@ -34,23 +46,33 @@ extern intersect sphere_intersect(sphere * s, ray r) {
 	float c = sqrt(radius * radius - d * d);
 	float t0 = om - c;
 	float t1 = om + c;
- 	oisec.t = t0 < t1 ? t0 : t1;
+	oisec.t = t0 < t1 ? t0 : t1;
 	oisec.r = r;
 	oisec.thing = s;
 	return oisec;
 }
 
-extern void plane_new(plane * p, vec pos, vec normal, color c) {
-
+extern void plane_new(plane * p, const char * name, vec pos, vec normal, surface sf) {
+	p->head.type = Type_Plane;
+	sprintf(p->head.name, "%s", name);
+	p->pos = pos;
+	p->normal = normal;
+	p->head.sface = sf;
 }
 
 extern void plane_normal(vec * out, plane p, vec pos) {
-
+	out->x = p.normal.x;
+	out->y = p.normal.y;
+	out->z = p.normal.z;
 }
 
 extern intersect plane_intersect(plane * p, ray r) {
 	intersect i;
-	i.t = FLT_MAX;
+	vec ep;
+	vec_sub(&ep, p->pos, r.pos);
+	i.t = vec_dot(p->normal, ep) / vec_dot(p->normal, r.dir);
+	i.thing = p;
+	i.r = r;
 	return i;
 }
 
@@ -62,4 +84,15 @@ extern void thing_normal(vec * normal, ThingHead * head, vec pos) {
 	} else {
 		// TODO: other object type
 	}
+}
+
+extern void thing_shader(color * c, ThingHead * head, intersect isec, array lights) {
+	vec ex_dir;
+	vec_scale(&ex_dir, isec.r.dir, isec.t);
+	vec hit;
+	vec_add(&hit, isec.r.pos, ex_dir);
+	vec n;
+	thing_normal(&n, isec.thing, hit);
+
+	surface_shader(c, head->sface, hit, n, isec.r, lights);
 }

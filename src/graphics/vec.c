@@ -49,6 +49,12 @@ extern void vec_normal(vec * out) {
 	vec_scale(out, *out, 1.0 / sqrt(mag));
 }
 
+extern float vec_distance(vec a, vec b) {
+	vec s;
+	vec_sub(&s, a, b);
+	return sqrt(vec_mag(s));
+}
+
 extern void vec_reflect(vec * out, vec in, vec n) {
 	vec map;
 	vec_normal(&in);

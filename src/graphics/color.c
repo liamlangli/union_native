@@ -25,3 +25,7 @@ extern void color_scale(color * out, color c, float factor) {
 	out->b = c.b * factor;
 	color_clamp(out);
 }
+
+extern void color_print(color c) {
+	printf("<color r:%d g:%d b:%d>\n", c.r, c.g, c.b);
+}

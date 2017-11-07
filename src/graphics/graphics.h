@@ -20,9 +20,10 @@ extern float    vec_dot(vec a, vec b);
 extern void     vec_cross(vec * out, vec a, vec b);
 extern float    vec_mag(vec in);
 extern void     vec_normal(vec * out);
-extern void     vec_print(vec in);
+extern float 	vec_distance(vec a, vec b);
 extern void 	vec_reflect(vec * out, vec in, vec n);
 extern void 	vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c);
+extern void     vec_print(vec in);
 
 typedef struct {
 	int r, g, b;
@@ -32,6 +33,7 @@ extern void 	color_clamp(color * c);
 extern void 	color_new(color * c, int r, int g, int b);
 extern void 	color_add(color * c, color a, color b);
 extern void 	color_scale(color * out, color c, float factor);
+extern void 	color_print(color c);
 
 typedef struct {
 	vec pos, dir;
@@ -46,35 +48,40 @@ typedef struct {
 } intersect;
 
 typedef struct {
+	color c;
+	float diffuse;
+	float specular;
+	float roughness;
+	float refaction_factor;
+} surface;
+
+extern void surface_new(surface * s, color c, float diffuse, float specular, float refaction_factor);
+extern void surface_shader(color * c, surface s, vec pos, vec normal, ray r, array lights);
+
+typedef struct {
 	vec pos;
 	color c;
+	float intensity;
 	int type;
 } light;
 
-extern void 	light_new(light * l, vec pos, color c, int type);
+extern void 	light_new(light * l, vec pos, color c, float intensity, int type);
+extern void 	light_reduce(color * c, color c_in, vec in, vec pos, vec normal, surface s, light l);
+
 
 typedef struct {
 	int type;
 	char name[123];
+	surface sface;
 } ThingHead;
-
-typedef struct {
-	color c;
-	float diffuse;
-	float specular;
-	float refaction_factor;
-} surface;
-
-extern void surface_shader(color * c, surface s, ray r, vec point, array lights);
 
 typedef struct {
 	ThingHead head;
 	vec pos;
 	float radius;
-	color c;
 } sphere;
 
-extern void 		sphere_new(sphere * s, const char * name, vec pos, float radius, color c);
+extern void 		sphere_new(sphere * s, const char * name, vec pos, float radius, surface sf);
 extern void 		sphere_normal(vec * normal, sphere s, vec pos);
 extern intersect	sphere_intersect(sphere * s, ray r);
 
@@ -82,14 +89,14 @@ typedef struct {
 	ThingHead head;
 	vec pos;
 	vec normal;
-	color c;
 } plane;
 
-extern void 		plane_new(plane * p, vec pos, vec normal, color c);
+extern void 		plane_new(plane * p, const char * name, vec pos, vec normal, surface sf);
 extern void 		plane_normal(vec * out, plane p, vec pos);
 extern intersect 	plane_intersect(plane * p, ray r);
 
 extern void 		thing_normal(vec * normal, ThingHead * head, vec pos);
+extern void 		thing_shader(color * c, ThingHead * head, intersect isec, array lights);
 
 typedef struct {
 	char name[127];
@@ -100,4 +107,6 @@ typedef struct {
 
 extern void  		scene_new(scene * scn, const char * name);
 extern intersect	scene_intersect(scene scne, ray r);
+
+extern int 			ray_test(vec hit, light l, scene scne);
 #endif

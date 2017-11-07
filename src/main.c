@@ -10,33 +10,43 @@ int main () {
 
 	// line init
 	light lit;
-	// vec light_dir;
-	// vec_new(&light_dir, 0, 0.2, 0.8);
-	vec light_pos = {30, 30, 1};
+	vec light_pos = {30, 30, 30};
 	vec light_dir = {0, 0.2, 0.8};
-	color light_color = {255, 255, 255};
-	light_new(&lit, light_pos, light_color, 0);
+	color light_color = {220, 250, 230};
+	light_new(&lit, light_pos, light_color, 2, 0);
 
 	// camera init
 	vec origin = {0, 0, -1.0};
+
+	//surface init;
+	color sc = {120, 255, 130};
+	surface sf = {sc, 10, 10, 100, 10};
 
 	// obj init
 	vec s_pos = {2.5, 0, 10};
 	color c = {255, 0, 0};
 	sphere s;
-	sphere_new(&s, "s", s_pos, 2, c);
+	sphere_new(&s, "s", s_pos, 2, sf);
 
 	vec s1_pos = {-2.5, 0, 12};
 	sphere s1;
-	sphere_new(&s1, "s1", s1_pos, 2, c);
+	sphere_new(&s1, "s1", s1_pos, 2, sf);
 
-	color clear_color = {120, 130, 150};
+	vec p_pos = {0, -2, 0};
+	vec p_n = {0, 1, 0};
+	plane pl;
+	plane_new(&pl, "demo plane", p_pos, p_n, sf);
+
+	// clear color
+	color clear_color = {0, 0, 0};
 
 
 	scene scne;
 	scene_new(&scne, "main");
+	array_push_back(&scne.things, &pl);
 	array_push_back(&scne.things, &s);
 	array_push_back(&scne.things, &s1);
+	array_push_back(&scne.lights, &lit);
 	printf("nitem:%d\n", scne.things.nItems);
 
 	float ambient = 0.0f;
@@ -52,30 +62,22 @@ int main () {
 			ray r;
 			ray_new(&r, origin, dir);
 
-			color cl_out;
+			color cl_out = {0, 0, 0};
 			intersect isec = scene_intersect(scne, r);
-			if (isec.t == FLT_MAX) {
+			if (isec.t == FLT_MAX || isec.t < 0) {
 				cl_out = clear_color;
 			} else {
-				color c = {120, 250, 130};
-				vec pos;
-				vec_scale(&pos, isec.r.dir, isec.t);
-				vec n;
-				thing_normal(&n, (ThingHead *)isec.thing, pos);
-				vec ldir;
-				vec_sub(&ldir, lit.pos, pos);
-				vec_normal(&ldir);
-
-				// vec sight;
-				// vec_scale(&sight, isec.r.dir, -1);
-				printf("intensity:%5.2f\n", vec_dot(n, ldir));
-				float i = max(0, vec_dot(n, ldir));
-				color cl, ca;
-				color_scale(&cl, c, i);   		// light
-				color_scale(&ca, c, ambient);	// ambient
-				color_add(&cl_out, cl, ca);
+				vec hit_pos;
+				vec_scale(&hit_pos, isec.r.dir, isec.t);
+				int in_shadow = ray_test(hit_pos, lit, scne);
+				if (in_shadow) {
+					color_new(&cl_out, 0, 0, 0);
+				} else {
+					thing_shader(&cl_out, isec.thing, isec, scne.lights);
+				}
 			}
-			fprintf(out, "%d %d %d\n", cl_out.r, cl_out.g, cl_out.b);
+			// printf("distance: %5.2f\n", isec.t);
+			fprintf(out, "%d %d %d ", cl_out.r, cl_out.g, cl_out.b);
 		}
 	}
 

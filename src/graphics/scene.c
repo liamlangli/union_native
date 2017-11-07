@@ -9,6 +9,8 @@ extern void scene_new(scene * scn, const char * name) {
 extern intersect scene_intersect(scene scn, ray r) {
     intersect oisec;
     oisec.t = FLT_MAX;
+    oisec.r = r;
+    oisec.thing = NULL;
     for(int i = 0, il = scn.things.nItems; i < il; ++i) {
         ThingHead * head = (ThingHead *)scn.things.items[i];
         intersect isec;
@@ -19,8 +21,8 @@ extern intersect scene_intersect(scene scn, ray r) {
             plane * p = (plane *)scn.things.items[i];
             isec = plane_intersect(p, r);
         }
-        
-        if (isec.t < oisec.t) {
+
+        if (isec.t > 0 && isec.t < oisec.t) {
             oisec = isec;
         }
     }
