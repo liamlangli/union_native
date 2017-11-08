@@ -1,19 +1,26 @@
 #include "graphics.h"
 
-extern void surface_new(surface * s, color c, float diffuse, float specular, float refaction_factor) {
+extern void surface_new(surface * s, color c, color diffuse, color specular,float roughness, float refaction_factor) {
 	s->c = c;
 	s->diffuse = diffuse;
 	s->specular = specular;
+	s->roughness = roughness;
 	s->refaction_factor = refaction_factor;
 }
 
-extern void surface_shader(color * c, surface s, vec pos, vec normal, ray r, array lights) {
+extern void surface_shader(color *c, surface s, vec pos, vec normal, ray r, scene scne) {
 	// L = k_d * I * max(0, dot(n, l))
-	for(int l = 0; l < lights.nItems; ++l) {
-		color lc;
-		light_reduce(&lc, *c, r.dir, pos, normal, s, *(light *)lights.items[l]);
-		color_add(c, *c, lc);
+	color in = {0, 0, 0};
+	for(int l = 0; l < scne.lights.nItems; ++l) {
+		light lit = *(light *)scne.lights.items[l];
+		int in_shadow = ray_test(pos, lit, scne);
+		if (in_shadow) {
+			continue;
+		} else {
+			light_reduce(&in, r.dir, pos, normal, s, lit);
+		}
 	}
+	color_add(c, *c, in);
 }
 
 extern void sphere_new(sphere * s, const char * name, vec pos, float radius, surface sf) {
@@ -86,7 +93,7 @@ extern void thing_normal(vec * normal, ThingHead * head, vec pos) {
 	}
 }
 
-extern void thing_shader(color * c, ThingHead * head, intersect isec, array lights) {
+extern void thing_shader(color * c, ThingHead * head, intersect isec, scene scne) {
 	vec ex_dir;
 	vec_scale(&ex_dir, isec.r.dir, isec.t);
 	vec hit;
@@ -94,5 +101,5 @@ extern void thing_shader(color * c, ThingHead * head, intersect isec, array ligh
 	vec n;
 	thing_normal(&n, isec.thing, hit);
 
-	surface_shader(c, head->sface, hit, n, isec.r, lights);
+	surface_shader(c, head->sface, hit, n, isec.r, scne);
 }

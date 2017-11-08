@@ -14,7 +14,7 @@
 void error(const char * msg);
 float max(float a, float b);
 
-extern const int Type_Sphere;
-extern const int Type_Plane;
+#define Type_Sphere 0
+#define Type_Plane 1
 
 #endif

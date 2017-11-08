@@ -42,8 +42,8 @@ void array_case() {
 }
 
 void vec_reflect_case() {
-    vec n   = {0,  1,  0};
-    vec in  = {1, -2,  0};
+    vec n   = { 0,  1, 0};
+    vec in  = { 1, -1, 0};
     vec out;
     vec_reflect(&out, in, n);
     vec_print(out);
@@ -65,12 +65,18 @@ void plane_intersect_case() {
     printf("%5.2f\n", isec.t);
 }
 
+void iclamp_case() {
+    int out = iclamp(300, 0, 255);
+    printf("output: %d\n", out);
+}
+
 int main() {
 
     // vec_barycoordinate_locate_case();
     // array_case();
-    // vec_reflect_case();
-    plane_intersect_case();
+    vec_reflect_case();
+    // plane_intersect_case();
+    // iclamp_case();
 
     return 0;
 }

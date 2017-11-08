@@ -8,19 +8,26 @@ int main () {
 	FILE * out = fopen("out.ppm", "w");
 	fprintf(out, "P3\n%d %d 255\n", W, H);
 
-	// line init
+	// light init
 	light lit;
-	vec light_pos = {30, 30, 30};
+	vec light_pos = {30, 30, -30};
 	vec light_dir = {0, 0.2, 0.8};
-	color light_color = {220, 250, 230};
-	light_new(&lit, light_pos, light_color, 2, 0);
+	color light_color = {150, 170, 200};
+	light_new(&lit, light_pos, light_color, 10, 0);
+
+	light lit1;
+	vec light_pos1 = {30, 30, 30};
+	color light_color1 = {150, 170, 120};
+	light_new(&lit1, light_pos1, light_color1, 12, 0);
 
 	// camera init
 	vec origin = {0, 0, -1.0};
 
 	//surface init;
 	color sc = {120, 255, 130};
-	surface sf = {sc, 10, 10, 100, 10};
+	color diffuse = {120, 130, 150};
+	color specular = {200, 200, 200};
+	surface sf = {sc, diffuse, specular, 50, 10};
 
 	// obj init
 	vec s_pos = {2.5, 0, 10};
@@ -47,7 +54,7 @@ int main () {
 	array_push_back(&scne.things, &s);
 	array_push_back(&scne.things, &s1);
 	array_push_back(&scne.lights, &lit);
-	printf("nitem:%d\n", scne.things.nItems);
+	array_push_back(&scne.lights, &lit1);
 
 	float ambient = 0.0f;
 
@@ -69,14 +76,8 @@ int main () {
 			} else {
 				vec hit_pos;
 				vec_scale(&hit_pos, isec.r.dir, isec.t);
-				int in_shadow = ray_test(hit_pos, lit, scne);
-				if (in_shadow) {
-					color_new(&cl_out, 0, 0, 0);
-				} else {
-					thing_shader(&cl_out, isec.thing, isec, scne.lights);
-				}
+				thing_shader(&cl_out, isec.thing, isec, scne);
 			}
-			// printf("distance: %5.2f\n", isec.t);
 			fprintf(out, "%d %d %d ", cl_out.r, cl_out.g, cl_out.b);
 		}
 	}

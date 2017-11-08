@@ -14,9 +14,10 @@ extern void color_new(color * c, int r, int g, int b) {
 }
 
 extern void color_add(color * c, color a, color b) {
-	c->r = iclamp(a.r + b.r, 0, 255);
-	c->g = iclamp(a.g + b.g, 0, 255);
-	c->b = iclamp(a.b + b.b, 0, 255);
+	c->r = a.r + b.r;
+	c->g = a.g + b.g;
+	c->b = a.b + b.b;
+	color_clamp(c);
 }
 
 extern void color_scale(color * out, color c, float factor) {

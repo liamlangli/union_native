@@ -56,13 +56,13 @@ extern float vec_distance(vec a, vec b) {
 }
 
 extern void vec_reflect(vec * out, vec in, vec n) {
-	vec map;
 	vec_normal(&in);
 	vec_normal(&n);
 
-	vec_mul(&map, n, in);
-	vec_scale(&map, map, 2);
-	vec_sub(out, in, map);
+	float map = vec_dot(n, in);
+	vec mapv;
+	vec_scale(&mapv, n, map * 2.0f);
+	vec_sub(out, in, mapv);
 
 	vec_normal(out);
 }
