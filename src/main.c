@@ -26,7 +26,7 @@ int main () {
 	//surface init;
 	color sc = {120, 255, 130};
 	color diffuse = {120, 130, 150};
-	color specular = {200, 200, 200};
+	color specular = {100, 100, 100};
 	surface sf = {sc, diffuse, specular, 50, 10};
 
 	// obj init
@@ -60,24 +60,16 @@ int main () {
 
 	// perspective viewing mode
 	for (int y = 0; y < H; ++y) {
-		// fprintf(stderr, "\rrender: %5.2f%%", 100.0 * W / y);
 		for (int x = 0; x < W; ++x) {
+			// TODO generate ray
 			vec p, dir;
 			vec_new(&p, (x - W / 2.0) / W, (H / 2.0 - y)/ H, 0);
 			vec_sub(&dir, p, origin);
-
 			ray r;
 			ray_new(&r, origin, dir);
 
 			color cl_out = {0, 0, 0};
-			intersect isec = scene_intersect(scne, r);
-			if (isec.t == FLT_MAX || isec.t < 0) {
-				cl_out = clear_color;
-			} else {
-				vec hit_pos;
-				vec_scale(&hit_pos, isec.r.dir, isec.t);
-				thing_shader(&cl_out, isec.thing, isec, scne);
-			}
+			ray_trace(&cl_out, r, scne, 5);
 			fprintf(out, "%d %d %d ", cl_out.r, cl_out.g, cl_out.b);
 		}
 	}

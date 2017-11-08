@@ -8,16 +8,21 @@ extern void surface_new(surface * s, color c, color diffuse, color specular,floa
 	s->refaction_factor = refaction_factor;
 }
 
-extern void surface_shader(color *c, surface s, vec pos, vec normal, ray r, scene scne) {
+extern void surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne) {
 	// L = k_d * I * max(0, dot(n, l))
 	color in = {0, 0, 0};
 	for(int l = 0; l < scne.lights.nItems; ++l) {
 		light lit = *(light *)scne.lights.items[l];
-		int in_shadow = ray_test(pos, lit, scne);
+		int in_shadow = ray_test(hit, lit, scne);
 		if (in_shadow) {
 			continue;
 		} else {
-			light_reduce(&in, r.dir, pos, normal, s, lit);
+
+			vec hit_to_light;
+			vec_sub(&hit_to_light, lit.pos, hit);
+			vec_normal(&hit_to_light);
+
+			light_reduce(&in, hit_to_light, reflect_dir, normal, s, lit);
 		}
 	}
 	color_add(c, *c, in);
@@ -93,13 +98,31 @@ extern void thing_normal(vec * normal, ThingHead * head, vec pos) {
 	}
 }
 
-extern void thing_shader(color * c, ThingHead * head, intersect isec, scene scne) {
+extern void thing_shader(color * c, intersect isec, scene scne, int depth) {
 	vec ex_dir;
 	vec_scale(&ex_dir, isec.r.dir, isec.t);
+
 	vec hit;
 	vec_add(&hit, isec.r.pos, ex_dir);
-	vec n;
+
+	vec n;				// hit point normal
 	thing_normal(&n, isec.thing, hit);
 
-	surface_shader(c, head->sface, hit, n, isec.r, scne);
+	vec rd;				// ray reflect direction
+	vec_reflect(&rd, isec.r.dir, n);
+	ray ray_reflect = {hit, rd};
+
+	// TODO natural shader
+	color natural_color = {0, 0, 0};
+
+	surface_shader(&natural_color, ((ThingHead *)(isec.thing))->sface, hit, n, rd, scne);
+
+	color reflect_color = {0, 0, 0};
+	if(depth > 0 ) {
+		// TODO reflect shader;
+		ray_trace(&reflect_color, ray_reflect, scne, depth - 1);
+	}
+
+	color_scale(&reflect_color, reflect_color, 0.4);
+	color_add(c, natural_color, reflect_color);
 }

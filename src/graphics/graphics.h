@@ -99,15 +99,16 @@ extern void  		scene_new(scene * scn, const char * name);
 extern intersect	scene_intersect(scene scne, ray r);
 
 extern int 			ray_test(vec hit, light l, scene scne);
+extern void 		ray_trace(color * c, ray r, scene scne, int depth);
 
 extern void 		surface_new(surface * s, color c, color diffuse, color specular, float roughness, float refaction_factor);
-extern void 		surface_shader(color * c, surface s, vec pos, vec normal, ray r, scene scne);
+extern void 		surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne);
 
 extern void 		light_new(light * l, vec pos, color c, float intensity, int type);
-extern void 		light_reduce(color * c, vec in, vec pos, vec normal, surface s, light l);
+extern void 		light_reduce(color * c, vec hit_to_light, vec reflect_dir, vec normal, surface s, light l);
 
 extern void 		thing_normal(vec * normal, ThingHead * head, vec pos);
-extern void 		thing_shader(color * c, ThingHead * head, intersect isec, scene scne);
+extern void 		thing_shader(color * c, intersect isec, scene scne, int depth);
 
 
 
