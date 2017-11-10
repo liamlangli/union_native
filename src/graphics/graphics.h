@@ -76,6 +76,7 @@ extern float    vec_mag(vec in);
 extern void     vec_normal(vec * out);
 extern float 	vec_distance(vec a, vec b);
 extern void 	vec_reflect(vec * out, vec in, vec n);
+extern void 	vec_transmission(vec * out, vec in, vec normal, float n_in, float n_trans);
 extern void 	vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c);
 extern void     vec_print(vec in);
 

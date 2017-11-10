@@ -1,12 +1,12 @@
 #include "graphics.h"
 
-extern void scene_new(scene * scn, const char * name) {
+void scene_new(scene * scn, const char * name) {
     strcpy(scn->name, name);
     array_new(&scn->things);
     array_new(&scn->lights);
 }
 
-extern intersect scene_intersect(scene scn, ray r) {
+intersect scene_intersect(scene scn, ray r) {
     intersect oisec;
     oisec.t = FLT_MAX;
     oisec.r = r;

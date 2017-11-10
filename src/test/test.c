@@ -70,13 +70,28 @@ void iclamp_case() {
     printf("output: %d\n", out);
 }
 
+void vec_transmission_case() {
+    vec out;
+    vec in = {1, -1, 0};
+    vec_normal(&in);
+    vec n = {0, 1, 0};
+    float n_in = 1.0;
+    float n_trans = 1.41;
+    vec_transmission(&out, in, n, n_in, n_trans);
+    vec_print(out);
+
+    // printf
+    printf("transimission equation: %5.2f\n", in.x * n_in - out.x * n_trans);
+}
+
 int main() {
 
     // vec_barycoordinate_locate_case();
     // array_case();
-    vec_reflect_case();
+    // vec_reflect_case();
     // plane_intersect_case();
     // iclamp_case();
+    vec_transmission_case();
 
     return 0;
 }
