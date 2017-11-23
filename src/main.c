@@ -1,7 +1,7 @@
 #include "graphics/graphics.h"
 
-const int W = 1024;
-const int H = 1024;
+const int W = 512;
+const int H = 512;
 
 int main () {
 
@@ -12,23 +12,24 @@ int main () {
 	light lit;
 	vec light_pos = {30, 30, -30};
 	vec light_dir = {0, 0.2, 0.8};
-	color light_color = {150, 170, 200};
+	color light_color = {200, 200, 200};
 	light_new(&lit, light_pos, light_color, 20, 0);
 
 	light lit1;
 	vec light_pos1 = {30, 30, 30};
-	color light_color1 = {150, 170, 120};
+	color light_color1 = {150, 170, 200};
 	light_new(&lit1, light_pos1, light_color1, 12, 0);
 
 	// camera init
 	vec origin = {0, 0, -1.0};
 
 	//surface init;
-	color c_diffuse = {120, 130, 150};
+	color c_diffuse = {140, 220, 150};
 	color c_specular = {100, 100, 100};
+	color plane_diffuse = {120, 120, 120};
 	surface sf			= {c_diffuse, c_specular, 50, 1.4, 0.0, 0.3, 1.0};
 	surface sf2 		= {c_diffuse, c_specular, 50, 1.0, 1.0, 0.0, 0.0};
-	surface plane_sf 	= {c_diffuse, c_specular, 50, 1.0, 1.0, 0.0, 0.0};
+	surface plane_sf 	= {plane_diffuse, c_specular, 50, 1.0, 1.0, 0.0, 0.0};
 
 	// obj init
 	vec s_pos = {-0.5, 2, 10};
@@ -45,8 +46,8 @@ int main () {
 	plane pl;
 	plane_new(&pl, "demo plane", p_pos, p_n, plane_sf);
 
-	vec p2_pos = {30, 0, 30};
-	vec p2_n = {1, 0, -0.2};
+	vec p2_pos = {0, 0, 300};
+	vec p2_n = {0, 0, -1};
 	vec_normal(&p2_n);
 	plane pl2;
 	plane_new(&pl2, "back plane", p2_pos, p2_n, plane_sf);

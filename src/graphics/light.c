@@ -12,7 +12,7 @@ void light_reduce(color * c, vec hit_to_light, vec reflect_dir, vec normal, surf
     float illum = vec_dot(hit_to_light, normal);
     color lcolor = {0, 0, 0};
     if(illum > 0 ) {
-        color_scale(&lcolor, l.c, illum * l.intensity / 20);
+        color_scale(&lcolor, s.diffuse, illum * l.intensity / 20);
     }
 
     float specular = vec_dot(hit_to_light, reflect_dir);
