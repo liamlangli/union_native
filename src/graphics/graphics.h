@@ -26,11 +26,13 @@ typedef struct {
 } intersect;
 
 typedef struct {
-	color c;
 	color diffuse;
 	color specular;
 	float roughness;
-	float refaction_factor;
+	float refraction;
+	float diffuse_factor;
+	float reflect_factor;
+	float refraction_factor;
 } surface;
 
 typedef struct {
@@ -65,26 +67,26 @@ typedef struct {
 	color clear_color;
 } scene;
 
-extern void     vec_new(vec * out, float x, float y, float z);
-extern void     vec_add(vec * out, vec a, vec b);
-extern void     vec_sub(vec * out, vec a, vec b);
-extern void     vec_scale(vec * out, vec in, float factor);
-extern void     vec_mul(vec * out, vec a, vec b);
-extern float    vec_dot(vec a, vec b);
-extern void     vec_cross(vec * out, vec a, vec b);
-extern float    vec_mag(vec in);
-extern void     vec_normal(vec * out);
-extern float 	vec_distance(vec a, vec b);
-extern void 	vec_reflect(vec * out, vec in, vec n);
-extern void 	vec_transmission(vec * out, vec in, vec normal, float n_in, float n_trans);
-extern void 	vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c);
-extern void     vec_print(vec in);
+extern void     	vec_new(vec * out, float x, float y, float z);
+extern void     	vec_add(vec * out, vec a, vec b);
+extern void     	vec_sub(vec * out, vec a, vec b);
+extern void     	vec_scale(vec * out, vec in, float factor);
+extern void     	vec_mul(vec * out, vec a, vec b);
+extern float    	vec_dot(vec a, vec b);
+extern void     	vec_cross(vec * out, vec a, vec b);
+extern float    	vec_mag(vec in);
+extern void     	vec_normal(vec * out);
+extern float 		vec_distance(vec a, vec b);
+extern void 		vec_reflect(vec * out, vec in, vec n);
+extern int 			vec_transmission(vec * out, vec in, vec normal, float n);
+extern void 		vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c);
+extern void     	vec_print(vec in);
 
-extern void 	color_clamp(color * c);
-extern void 	color_new(color * c, int r, int g, int b);
-extern void 	color_add(color * c, color a, color b);
-extern void 	color_scale(color * out, color c, float factor);
-extern void 	color_print(color c);
+extern void 		color_clamp(color * c);
+extern void 		color_new(color * c, int r, int g, int b);
+extern void 		color_add(color * c, color a, color b);
+extern void 		color_scale(color * out, color c, float factor);
+extern void 		color_print(color c);
 
 extern void 		ray_new(ray * r, vec pos, vec dir);
 
@@ -96,13 +98,14 @@ extern void 		plane_new(plane * p, const char * name, vec pos, vec normal, surfa
 extern void 		plane_normal(vec * out, plane p, vec pos);
 extern intersect 	plane_intersect(plane * p, ray r);
 
-extern void  		scene_new(scene * scn, const char * name);
+extern void  		scene_new(scene * scne, const char * name);
 extern intersect	scene_intersect(scene scne, ray r);
+extern void 		scene_free(scene * scne);
 
 extern int 			ray_test(vec hit, light l, scene scne);
 extern void 		ray_trace(color * c, ray r, scene scne, int depth);
 
-extern void 		surface_new(surface * s, color c, color diffuse, color specular, float roughness, float refaction_factor);
+extern void 		surface_new(surface * s, color diffuse, color specular, float roughness, float refraction, float diffuse_factor, float reflect_factor, float refraction_factor);
 extern void 		surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne);
 
 extern void 		light_new(light * l, vec pos, color c, float intensity, int type);

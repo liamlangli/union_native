@@ -67,23 +67,27 @@ void vec_reflect(vec * out, vec in, vec n) {
 	vec_normal(out);
 }
 
-void vec_transmission(vec * out, vec in, vec normal, float n_in, float n_trans) {
-	// t = n_in * ( v_in + normal * cos(theta) ) / n_trans  - normal * cos(theta);
+int vec_transmission(vec * out, vec in, vec normal, float n) {
+	float inDn = vec_dot(in, normal);
+	float factor = 1.0f / n;
+	if (inDn > 0) {
+		vec_scale(&normal, normal, -1);
+		factor = n;
+		inDn = vec_dot(in, normal);
+	}
 
-	float n_factor = n_in / n_trans;
-	float in_n_map = vec_dot(in, normal);
+	float k = 1.0f - factor * factor * (1.0f - inDn * inDn);
+	if (k < 0.0f) {
+		return 0;
+	}
 
-	vec n_scale;
-	vec_scale(&n_scale, normal, in_n_map);
-	vec left;
-	vec_sub(&left, in, n_scale);
-	vec_scale(&left, left, n_factor);
-
-	vec right;
-	vec_scale(&right, normal, sqrtf( 1 - powf(n_factor, 2) * (1 - powf(in_n_map, 2)) ) );
-
-	vec_sub(out, left, right);
+	float a = factor * inDn + sqrtf(k);
+	vec in_map, normal_map;
+	vec_scale(&in_map, in, factor);
+	vec_scale(&normal_map, normal, a);
+	vec_sub(out, in_map, normal_map);
 	vec_normal(out);
+	return 1;
 }
 
 void vec_barycoordinate_locate(vec * out, vec p, vec a, vec b, vec c) {

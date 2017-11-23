@@ -72,16 +72,25 @@ void iclamp_case() {
 
 void vec_transmission_case() {
     vec out;
-    vec in = {1, -1, 0};
+    vec in = {1, 1, 0};
     vec_normal(&in);
     vec n = {0, 1, 0};
-    float n_in = 1.0;
-    float n_trans = 1.41;
-    vec_transmission(&out, in, n, n_in, n_trans);
+    float n_trans = 1.2;
+    int res = vec_transmission(&out, in, n, n_trans);
     vec_print(out);
 
-    // printf
-    printf("transimission equation: %5.2f\n", in.x * n_in - out.x * n_trans);
+    printf("isTransimit: %s\n", res ? "true" : "false");
+    printf("transimission equation: %5.2f\n", in.x * 1.2 - out.x);
+}
+
+void sphere_intersect_case() {
+    vec pos = {0, 0, 2 - 0.0000001f};
+    vec direction = {0, 0, -1};
+    ray r = {pos, direction};
+    surface plane_sf = {{0, 0, 0}, {0, 0, 0}, 50, 1.0, 1.0, 0.0, 0.0};
+    sphere s = {{0, "demo" ,plane_sf}, {0, 0, 1}, 1.0f};
+    intersect isec = sphere_intersect(&s, r);
+    printf("%5.2f\n", isec.t);
 }
 
 int main() {
@@ -91,7 +100,8 @@ int main() {
     // vec_reflect_case();
     // plane_intersect_case();
     // iclamp_case();
-    vec_transmission_case();
+    // vec_transmission_case();
+    sphere_intersect_case();
 
     return 0;
 }

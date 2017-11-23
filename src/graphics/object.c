@@ -1,11 +1,15 @@
 #include "graphics.h"
 
-void surface_new(surface * s, color c, color diffuse, color specular,float roughness, float refaction_factor) {
-	s->c = c;
+const float epsilon = 0.0001f;
+
+void surface_new(surface * s, color diffuse, color specular, float roughness, float refraction, float diffuse_factor, float reflect_factor, float refraction_factor) {
 	s->diffuse = diffuse;
 	s->specular = specular;
 	s->roughness = roughness;
-	s->refaction_factor = refaction_factor;
+	s->refraction = refraction;
+	s->diffuse_factor = diffuse_factor;
+	s->reflect_factor = reflect_factor;
+	s->refraction_factor = refraction_factor;
 }
 
 void surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne) {
@@ -61,6 +65,12 @@ intersect sphere_intersect(sphere * s, ray r) {
 	oisec.t = t0 < t1 ? t0 : t1;
 	oisec.r = r;
 	oisec.thing = s;
+
+	float distance = vec_distance(s->pos, r.pos);
+	if (distance < radius) {
+		oisec.t = t1;
+	}
+
 	return oisec;
 }
 
@@ -99,30 +109,59 @@ void thing_normal(vec * normal, ThingHead * head, vec pos) {
 }
 
 void thing_shader(color * c, intersect isec, scene scne, int depth) {
-	vec ex_dir;
-	vec_scale(&ex_dir, isec.r.dir, isec.t);
+
+	if (depth <= 0) return;
+
+	vec hit_ext;
+	vec_scale(&hit_ext, isec.r.dir, isec.t);
+	vec reflect_ext;
+	vec_scale(&reflect_ext, isec.r.dir, isec.t - epsilon);
+	vec refract_ext;
+	vec_scale(&refract_ext, isec.r.dir, isec.t + epsilon);
 
 	vec hit;
-	vec_add(&hit, isec.r.pos, ex_dir);
+	vec_add(&hit, isec.r.pos, hit_ext);
+	vec hit_reflect;
+	vec_add(&hit_reflect, isec.r.pos, reflect_ext);
+	vec hit_refract;
+	vec_add(&hit_refract, isec.r.pos, refract_ext);
 
 	vec n;				// hit point normal
 	thing_normal(&n, isec.thing, hit);
 
-	vec rd;				// ray reflect direction
-	vec_reflect(&rd, isec.r.dir, n);
-	ray ray_reflect = {hit, rd};
+	// shader process
+	// color = natural + lambda_reflet * reflect + lambda_transmit * transmit
+	// TODO set lambdas as surface attribute
+	// lambda_reflet = 0.4
+	// lambda_transmit = 0.3
 
-	// TODO natural shader
+	surface sface = ((ThingHead *)(isec.thing))->sface;
+
+	// reflect ray
+	vec dir_reflect;
+	vec_reflect(&dir_reflect, isec.r.dir, n);
+	ray ray_reflect = {hit_reflect, dir_reflect};
+
+	// natural shader
 	color natural_color = {0, 0, 0};
+	surface_shader(&natural_color, sface, hit_reflect, n, dir_reflect, scne);
+	color_scale(&natural_color, natural_color, sface.diffuse_factor);
 
-	surface_shader(&natural_color, ((ThingHead *)(isec.thing))->sface, hit, n, rd, scne);
-
+	// reflect shader
 	color reflect_color = {0, 0, 0};
-	if(depth > 0 ) {
-		// TODO reflect shader;
-		ray_trace(&reflect_color, ray_reflect, scne, depth - 1);
+	ray_trace(&reflect_color, ray_reflect, scne, depth - 1);
+	color_scale(&reflect_color, reflect_color, sface.reflect_factor);
+
+	// refraction shader
+	color refraction_color = {0, 0, 0};
+	vec dir_refraction;
+	int isTransimit = vec_transmission(&dir_refraction, isec.r.dir, n, sface.refraction);
+	ray ray_refract = {hit_refract, dir_refraction};
+	if (isTransimit) {
+		ray_trace(&refraction_color, ray_refract, scne, depth - 1);
+		color_scale(&refraction_color, refraction_color, sface.refraction_factor);
 	}
 
-	color_scale(&reflect_color, reflect_color, 0.4);
+	color_add(&reflect_color, reflect_color, refraction_color);
 	color_add(c, natural_color, reflect_color);
 }

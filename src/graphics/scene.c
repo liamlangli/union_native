@@ -1,9 +1,9 @@
 #include "graphics.h"
 
-void scene_new(scene * scn, const char * name) {
-    strcpy(scn->name, name);
-    array_new(&scn->things);
-    array_new(&scn->lights);
+void scene_new(scene * scne, const char * name) {
+    strcpy(scne->name, name);
+    array_new(&scne->things);
+    array_new(&scne->lights);
 }
 
 intersect scene_intersect(scene scn, ray r) {
@@ -22,10 +22,15 @@ intersect scene_intersect(scene scn, ray r) {
             isec = plane_intersect(p, r);
         }
 
-        if (isec.t > 0 && isec.t < oisec.t) {
+        if (isec.t < oisec.t &&  isec.t > 0) {
             oisec = isec;
         }
     }
 
     return oisec;
+}
+
+void scene_free(scene * scne) {
+    array_free(&scne->things);
+    array_free(&scne->lights);
 }

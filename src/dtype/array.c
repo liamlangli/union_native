@@ -27,7 +27,6 @@ void array_clear(array * a) {
 
 void array_free(array * a) {
     free(a->items);
-    free(a);
 }
 
 void array_print(array a) {
