@@ -19,6 +19,8 @@ pic 04 specular and diffuse color render
 pic 05 recursion reflect tracing   
 ![](http://li-lang.oss-cn-shanghai.aliyuncs.com/reflect.png)
 
+pic 06 refraction ray tracing
+![](http://li-lang.oss-cn-shanghai.aliyuncs.com/refraction.png)
 
 ##### Basic Ray tracing algorithm
 1. ray generation
