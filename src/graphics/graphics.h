@@ -109,7 +109,7 @@ extern void 		surface_new(surface * s, color diffuse, color specular, float roug
 extern void 		surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne);
 
 extern void 		light_new(light * l, vec pos, color c, float intensity, int type);
-extern void 		light_reduce(color * c, vec hit_to_light, vec reflect_dir, vec normal, surface s, light l);
+extern void 		light_reduce(color * c, vec hit, vec reflect_dir, vec normal, surface s, light l);
 
 extern void 		thing_normal(vec * normal, ThingHead * head, vec pos);
 extern void 		thing_shader(color * c, intersect isec, scene scne, int depth);
