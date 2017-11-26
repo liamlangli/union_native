@@ -7,6 +7,8 @@
 extern int 		iclamp(int  in, int b, int  t);
 extern float 	fclamp(float  in, float b, float  t);
 
+extern const float Pi;
+
 typedef struct {
 	float x, y, z;
 } vec;

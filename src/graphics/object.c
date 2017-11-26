@@ -21,7 +21,6 @@ void surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, s
 		if (in_shadow) {
 			continue;
 		} else {
-			
 			light_reduce(&in, hit, reflect_dir, normal, s, lit);
 		}
 	}
