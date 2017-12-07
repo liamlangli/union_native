@@ -63,6 +63,12 @@ typedef struct {
 } plane;
 
 typedef struct {
+	ThingHead head;
+	vec a, b, c;
+	vec normal;
+} triangle;
+
+typedef struct {
 	char name[127];
 	array things;
 	array lights;
@@ -100,6 +106,10 @@ extern void 		plane_new(plane * p, const char * name, vec pos, vec normal, surfa
 extern void 		plane_normal(vec * out, plane p, vec pos);
 extern intersect 	plane_intersect(plane * p, ray r);
 
+extern void 		triangle_new(triangle * t, const char * name, vec a, vec b, vec c, surface s);
+extern void 		triangle_normal(vec * out, triangle t, vec pos);
+extern intersect   	triangle_intersect(triangle * t, ray);
+
 extern void  		scene_new(scene * scne, const char * name);
 extern intersect	scene_intersect(scene scne, ray r);
 extern void 		scene_free(scene * scne);
@@ -115,7 +125,5 @@ extern void 		light_reduce(color * c, vec hit, vec reflect_dir, vec normal, surf
 
 extern void 		thing_normal(vec * normal, ThingHead * head, vec pos);
 extern void 		thing_shader(color * c, intersect isec, scene scne, int depth);
-
-
 
 #endif

@@ -16,5 +16,6 @@ float max(float a, float b);
 
 #define Type_Sphere 0
 #define Type_Plane 1
+#define Type_Triangle 2
 
 #endif

@@ -93,6 +93,30 @@ intersect plane_intersect(plane * p, ray r) {
 	return i;
 }
 
+void triangle_new(triangle * t, const char * name, vec a, vec b, vec c, surface s) {
+	t->head.type = Type_Triangle;
+	sprintf(t->head.name, "%s", name);
+	t->head.sface = s;
+	t->a = a;
+	t->b = b;
+	t->c = c;
+
+	vec ab;
+	vec_sub(&ab, b, a);
+	vec ac;
+	vec_sub(&ac, c, a);
+	vec_cross(&t->normal, ab, bc);
+	vec_normal(&t->normal);
+}
+
+void triangle_normal(vec * out, triangle t, vec pos) {
+
+}
+
+intersect triangle_intersect(triangle * t, ray) {
+
+}
+
 void thing_normal(vec * normal, ThingHead * head, vec pos) {
 	if (head->type == Type_Sphere) {
 		sphere_normal(normal, *((sphere *)head), pos);
