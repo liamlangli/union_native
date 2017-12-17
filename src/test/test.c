@@ -88,9 +88,23 @@ void sphere_intersect_case() {
     vec direction = {0, 0, -1};
     ray r = {pos, direction};
     surface plane_sf = {{0, 0, 0}, {0, 0, 0}, 50, 1.0, 1.0, 0.0, 0.0};
-    sphere s = {{0, "demo" ,plane_sf}, {0, 0, 1}, 1.0f};
+    sphere s = {{0, "demo", plane_sf}, {0, 0, 1}, 1.0f};
     intersect isec = sphere_intersect(&s, r);
     printf("%5.2f\n", isec.t);
+}
+
+void triangle_intersect_case() {
+    vec pos = {1,  1, 1},
+        dir = {0, -1, 0};
+    ray r = {pos, dir};
+    vec a = {0, 0, 0},
+        b = {4, 0, 0},
+        c = {0, 0, 4};
+    triangle tri;
+    surface sface = {{0, 0, 0}, {0, 0, 0}, 50, 1.0, 1.0, 0.0, 0.0};
+    triangle_new( &tri, "demo triangle", a, b, c, sface);
+    intersect isec = triangle_intersect( &tri, r);
+    printf( "distance: %.2f\n", isec.t);
 }
 
 int main() {
@@ -101,7 +115,8 @@ int main() {
     // plane_intersect_case();
     // iclamp_case();
     // vec_transmission_case();
-    sphere_intersect_case();
+    // sphere_intersect_case();
+    triangle_intersect_case();
 
     return 0;
 }

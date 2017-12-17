@@ -30,3 +30,11 @@ void ray_trace(color * c, ray r, scene scne, int depth) {
 		thing_shader(c, isec, scne, depth);
 	}
 }
+
+void ray_print(ray r) {
+	printf("<ray pos:\n    ");
+	vec_print(r.pos);
+	printf("     dir:\n    ");
+	vec_print(r.dir);
+	printf(">\n");
+}

@@ -116,6 +116,7 @@ extern void 		scene_free(scene * scne);
 
 extern int 			ray_test(vec hit, light l, scene scne);
 extern void 		ray_trace(color * c, ray r, scene scne, int depth);
+extern void 		ray_print(ray r);
 
 extern void 		surface_new(surface * s, color diffuse, color specular, float roughness, float refraction, float diffuse_factor, float reflect_factor, float refraction_factor);
 extern void 		surface_shader(color *c, surface s, vec hit, vec normal, vec reflect_dir, scene scne);

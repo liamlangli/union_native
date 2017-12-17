@@ -105,16 +105,47 @@ void triangle_new(triangle * t, const char * name, vec a, vec b, vec c, surface 
 	vec_sub(&ab, b, a);
 	vec ac;
 	vec_sub(&ac, c, a);
-	vec_cross(&t->normal, ab, bc);
+	vec_cross(&t->normal, ab, ac);
 	vec_normal(&t->normal);
 }
 
 void triangle_normal(vec * out, triangle t, vec pos) {
-
+	vec n = t.normal;
+	vec_new(out, n.x, n.y, n.z);
 }
 
-intersect triangle_intersect(triangle * t, ray) {
+intersect triangle_intersect(triangle * tri, ray r) {
+	intersect isec;
+	vec o = r.pos, dir = r.dir;
+	vec_normal(&dir);
+	vec pa = tri->a, pb = tri->b, pc = tri->c;
 
+	float a = pa.x - pb.x, d = pa.x - pc.x, g = dir.x,
+		  b = pa.y - pb.y, e = pa.y - pc.y, h = dir.y,
+		  c = pa.z - pb.z, f = pa.z - pc.z, i = dir.z;
+
+	float j = pa.x - o.x,
+		  k = pa.y - o.y,
+		  l = pa.z - o.z;
+
+	float M 	= a * (e * i - h * f) + b * (g * f - d * i) + c * (d * h - e * g);
+	float beta  = (j * (e * i - h * f) + k * (g * f - d * i) + l * (d * h - e * g)) / M;
+	float gamma = (i * (a * k - j * b) + h * (j * c - a * l) + g * (b * l - k * c)) / M;
+	float t     = - (f * (a * k - j * b) + e * (j * c - a * l) + d * (b * l - k * c)) / M;
+
+	float alpha = 1 - beta - gamma;
+
+	printf("M:%.2f alpha:%.2f beta:%.2f gamma:%.2f\n", M, alpha, beta, gamma);
+
+	if (alpha > 0 && alpha < 1) {
+		isec.t = t;
+		isec.thing = tri;
+		isec.r = r;
+	} else {
+		isec.t = FLT_MAX;
+	}
+
+	return isec;
 }
 
 void thing_normal(vec * normal, ThingHead * head, vec pos) {
