@@ -22,6 +22,9 @@ pic 05 recursion reflect tracing
 pic 06 refraction ray tracing
 ![](http://li-lang.oss-cn-shanghai.aliyuncs.com/refraction.png)
 
+pic 07 render triangle
+![](http://li-lang.oss-cn-shanghai.aliyuncs.com/triangle.png)
+
 ##### Basic Ray tracing algorithm
 1. ray generation
 2. ray intersection

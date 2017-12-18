@@ -20,6 +20,9 @@ intersect scene_intersect(scene scn, ray r) {
         } else if (head->type == Type_Plane) {
             plane * p = (plane *)scn.things.items[i];
             isec = plane_intersect(p, r);
+        } else if (head->type == Type_Triangle) {
+            triangle * t = (triangle *)scn.things.items[i];
+            isec = triangle_intersect(t, r);
         }
 
         if (isec.t < oisec.t &&  isec.t > 0) {

@@ -84,13 +84,14 @@ void plane_normal(vec * out, plane p, vec pos) {
 }
 
 intersect plane_intersect(plane * p, ray r) {
-	intersect i;
+	intersect isec;
 	vec ep;
 	vec_sub(&ep, p->pos, r.pos);
-	i.t = vec_dot(p->normal, ep) / vec_dot(p->normal, r.dir);
-	i.thing = p;
-	i.r = r;
-	return i;
+	float t = vec_dot(p->normal, ep) / vec_dot(p->normal, r.dir);
+	isec.t = t > 0 ? t : FLT_MAX;
+	isec.thing = p;
+	isec.r = r;
+	return isec;
 }
 
 void triangle_new(triangle * t, const char * name, vec a, vec b, vec c, surface s) {
@@ -135,9 +136,7 @@ intersect triangle_intersect(triangle * tri, ray r) {
 
 	float alpha = 1 - beta - gamma;
 
-	printf("M:%.2f alpha:%.2f beta:%.2f gamma:%.2f\n", M, alpha, beta, gamma);
-
-	if (alpha > 0 && alpha < 1) {
+	if (beta > 0 && gamma > 0 && alpha > 0 && alpha < 1) {
 		isec.t = t;
 		isec.thing = tri;
 		isec.r = r;
@@ -153,6 +152,8 @@ void thing_normal(vec * normal, ThingHead * head, vec pos) {
 		sphere_normal(normal, *((sphere *)head), pos);
 	} else if (head->type == Type_Plane) {
 		plane_normal(normal, *((plane *)head), pos);
+	} else if (head->type == Type_Triangle) {
+		triangle_normal(normal, *((triangle *)head), pos);
 	} else {
 		// TODO: other object type
 	}
