@@ -26,9 +26,11 @@ int main () {
 	color c_diffuse = {220, 220, 220};
 	color c_specular = {100, 100, 100};
 	color plane_diffuse = {20, 20, 20};
+	color rosette_diffuse = {255, 0, 0};
 	surface sf			= {c_diffuse, c_specular, 10, 0.0, 0.7, 0.0, 0.0};
 	surface sf2 		= {c_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
 	surface plane_sf 	= {plane_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
+	surface rosette_sf	= {rosette_diffuse, c_diffuse, 100, 0.0, 2.0, 0.0, 0.0};
 
 	// obj init
 	vec s_pos = {0.0, 0.0, 10};
@@ -49,16 +51,21 @@ int main () {
 	plane pl;
 	plane_new(&pl, "demo plane", p_pos, p_n, plane_sf);
 
-	triangle tri;
-	vec pa = {0, 1, 4}, pb = {1, 0, 4}, pc = {0, -1, 4};
-	triangle_new(&tri, "demo tri", pa, pb, pc, plane_sf);
+	triangle tri_left;
+	vec lpa = {0, 1.8, 9}, lpb = {-1.4, 2.4, 10}, lpc = {-1.5, 1.6, 9};
+	triangle_new(&tri_left, "rosette left", lpa, lpb, lpc, rosette_sf);
+
+	triangle tri_right;
+	vec rpa = {0, 1.8, 9}, rpb = {1.4, 2.4, 10}, rpc = {1.5, 1.6, 9};
+	triangle_new(&tri_right, "rosette right ", rpa, rpc, rpb, rosette_sf);
 
 	// clear color
 	color clear_color = {0, 0, 0};
 
 	scene scne;
 	scene_new(&scne, "main");
-	// array_push_back(&scne.things, &tri);
+	array_push_back(&scne.things, &tri_left);
+	array_push_back(&scne.things, &tri_right);
 	array_push_back(&scne.things, &s);
 	array_push_back(&scne.things, &s1);
 	array_push_back(&scne.things, &s2);
