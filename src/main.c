@@ -1,7 +1,7 @@
 #include "graphics/graphics.h"
 
-const int W = 512;
-const int H = 512;
+const int W = 256;
+const int H = 256;
 
 int main () {
 
@@ -10,39 +10,39 @@ int main () {
 
 	// light init
 	light lit;
-	vec light_pos = {30, 30, -30};
-	color light_color = {60, 120, 20};
-	light_new(&lit, light_pos, light_color, 5000, 0);
+	vec light_pos = {0, 60, 30};
+	color light_color = {120, 120, 120};
+	light_new(&lit, light_pos, light_color, 4000, 0);
 
 	light lit1;
-	vec light_pos1 = {30, 30, 30};
-	color light_color1 = {120, 60, 20};
-	light_new(&lit1, light_pos1, light_color1, 6000, 0);
+	vec light_pos1 = {0, 60, -30};
+	color light_color1 = {60, 60, 60};
+	light_new(&lit1, light_pos1, light_color1, 9000, 0);
 
 	// camera init
 	vec origin = {0, 0, -1.0};
 
 	//surface init;
-	color c_diffuse = {140, 220, 150};
+	color c_diffuse = {220, 220, 220};
 	color c_specular = {100, 100, 100};
-	color plane_diffuse = {20, 60, 120};
-	surface sf			= {c_diffuse, c_specular, 50, 1.4, 0.0, 0.3, 1.0};
-	surface sf2 		= {c_diffuse, c_specular, 50, 1.0, 1.0, 0.0, 0.0};
-	surface plane_sf 	= {plane_diffuse, c_specular, 50, 1.0, 1.0, 0.0, 0.0};
+	color plane_diffuse = {20, 20, 20};
+	surface sf			= {c_diffuse, c_specular, 10, 0.0, 0.7, 0.0, 0.0};
+	surface sf2 		= {c_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
+	surface plane_sf 	= {plane_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
 
 	// obj init
-	vec s_pos = {-0.5, 2, 10};
-	color c = {255, 0, 0};
+	vec s_pos = {0.0, 0.0, 10};
+	color c = {100, 100, 100};
 	sphere s;
 	sphere_new(&s, "s", s_pos, 2, sf);
 
-	vec s1_pos = {6, 0, 30};
+	vec s1_pos = {2.0, 1.0, 10};
 	sphere s1;
-	sphere_new(&s1, "s1", s1_pos, 2, sf2);
+	sphere_new(&s1, "s1", s1_pos, 1.2, sf2);
 
-	vec s2_pos = {2, 4, 30};
+	vec s2_pos = {-2.0, 1.0, 10};
 	sphere s2;
-	sphere_new(&s2, "s2", s2_pos, 3, sf2);
+	sphere_new(&s2, "s2", s2_pos, 1.2, sf2);
 
 	vec p_pos = {0, -2, 0};
 	vec p_n = {0, 1, 0};
@@ -58,7 +58,7 @@ int main () {
 
 	scene scne;
 	scene_new(&scne, "main");
-	array_push_back(&scne.things, &tri);
+	// array_push_back(&scne.things, &tri);
 	array_push_back(&scne.things, &s);
 	array_push_back(&scne.things, &s1);
 	array_push_back(&scne.things, &s2);
