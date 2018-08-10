@@ -1,7 +1,7 @@
 #include "graphics/graphics.h"
 
-const int W = 256;
-const int H = 256;
+const int W = 512;
+const int H = 512;
 
 int main () {
 
@@ -12,12 +12,12 @@ int main () {
 	light lit;
 	vec light_pos = {0, 60, 30};
 	color light_color = {120, 120, 120};
-	light_new(&lit, light_pos, light_color, 4000, 0);
+	light_new(&lit, light_pos, light_color, 3000, 0);
 
 	light lit1;
-	vec light_pos1 = {0, 60, -30};
+	vec light_pos1 = {0, 10, -40};
 	color light_color1 = {60, 60, 60};
-	light_new(&lit1, light_pos1, light_color1, 9000, 0);
+	light_new(&lit1, light_pos1, light_color1, 4000, 0);
 
 	// camera init
 	vec origin = {0, 0, -1.0};
@@ -27,9 +27,9 @@ int main () {
 	color c_specular = {100, 100, 100};
 	color plane_diffuse = {20, 20, 20};
 	color rosette_diffuse = {255, 0, 0};
-	surface sf			= {c_diffuse, c_specular, 10, 0.0, 0.7, 0.0, 0.0};
+	surface sf			= {c_diffuse, c_specular, 4, 1.0, 1.0, 0.0, 0.0};
 	surface sf2 		= {c_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
-	surface plane_sf 	= {plane_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
+	surface plane_sf 	= {plane_diffuse, c_specular, 100, 1.0, 2.0, 0.1, 0.0};
 	surface rosette_sf	= {rosette_diffuse, c_diffuse, 100, 0.0, 2.0, 0.0, 0.0};
 
 	// obj init
@@ -40,11 +40,11 @@ int main () {
 
 	vec s1_pos = {2.0, 1.0, 10};
 	sphere s1;
-	sphere_new(&s1, "s1", s1_pos, 1.2, sf2);
+	sphere_new(&s1, "s1", s1_pos, 1.2, sf);
 
 	vec s2_pos = {-2.0, 1.0, 10};
 	sphere s2;
-	sphere_new(&s2, "s2", s2_pos, 1.2, sf2);
+	sphere_new(&s2, "s2", s2_pos, 1.2, sf);
 
 	vec p_pos = {0, -2, 0};
 	vec p_n = {0, 1, 0};
@@ -60,7 +60,7 @@ int main () {
 	triangle_new(&tri_right, "rosette right ", rpa, rpc, rpb, rosette_sf);
 
 	// clear color
-	color clear_color = {0, 0, 0};
+	color clear_color = {12, 12, 12};
 
 	scene scne;
 	scene_new(&scne, "main");
@@ -73,7 +73,7 @@ int main () {
 	array_push_back(&scne.lights, &lit1);
 	array_push_back(&scne.things, &pl);
 
-	float ambient = 0.0f;
+	float ambient = 0.2f;
 
 	// perspective viewing mode
 	for (int y = 0; y < H; ++y) {
