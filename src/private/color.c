@@ -1,5 +1,12 @@
 #include "graphics.h"
 
+i32 iclamp(i32 i, i32 b, i32 t)
+{
+  if (i > t) return t;
+  if (i < b) return b;
+  return i;
+}
+
 void color_clamp(color * c) {
 	c->r = iclamp(c->r, 0, 255);
 	c->g = iclamp(c->g, 0, 255);

@@ -1,5 +1,4 @@
 #include "graphics.h"
-#include "common.h"
 
 const float epsilon = 0.0001f;
 
@@ -209,7 +208,7 @@ void thing_shader(color *c, intersect isec, scene scne, int depth)
   vec_add(&hit_refract, isec.r.pos, refract_ext);
 
   vec n; // hit point normal
-  thing_normal(&n, isec.thing, hit);
+  thing_normal(&n, (ThingHead*)isec.thing, hit);
 
   // shader process
   // color = natural + lambda_reflet * reflect + lambda_transmit * transmit

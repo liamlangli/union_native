@@ -9,7 +9,11 @@
 #include <float.h>
 #include <string.h>
 
+#include "glm.h"
 #include "dtype.h"
+
+typedef vec3 rgb;
+typedef vec4 rgba;
 
 extern int iclamp(int in, int b, int t);
 extern float fclamp(float in, float b, float t);
@@ -18,79 +22,79 @@ extern const float Pi;
 
 typedef struct
 {
-	float x, y, z;
+  float x, y, z;
 } vec;
 
 typedef struct
 {
-	int r, g, b;
+  int r, g, b;
 } color;
 
 typedef struct
 {
-	vec pos, dir;
+  vec pos, dir;
 } ray;
 
 typedef struct
 {
-	void *thing;
-	ray r;
-	float t;
+  void *thing;
+  ray r;
+  float t;
 } intersect;
 
 typedef struct
 {
-	color diffuse;
-	color specular;
-	float roughness;
-	float refraction;
-	float diffuse_factor;
-	float reflect_factor;
-	float refraction_factor;
+  color diffuse;
+  color specular;
+  float roughness;
+  float refraction;
+  float diffuse_factor;
+  float reflect_factor;
+  float refraction_factor;
 } surface;
 
 typedef struct
 {
-	vec pos;
-	color c;
-	float intensity;
-	int type;
+  vec pos;
+  color c;
+  float intensity;
+  int type;
 } light;
 
 typedef struct
 {
-	int type;
-	char name[123];
-	surface sface;
+  int type;
+  char name[123];
+  surface sface;
 } ThingHead;
 
 typedef struct
 {
-	ThingHead head;
-	vec pos;
-	float radius;
+  ThingHead head;
+  vec pos;
+  float radius;
 } sphere;
 
 typedef struct
 {
-	ThingHead head;
-	vec pos;
-	vec normal;
+  ThingHead head;
+  vec pos;
+  vec normal;
 } plane;
 
 typedef struct
 {
-	ThingHead head;
-	vec a, b, c;
-	vec normal;
+  ThingHead head;
+  vec a, b, c;
+  vec normal;
 } triangle;
 
 typedef struct
 {
-	char name[127];
-	array things;
-	array lights;
-	color clear_color;
+  char name[127];
+  array things;
+  array lights;
+  color clear_color;
 } scene;
 
 extern void vec_new(vec *out, float x, float y, float z);
