@@ -1,7 +1,6 @@
-#include "../graphics/graphics.h"
-#include "../io/io.h"
-#include "../dtype/dtype.h"
-#include "../common/common.h"
+#include "graphics.h"
+#include "io.h"
+#include "dtype.h"
 
 void vec_barycoordinate_locate_case() {
     vec ax, ay, az, p;

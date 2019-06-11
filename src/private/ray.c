@@ -26,7 +26,7 @@ int ray_test(vec hit, light l, scene scne) {
 void ray_trace(color * c, ray r, scene scne, int depth) {
 	intersect isec = scene_intersect(scne, r);
 	color_new(c, 0, 0, 0);
-	if (isec.t < FLT_MAX && isec.t > 0) {
+	if (isec.t < FLT_MAX && isec.t > 0.0f) {
 		thing_shader(c, isec, scne, depth);
 	}
 }

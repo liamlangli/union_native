@@ -1,5 +1,6 @@
-out.ppm
+
 bin
-bin/*
-dist
-dist/*
+build
+
+.vscode/ipch
+

@@ -27,6 +27,13 @@ void color_scale(color * out, color c, float factor) {
 	color_clamp(out);
 }
 
+void color_mix(color * out, color a, color b, float factor) {
+	out->r = a.r * (1.0f - factor) + b.r * factor;
+	out->g = a.g * (1.0f - factor) + b.g * factor;
+	out->b = a.b * (1.0f - factor) + b.b * factor;
+	color_clamp(out);
+}
+
 void color_print(color c) {
 	printf("<color r:%d g:%d b:%d>\n", c.r, c.g, c.b);
 }

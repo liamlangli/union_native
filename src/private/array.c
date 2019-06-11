@@ -1,13 +1,13 @@
 #include "dtype.h"
 
-int array_new(array * a) {
+bool array_new(array * a) {
     a->items = malloc(sizeof(void *)* 10);
     a->nItems = 0;
     a->nSize = 10;
     return true;
 }
 
-int array_push_back(array * a, void * item) {
+bool array_push_back(array * a, void * item) {
     if (a->nItems < a->nSize) {
         a->items[a->nItems] = item;
         a->nItems++;
@@ -17,7 +17,7 @@ int array_push_back(array * a, void * item) {
     return true;
 }
 
-int array_is_empty(array * a) {
+u32 array_is_empty(array * a) {
     return a->nItems == 0;
 }
 
