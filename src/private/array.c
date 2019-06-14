@@ -1,34 +1,70 @@
-#include "dtype.h"
+#include "container.h"
 
-bool array_new(array * a) {
-    a->items = malloc(sizeof(void *)* 10);
-    a->nItems = 0;
-    a->nSize = 10;
-    return true;
+#include <stdlib.h>
+#include <string.h>
+
+Array* array_create()
+{
+  Array *arr = (Array*)malloc(sizeof(Array));
+  arr->size = 0;
+  arr->capacity = 100;
+  arr->buffer = (void**)calloc(arr->capacity, sizeof(void*));
+  return arr;
 }
 
-bool array_push_back(array * a, void * item) {
-    if (a->nItems < a->nSize) {
-        a->items[a->nItems] = item;
-        a->nItems++;
-    } else {
-        // TODO realloc array size;
-    }
-    return true;
+void array_free(Array *arr)
+{
+  free(arr->buffer);
+  free(arr);
 }
 
-u32 array_is_empty(array * a) {
-    return a->nItems == 0;
+bool array_push(Array * arr, void *element)
+{
+  if (arr->size >= arr->capacity)
+  {
+    fprintf(stderr, "upto max array size.");
+    return false;
+  }
+
+  arr->buffer[arr->size] = element;
+  ++(arr->size);
+  return true;
 }
 
-void array_clear(array * a) {
+bool array_remove_at(Array *arr, u32 index, void **data)
+{
+  if (index >= arr->size)
+  {
+    fprintf(stderr, "out of range");
+    return false;
+  }
 
+  if (data)
+  {
+    *data = arr->buffer[index];
+  }
+
+  if (index != arr->size -1)
+  {
+    u32 block_size = (arr->size - 1 - index) * sizeof(void *);
+
+    memmove(
+      &(arr->buffer[index]),
+      &(arr->buffer[index + 1]),
+      block_size
+    );
+  }
+
+  --(arr->size);
+  return true;
 }
 
-void array_free(array * a) {
-    free(a->items);
-}
-
-void array_print(array a) {
-    fprintf(stdout, "<Array size: %d items:%d>\n", a.nSize, a.nItems);
+bool array_get(Array *arr, u32 index, void **data)
+{
+  if (index >= arr->size)
+  {
+    return false;
+  }
+  *data = arr->buffer[index];
+  return true;
 }

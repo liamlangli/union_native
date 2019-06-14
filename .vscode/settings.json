@@ -2,7 +2,8 @@
     "files.associations": {
         "graphics.h": "c",
         "dtype.h": "c",
-        "encode.h": "c"
+        "encode.h": "c",
+        "glm_ext.h": "c"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
     "C_Cpp.configurationWarnings": "Disabled"

@@ -1,108 +1,93 @@
 #include <stdlib.h>
-#include "graphics.h"
+#include <string.h>
+
+#include "glm_ext.h"
 #include "global.h"
 #include "io.h"
+#include "hit.h"
 
-const int W = 512;
-const int H = 512;
+const i32 W = 512;
+const i32 H = 512;
+const i32 N_SAMPLES = 4;
+
+vec3 v1;
+vec3 v2;
+
+void rand_unit_sphere(vec3 dst)
+{
+  drand48();
+}
+
+f32 randf()
+{
+  return (f32)(rand() % 1024)/ (f32)1024 - 0.5f; 
+}
+
+void shader(rgb color, vec3 N)
+{
+  glm_vec3_mul_f(N, N, 0.5f);
+  glm_vec3_add_f(color, N, 0.5f);
+}
 
 int main()
 {
 
   size_t pixels_size = sizeof(u8) * W * H * 3;
   u8 pixels[H][W][3];
-  memset(pixels, 255, pixels_size);
+  memset(pixels, 0, pixels_size);
 
-  // light init
-  light lit;
-  vec light_pos = {0, 60, 30};
-  color light_color = {120, 120, 120};
-  light_new(&lit, light_pos, light_color, 3000, 0);
+  vec3 lower_corner = {-1.0f, -1.0f, -1.0f};
+  vec3 hori = {2.0f, 0.0f, 0.0f};
+  vec3 vert = {0.0f, 2.0f, 0.0f};
+  Ray ray;
+  glm_vec3_set(ray.origin, 0.0f, 0.0f, 0.0f);
+  rgb color;
 
-  light lit1;
-  vec light_pos1 = {0, 10, -40};
-  color light_color1 = {60, 60, 60};
-  light_new(&lit1, light_pos1, light_color1, 4000, 0);
+  vec3 center = {0.0f, 0.0, -5.0f};
+  f32 radius = 1.0f;
+  vec3 p;
 
-  // camera init
-  vec origin = {0, 0, -1.0};
+  vec3 sky_u = {1.0f, 1.0f, 1.0f};
+  vec3 sky_d = {0.5f, 0.7f, 1.0f};
 
-  //surface init;
-  color c_diffuse = {220, 220, 220};
-  color c_specular = {100, 100, 100};
-  color plane_diffuse = {20, 20, 20};
-  color rosette_diffuse = {255, 0, 0};
-  surface sf = {c_diffuse, c_specular, 4, 1.0, 1.0, 0.0, 0.0};
-  surface sf2 = {c_diffuse, c_specular, 100, 1.0, 1.0, 0.1, 0.0};
-  surface plane_sf = {plane_diffuse, c_specular, 100, 1.0, 2.0, 0.1, 0.0};
-  surface rosette_sf = {rosette_diffuse, c_diffuse, 100, 0.0, 2.0, 0.0, 0.0};
-
-  // obj init
-  vec s_pos = {0.0, 0.0, 10};
-  color c = {100, 100, 100};
-  sphere s;
-  sphere_new(&s, "s", s_pos, 2, sf);
-
-  vec s1_pos = {2.0, 1.0, 10};
-  sphere s1;
-  sphere_new(&s1, "s1", s1_pos, 1.2, sf);
-
-  vec s2_pos = {-2.0, 1.0, 10};
-  sphere s2;
-  sphere_new(&s2, "s2", s2_pos, 1.2, sf);
-
-  vec p_pos = {0, -2, 0};
-  vec p_n = {0, 1, 0};
-  plane pl;
-  plane_new(&pl, "demo plane", p_pos, p_n, plane_sf);
-
-  triangle tri_left;
-  vec lpa = {0, 1.8, 9}, lpb = {-1.4, 2.4, 10}, lpc = {-1.5, 1.6, 9};
-  triangle_new(&tri_left, "rosette left", lpa, lpb, lpc, rosette_sf);
-
-  triangle tri_right;
-  vec rpa = {0, 1.8, 9}, rpb = {1.4, 2.4, 10}, rpc = {1.5, 1.6, 9};
-  triangle_new(&tri_right, "rosette right ", rpa, rpc, rpb, rosette_sf);
-
-  // clear color
-  color clear_color = {12, 12, 12};
-
-  scene scne;
-  scene_new(&scne, "main");
-  array_push_back(&scne.things, &tri_left);
-  array_push_back(&scne.things, &tri_right);
-  array_push_back(&scne.things, &s);
-  array_push_back(&scne.things, &s1);
-  array_push_back(&scne.things, &s2);
-  array_push_back(&scne.lights, &lit);
-  array_push_back(&scne.lights, &lit1);
-  array_push_back(&scne.things, &pl);
-
-  float ambient = 0.2f;
-
-  // perspective viewing mode
-  for (int y = 0; y < H; ++y)
+  for (i32 j = 0; j < H; ++j)
   {
-    for (int x = 0; x < W; ++x)
+    for (i32 i = 0; i < W; ++i)
     {
-      // TODO generate ray
-      vec p, dir;
-      vec_new(&p, (x - W / 2.0) / W, (H / 2.0 - y) / H, 0);
-      vec_sub(&dir, p, origin);
-      ray r;
-      ray_new(&r, origin, dir);
+      f32 u = (f32)(i + drand48())/ (f32)W;
+      f32 v = 1.0f - (f32)(j + drand48()) / (f32)H;
+      glm_vec3_mul_f(v1, hori, u);
+      glm_vec3_mul_f(v2, vert, v);
+      glm_vec3_add(v2, v1, v2);
+      glm_vec3_add(ray.direction, v2, lower_corner);
+      glm_vec3_normalize(ray.direction);
 
-      color cl_out = {0, 0, 0};
-      ray_trace(&cl_out, r, scne, 4);
+      vec3 outColor = {0.0f, 0.0f, 0.0f};
+      for (i32 k = 0; k < N_SAMPLES; ++k)
+      {
+        f32 t = hit_sphere(&ray, center, radius);
+        if (t > 0.0f)
+        {
+          ray_extend(p, &ray, t);
+          glm_vec3_sub(p, p, center);
+          glm_vec3_normalize(p);
+          shader(color, p);
+        }
+        else
+        {
+          glm_vec3_lerp(color, sky_u, sky_d, v);
+        }
+        glm_vec3_add(outColor, outColor, color);
+      }
+      glm_vec3_mul_f(outColor, outColor, 1.0f / (f32)N_SAMPLES);
 
-      pixels[y][x][0] = cl_out.r;
-      pixels[y][x][1] = cl_out.g;
-      pixels[y][x][2] = cl_out.b;
+      pixels[j][i][0] = (u8)(outColor[0] * 255.99f);
+      pixels[j][i][1] = (u8)(outColor[1] * 255.99f);
+      pixels[j][i][2] = (u8)(outColor[2] * 255.99f);
     }
   }
 
   image_save_webp("out.webp", (u8 *)pixels, W, H, pixels_size);
-  scene_free(&scne);
 
   return 0;
 }

@@ -298,6 +298,13 @@ FORCE_INLINE void glm_vec3_mul_f(vec3 dst, vec3 v, f32 s)
   dst[2] = v[2] * s;
 }
 
+FORCE_INLINE void glm_vec3_lerp(vec3 dst, vec3 from, vec3 to, f32 t)
+{
+  dst[0] = glm_lerp(from[0], to[0], t);
+  dst[1] = glm_lerp(from[1], to[1], t);
+  dst[2] = glm_lerp(from[2], to[2], t);
+}
+
 FORCE_INLINE void glm_vec3_normalize_to(vec3 dst, vec3 v)
 {
   f32 l = glm_vec3_length(v);
