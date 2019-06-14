@@ -5,6 +5,8 @@
 #include "global.h"
 #include "io.h"
 #include "hit.h"
+#include "container.h"
+#include "scene.h"
 
 const i32 W = 512;
 const i32 H = 512;
@@ -43,35 +45,37 @@ int main()
   glm_vec3_set(ray.origin, 0.0f, 0.0f, 0.0f);
   rgb color;
 
-  vec3 center = {0.0f, 0.0, -5.0f};
-  f32 radius = 1.0f;
-  vec3 p;
-
   vec3 sky_u = {1.0f, 1.0f, 1.0f};
   vec3 sky_d = {0.5f, 0.7f, 1.0f};
+
+  vec3 center = {0.0f, 0.0f, -5.0f};
+  vec3 normal = {0.0f, 1.0f, 0.0f};
+  Array *scene = array_create();
+  array_push(scene, hitable_sphere_create(center, 1.0f));
+  array_push(scene, hitable_plane_create(normal, 1.0f));
+
+  Hit hit;
 
   for (i32 j = 0; j < H; ++j)
   {
     for (i32 i = 0; i < W; ++i)
     {
-      f32 u = (f32)(i + drand48())/ (f32)W;
-      f32 v = 1.0f - (f32)(j + drand48()) / (f32)H;
-      glm_vec3_mul_f(v1, hori, u);
-      glm_vec3_mul_f(v2, vert, v);
-      glm_vec3_add(v2, v1, v2);
-      glm_vec3_add(ray.direction, v2, lower_corner);
-      glm_vec3_normalize(ray.direction);
-
       vec3 outColor = {0.0f, 0.0f, 0.0f};
       for (i32 k = 0; k < N_SAMPLES; ++k)
       {
-        f32 t = hit_sphere(&ray, center, radius);
-        if (t > 0.0f)
+        f32 u = (f32)(i + drand48())/ (f32)W;
+        f32 v = 1.0f - (f32)(j + drand48()) / (f32)H;
+        glm_vec3_mul_f(v1, hori, u);
+        glm_vec3_mul_f(v2, vert, v);
+        glm_vec3_add(v2, v1, v2);
+        glm_vec3_add(ray.direction, v2, lower_corner);
+        glm_vec3_normalize(ray.direction);
+
+        hit.t = FLT_MAX;
+        scene_traverse(scene, &ray, &hit);
+        if (hit.t > 0.0f && hit.t < FLT_MAX)
         {
-          ray_extend(p, &ray, t);
-          glm_vec3_sub(p, p, center);
-          glm_vec3_normalize(p);
-          shader(color, p);
+          shader(color, hit.N);
         }
         else
         {

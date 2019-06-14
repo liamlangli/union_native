@@ -20,5 +20,5 @@ f32 hit_sphere(Ray *ray, vec3 center, f32 radius)
 
 f32 hit_plane(Ray *ray, vec3 normal, f32 offset)
 {
-  
+  return -(glm_vec3_dot(ray->origin, normal) + offset) / glm_vec3_dot(ray->direction, normal);
 }
