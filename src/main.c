@@ -15,9 +15,14 @@ const i32 N_SAMPLES = 4;
 vec3 v1;
 vec3 v2;
 
+vec3 one = {1.0f, 1.0f, 1.0f};
 void rand_unit_sphere(vec3 dst)
 {
-  drand48();
+  do {
+    glm_vec3_set(dst, drand48(), drand48(), drand48());
+    glm_vec3_mul_f(dst, dst, 2.0f);
+    glm_vec3_sub(dst, dst, one);
+  } while (glm_vec3_dot(dst, dst) >= 1.0f);
 }
 
 f32 randf()
@@ -25,10 +30,22 @@ f32 randf()
   return (f32)(rand() % 1024)/ (f32)1024 - 0.5f; 
 }
 
-void shader(rgb color, vec3 N)
+vec3 sky_u = {1.0f, 1.0f, 1.0f};
+vec3 sky_d = {0.5f, 0.7f, 1.0f};
+bool shader(rgb color, Hit *hit, f32 v)
 {
-  glm_vec3_mul_f(N, N, 0.5f);
-  glm_vec3_add_f(color, N, 0.5f);
+  glm_vec3_set(color, 0.0, 0.0, 0.0);
+  if (hit->t > 0.0f && hit->t < FLT_MAX)
+  {
+    glm_vec3_copy(color, hit->target->color);
+    return true;
+  }
+  else
+  {
+    glm_vec3_lerp(color, sky_u, sky_d, v);
+    return false;
+  }
+  return false;
 }
 
 int main()
@@ -38,29 +55,34 @@ int main()
   u8 pixels[H][W][3];
   memset(pixels, 0, pixels_size);
 
+  vec3 origin = {0.0f, 0.0f, 0.0f};
   vec3 lower_corner = {-1.0f, -1.0f, -1.0f};
   vec3 hori = {2.0f, 0.0f, 0.0f};
   vec3 vert = {0.0f, 2.0f, 0.0f};
   Ray ray;
-  glm_vec3_set(ray.origin, 0.0f, 0.0f, 0.0f);
-  rgb color;
-
-  vec3 sky_u = {1.0f, 1.0f, 1.0f};
-  vec3 sky_d = {0.5f, 0.7f, 1.0f};
+  rgb color, reflect_color;
 
   vec3 center = {0.0f, 0.0f, -5.0f};
   vec3 normal = {0.0f, 1.0f, 0.0f};
   Array *scene = array_create();
-  array_push(scene, hitable_sphere_create(center, 1.0f));
-  array_push(scene, hitable_plane_create(normal, 1.0f));
+
+  rgb ground_diffuse = {0.1f, 0.2f, 0.3f},
+      sphere_diffuse = {0.3f, 0.2f, 0.1f};
+
+  array_push(scene, hitable_sphere_create(center, 1.0f, sphere_diffuse));
+  array_push(scene, hitable_plane_create(normal, 1.0f, ground_diffuse));
 
   Hit hit;
+
+  vec3 unit;
+  vec3 target;
+  vec3 outColor;
 
   for (i32 j = 0; j < H; ++j)
   {
     for (i32 i = 0; i < W; ++i)
     {
-      vec3 outColor = {0.0f, 0.0f, 0.0f};
+      glm_vec3_set(outColor, 0.0f, 0.0f, 0.0f);
       for (i32 k = 0; k < N_SAMPLES; ++k)
       {
         f32 u = (f32)(i + drand48())/ (f32)W;
@@ -73,15 +95,24 @@ int main()
 
         hit.t = FLT_MAX;
         scene_traverse(scene, &ray, &hit);
-        if (hit.t > 0.0f && hit.t < FLT_MAX)
+        glm_vec3_copy(ray.origin, origin);
+        if (shader(color, &hit, v))
         {
-          shader(color, hit.N);
+          glm_vec3_add(outColor, outColor, color);
+          rand_unit_sphere(unit);
+          glm_vec3_add(unit, unit, hit.N);
+          glm_vec3_add(unit, unit, hit.p);
+          glm_vec3_sub(unit, unit, hit.p);
+          glm_vec3_normalize(unit);
+          glm_vec3_copy(ray.direction, unit);
+          glm_vec3_copy(ray.origin, hit.p);
+          scene_traverse(scene, &ray, &hit);
+          // shader(reflect_color, &hit, v);
+          // glm_vec3_mul_f(reflect_color, reflect_color, 0.5f);
+          // glm_vec3_add(outColor, outColor, reflect_color);
+        } else {
+          // glm_vec3_add(outColor, outColor, color);
         }
-        else
-        {
-          glm_vec3_lerp(color, sky_u, sky_d, v);
-        }
-        glm_vec3_add(outColor, outColor, color);
       }
       glm_vec3_mul_f(outColor, outColor, 1.0f / (f32)N_SAMPLES);
 
