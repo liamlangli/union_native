@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project(rayt LANGUAGES C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
+if(UNIX AND NOT APPLE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
+endif()
 
 # pkg config
 find_package(PkgConfig)
