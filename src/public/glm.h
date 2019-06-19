@@ -9,11 +9,12 @@
 #include "global.h"
 #include <math.h>
 #include <float.h>
+#include <stdlib.h>
 
-typedef f32 vec2[2];
-typedef f32 vec3[3];
+typedef f64 vec2[2];
+typedef f64 vec3[3];
 typedef vec3 spherical;
-typedef f32 vec4[4];
+typedef f64 vec4[4];
 typedef vec4 quaternion;
 typedef vec3 mat3[3];
 typedef vec4 mat4[4];
@@ -38,83 +39,83 @@ typedef vec4 mat4[4];
 #define GLM_SQRT2 1.41421356237309504880168872420969808    /* sqrt(2)     */
 #define GLM_SQRT1_2 0.707106781186547524400844362104849039 /* 1/sqrt(2)   */
 
-#define GLM_Ef ((f32)GLM_E)
-#define GLM_LOG2Ef ((f32)GLM_LOG2E)
-#define GLM_LOG10Ef ((f32)GLM_LOG10E)
-#define GLM_LN2f ((f32)GLM_LN2)
-#define GLM_LN10f ((f32)GLM_LN10)
-#define GLM_PIf ((f32)GLM_PI)
-#define GLM_PI_2f ((f32)GLM_PI_2)
-#define GLM_PI_4f ((f32)GLM_PI_4)
-#define GLM_1_PIf ((f32)GLM_1_PI)
-#define GLM_2_PIf ((f32)GLM_2_PI)
-#define GLM_2_SQRTPIf ((f32)GLM_2_SQRTPI)
-#define GLM_SQRT2f ((f32)GLM_SQRT2)
-#define GLM_SQRT1_2f ((f32)GLM_SQRT1_2)
+#define GLM_Ef ((f64)GLM_E)
+#define GLM_LOG2Ef ((f64)GLM_LOG2E)
+#define GLM_LOG10Ef ((f64)GLM_LOG10E)
+#define GLM_LN2f ((f64)GLM_LN2)
+#define GLM_LN10f ((f64)GLM_LN10)
+#define GLM_PIf ((f64)GLM_PI)
+#define GLM_PI_2f ((f64)GLM_PI_2)
+#define GLM_PI_4f ((f64)GLM_PI_4)
+#define GLM_1_PIf ((f64)GLM_1_PI)
+#define GLM_2_PIf ((f64)GLM_2_PI)
+#define GLM_2_SQRTPIf ((f64)GLM_2_SQRTPI)
+#define GLM_SQRT2f ((f64)GLM_SQRT2)
+#define GLM_SQRT1_2f ((f64)GLM_SQRT1_2)
 
 FORCE_INLINE i32 glm_sign(i32 val)
 {
   return ((val >> 31) - (-val >> 31));
 }
 
-FORCE_INLINE f32 glm_signf(f32 val)
+FORCE_INLINE f64 glm_signf(f64 val)
 {
-  return (f32)((val > 0.0f) - (val < 0.0f));
+  return (f64)((val > 0.0f) - (val < 0.0f));
 }
 
-FORCE_INLINE f32 glm_min(f32 a, f32 b)
+FORCE_INLINE f64 glm_min(f64 a, f64 b)
 {
   if (a < b)
     return a;
   return b;
 }
 
-FORCE_INLINE f32 glm_max(f32 a, f32 b)
+FORCE_INLINE f64 glm_max(f64 a, f64 b)
 {
   if (a > b)
     return a;
   return b;
 }
 
-FORCE_INLINE f32 glm_pow2(f32 x)
+FORCE_INLINE f64 glm_pow2(f64 x)
 {
   return x * x;
 }
 
-FORCE_INLINE f32 glm_rad(f32 deg)
+FORCE_INLINE f64 glm_rad(f64 deg)
 {
   return deg * GLM_PIf / 180.0f;
 }
 
-FORCE_INLINE f32 glm_deg(f32 rad)
+FORCE_INLINE f64 glm_deg(f64 rad)
 {
-  return rad * 180.0f / GLM_PIf;
+  return rad * 180.0 / GLM_PIf;
 }
 
-FORCE_INLINE f32 glm_clamp(f32 val, f32 minVal, f32 maxVal)
+FORCE_INLINE f64 glm_clamp(f64 val, f64 minVal, f64 maxVal)
 {
   return glm_min(glm_max(val, minVal), maxVal);
 }
 
-FORCE_INLINE f32 glm_clamp_zo(f32 val)
+FORCE_INLINE f64 glm_clamp_zo(f64 val)
 {
-  return glm_clamp(val, 0.0f, 1.0f);
+  return glm_clamp(val, 0.0, 1.0);
 }
 
-FORCE_INLINE f32 glm_lerp(f32 from, f32 to, f32 t)
+FORCE_INLINE f64 glm_lerp(f64 from, f64 to, f64 t)
 {
   return from + glm_clamp_zo(t) * (to - from);
 }
 
-FORCE_INLINE bool glm_eq(f32 a, f32 b)
+FORCE_INLINE bool glm_eq(f64 a, f64 b)
 {
-  return fabsf(a - b) <= FLT_EPSILON;
+  return fabs(a - b) <= FLT_EPSILON;
 }
 
 /**
  * vec2
  **/
-FORCE_INLINE void glm_vec2_set(vec2 dst, f32 x, f32 y)
+FORCE_INLINE void glm_vec2_set(vec2 dst, f64 x, f64 y)
 {
   dst[0] = x;
   dst[1] = y;
@@ -150,25 +151,25 @@ FORCE_INLINE void glm_vec2_mul(vec2 dst, vec2 a, vec2 b)
   dst[1] = a[1] * b[1];
 }
 
-FORCE_INLINE void glm_vec2_mul_f(vec2 dst, vec2 src, f32 factor)
+FORCE_INLINE void glm_vec2_mul_f(vec2 dst, vec2 src, f64 factor)
 {
   src[0] = dst[0] * factor;
   src[1] = dst[1] * factor;
 }
 
-FORCE_INLINE void glm_vec2_rotate(vec2 dst, vec2 src, f32 radians)
+FORCE_INLINE void glm_vec2_rotate(vec2 dst, vec2 src, f64 radians)
 {
-  f32 x = src[0];
-  f32 y = src[1];
-  f32 c = cosf(radians);
-  f32 s = sinf(radians);
+  f64 x = src[0];
+  f64 y = src[1];
+  f64 c = cosf(radians);
+  f64 s = sinf(radians);
   dst[0] = x * c - y * s;
   dst[1] = x * s + y * c;
 }
 
-FORCE_INLINE f32 glm_vec2_length(vec2 src)
+FORCE_INLINE f64 glm_vec2_length(vec2 src)
 {
-  return sqrtf(src[0] * src[0] + src[1] * src[1]);
+  return sqrt(src[0] * src[0] + src[1] * src[1]);
 }
 
 FORCE_INLINE void glm_vec2_dump(vec2 dst)
@@ -184,7 +185,7 @@ FORCE_INLINE bool glm_vec2_contains(vec2 center, vec2 size, vec2 p)
   return v[0] > -size[0] && v[0] < size[0] && v[1] > -size[1] && v[1] < size[1];
 }
 
-FORCE_INLINE bool glm_vec2_contains_circle(vec2 center, f32 radius, vec2 p)
+FORCE_INLINE bool glm_vec2_contains_circle(vec2 center, f64 radius, vec2 p)
 {
   vec2 v;
   glm_vec2_sub(v, p, center);
@@ -195,7 +196,7 @@ FORCE_INLINE bool glm_vec2_contains_circle(vec2 center, f32 radius, vec2 p)
  * spherical
  * <radius, polar, azim>
  **/
-FORCE_INLINE void glm_spherical_set(spherical s, f32 radius, f32 polar, f32 azim)
+FORCE_INLINE void glm_spherical_set(spherical s, f64 radius, f64 polar, f64 azim)
 {
   s[0] = radius;
   s[1] = polar;
@@ -217,7 +218,7 @@ FORCE_INLINE void glm_vec3_dump(vec3 src)
   fprintf(stdout, "vec3<x:%.2f %.2f %.2f>\n", src[0], src[1], src[2]);
 }
 
-FORCE_INLINE void glm_vec3_set(vec3 dst, f32 x, f32 y, f32 z)
+FORCE_INLINE void glm_vec3_set(vec3 dst, f64 x, f64 y, f64 z)
 {
   dst[0] = x;
   dst[1] = y;
@@ -241,19 +242,19 @@ FORCE_INLINE void glm_vec3_one(vec3 v)
   v[0] = v[1] = v[2] = 1.0f;
 }
 
-FORCE_INLINE f32 glm_vec3_dot(vec3 a, vec3 b)
+FORCE_INLINE f64 glm_vec3_dot(vec3 a, vec3 b)
 {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-FORCE_INLINE f32 glm_vec3_mag(vec3 v)
+FORCE_INLINE f64 glm_vec3_mag(vec3 v)
 {
   return glm_vec3_dot(v, v);
 }
 
-FORCE_INLINE f32 glm_vec3_length(vec3 v)
+FORCE_INLINE f64 glm_vec3_length(vec3 v)
 {
-  return sqrtf(glm_vec3_mag(v));
+  return sqrt(glm_vec3_mag(v));
 }
 
 FORCE_INLINE void glm_vec3_add(vec3 dst, vec3 a, vec3 b)
@@ -263,7 +264,7 @@ FORCE_INLINE void glm_vec3_add(vec3 dst, vec3 a, vec3 b)
   dst[2] = a[2] + b[2];
 }
 
-FORCE_INLINE void glm_vec3_add_f(vec3 dst, vec3 v, f32 s)
+FORCE_INLINE void glm_vec3_add_f(vec3 dst, vec3 v, f64 s)
 {
   dst[0] = v[0] + s;
   dst[1] = v[1] + s;
@@ -277,7 +278,7 @@ FORCE_INLINE void glm_vec3_sub(vec3 dst, vec3 a, vec3 b)
   dst[2] = a[2] - b[2];
 }
 
-FORCE_INLINE void glm_vec3_sub_f(vec3 dst, vec3 v, f32 s)
+FORCE_INLINE void glm_vec3_sub_f(vec3 dst, vec3 v, f64 s)
 {
   dst[0] = v[0] - s;
   dst[1] = v[1] - s;
@@ -291,14 +292,14 @@ FORCE_INLINE void glm_vec3_mul(vec3 dst, vec3 a, vec3 b)
   dst[2] = a[2] * b[2];
 }
 
-FORCE_INLINE void glm_vec3_mul_f(vec3 dst, vec3 v, f32 s)
+FORCE_INLINE void glm_vec3_mul_f(vec3 dst, vec3 v, f64 s)
 {
   dst[0] = v[0] * s;
   dst[1] = v[1] * s;
   dst[2] = v[2] * s;
 }
 
-FORCE_INLINE void glm_vec3_lerp(vec3 dst, vec3 from, vec3 to, f32 t)
+FORCE_INLINE void glm_vec3_lerp(vec3 dst, vec3 from, vec3 to, f64 t)
 {
   dst[0] = glm_lerp(from[0], to[0], t);
   dst[1] = glm_lerp(from[1], to[1], t);
@@ -307,13 +308,13 @@ FORCE_INLINE void glm_vec3_lerp(vec3 dst, vec3 from, vec3 to, f32 t)
 
 FORCE_INLINE void glm_vec3_normalize_to(vec3 dst, vec3 v)
 {
-  f32 l = glm_vec3_length(v);
-  if (l == 0.0f)
+  f64 l = glm_vec3_length(v);
+  if (l == 0.0)
   {
-    glm_vec3_set(dst, 0.0f, 0.0f, 0.0f);
+    glm_vec3_set(dst, 0.0, 0.0, 0.0);
     return;
   }
-  glm_vec3_mul_f(dst, v, 1.0f / l);
+  glm_vec3_mul_f(dst, v, 1.0 / l);
 }
 
 FORCE_INLINE void glm_vec3_normalize(vec3 dst)
@@ -329,12 +330,12 @@ FORCE_INLINE void glm_vec3_cross(vec3 dst, vec3 a, vec3 b)
   dst[2] = a[0] * b[1] - a[1] * b[0];
 }
 
-FORCE_INLINE f32 glm_vec3_distance(vec3 a, vec3 b)
+FORCE_INLINE f64 glm_vec3_distance(vec3 a, vec3 b)
 {
-  return sqrtf(glm_pow2(b[0] - a[0] + glm_pow2(b[1] - a[1]) + glm_pow2(b[2] - a[2])));
+  return sqrt(glm_pow2(b[0] - a[0] + glm_pow2(b[1] - a[1]) + glm_pow2(b[2] - a[2])));
 }
 
-FORCE_INLINE void glm_vec3_clamp(vec3 dst, f32 minVal, f32 maxVal)
+FORCE_INLINE void glm_vec3_clamp(vec3 dst, f64 minVal, f64 maxVal)
 {
   dst[0] = glm_clamp(dst[0], minVal, maxVal);
   dst[1] = glm_clamp(dst[1], minVal, maxVal);
@@ -343,7 +344,7 @@ FORCE_INLINE void glm_vec3_clamp(vec3 dst, f32 minVal, f32 maxVal)
 
 FORCE_INLINE void glm_vec3_from_spherical(vec3 dst, spherical src)
 {
-  f32 sinRadius = sinf(src[1]) * src[0];
+  f64 sinRadius = sinf(src[1]) * src[0];
   dst[0] = sinRadius * sinf(src[2]);
   dst[1] = cosf(src[1]) * src[0];
   dst[2] = sinRadius * cosf(src[2]);
@@ -351,12 +352,12 @@ FORCE_INLINE void glm_vec3_from_spherical(vec3 dst, spherical src)
 
 FORCE_INLINE void glm_spherical_from_vec3(spherical dst, vec3 src)
 {
-  f32 radius = glm_vec3_length(src);
-  if (radius == 0.0f) {
-    glm_spherical_set(dst, 0.0f, 0.0f, 0.0f);
+  f64 radius = glm_vec3_length(src);
+  if (radius == 0.0) {
+    glm_spherical_set(dst, 0.0, 0.0, 0.0);
   } else {
     dst[0] = radius;
-    dst[1] = acosf(glm_clamp(src[1] / radius, -1.0f, 1.0f));
+    dst[1] = acosf(glm_clamp(src[1] / radius, -1.0, 1.0));
     dst[2] = atan2f(src[0], src[2]);
   }
 }
@@ -372,7 +373,7 @@ FORCE_INLINE void glm_vec4_copy(vec4 dst, vec4 src)
   dst[3] = src[3];
 }
 
-FORCE_INLINE void glm_vec4_set(vec4 dst, f32 x, f32 y, f32 z, f32 w)
+FORCE_INLINE void glm_vec4_set(vec4 dst, f64 x, f64 y, f64 z, f64 w)
 {
   dst[0] = x;
   dst[1] = y;
@@ -393,7 +394,7 @@ FORCE_INLINE void glm_quaternion_copy(vec4 dst, vec4 src)
   glm_vec4_copy(dst, src);
 }
 
-FORCE_INLINE void glm_quaternion_set(vec4 dst, f32 x, f32 y, f32 z, f32 w)
+FORCE_INLINE void glm_quaternion_set(vec4 dst, f64 x, f64 y, f64 z, f64 w)
 {
   glm_vec4_set(dst, x, y, z, w);
 }
@@ -403,43 +404,43 @@ FORCE_INLINE void glm_quaternion_from_mat4(quaternion dst, mat4 matrix)
   // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
   // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
 
-  f32 m11 = matrix[0][0], m12 = matrix[1][0], m13 = matrix[2][0];
-  f32 m21 = matrix[0][1], m22 = matrix[1][1], m23 = matrix[2][1];
-  f32 m31 = matrix[0][2], m32 = matrix[1][2], m33 = matrix[2][2];
-  f32 trace = m11 + m22 + m33;
-  f32 s;
+  f64 m11 = matrix[0][0], m12 = matrix[1][0], m13 = matrix[2][0];
+  f64 m21 = matrix[0][1], m22 = matrix[1][1], m23 = matrix[2][1];
+  f64 m31 = matrix[0][2], m32 = matrix[1][2], m33 = matrix[2][2];
+  f64 trace = m11 + m22 + m33;
+  f64 s;
 
-  if (trace > 0.0f)
+  if (trace > 0.0)
   {
-    s = 0.5f / sqrtf(trace + 1.0f);
-    dst[3] = 0.25f / s;
+    s = 0.5 / sqrt(trace + 1.0);
+    dst[3] = 0.25 / s;
     dst[0] = (m32 - m23) * s;
     dst[1] = (m13 - m31) * s;
     dst[2] = (m21 - m12) * s;
   }
   else if (m11 > m22 && m11 > m33)
   {
-    s = 2.0f * sqrtf(1.0f + m11 - m22 - m33);
+    s = 2.0 * sqrt(1.0 + m11 - m22 - m33);
     dst[3] = (m32 - m23) / s;
-    dst[0] = 0.25f * s;
+    dst[0] = 0.25 * s;
     dst[1] = (m12 + m21) / s;
     dst[2] = (m13 + m31) / s;
   }
   else if (m22 > m33)
   {
-    s = 2.0f * sqrtf(1.0f + m22 - m11 - m33);
+    s = 2.0 * sqrt(1.0 + m22 - m11 - m33);
     dst[3] = (m13 - m31) / s;
     dst[0] = (m12 + m21) / s;
-    dst[1] = 0.25f * s;
+    dst[1] = 0.25 * s;
     dst[2] = (m23 + m32) / s;
   }
   else
   {
-    s = 2.0f * sqrtf(1.0f + m33 - m11 - m22);
+    s = 2.0 * sqrt(1.0 + m33 - m11 - m22);
     dst[3] = (m21 - m12) / s;
     dst[0] = (m13 + m31) / s;
     dst[1] = (m23 + m32) / s;
-    dst[2] = 0.25f * s;
+    dst[2] = 0.25 * s;
   }
 }
 
@@ -513,7 +514,7 @@ FORCE_INLINE void glm_mat4_transpose_to(mat4 dst, mat4 m)
   dst[3][3] = m[3][3];
 }
 
-FORCE_INLINE void glm_mat4_scale_p(mat4 dst, f32 s)
+FORCE_INLINE void glm_mat4_scale_p(mat4 dst, f64 s)
 {
   dst[0][0] *= s;
   dst[0][1] *= s;
@@ -535,7 +536,7 @@ FORCE_INLINE void glm_mat4_scale_p(mat4 dst, f32 s)
 
 FORCE_INLINE void glm_mat4_scale(mat4 dst, vec3 s)
 {
-  f32 x = s[0], y = s[1], z = s[2];
+  f64 x = s[0], y = s[1], z = s[2];
   dst[0][0] *= x;
 }
 
@@ -548,7 +549,7 @@ FORCE_INLINE void glm_mat4_position(mat4 dst, vec3 position)
 
 FORCE_INLINE void glm_mat4_mul(mat4 dst, mat4 m1, mat4 m2)
 {
-  f32 a00 = m1[0][0], a01 = m1[0][1], a02 = m1[0][2], a03 = m1[0][3],
+  f64 a00 = m1[0][0], a01 = m1[0][1], a02 = m1[0][2], a03 = m1[0][3],
       a10 = m1[1][0], a11 = m1[1][1], a12 = m1[1][2], a13 = m1[1][3],
       a20 = m1[2][0], a21 = m1[2][1], a22 = m1[2][2], a23 = m1[2][3],
       a30 = m1[3][0], a31 = m1[3][1], a32 = m1[3][2], a33 = m1[3][3],
@@ -578,9 +579,9 @@ FORCE_INLINE void glm_mat4_mul(mat4 dst, mat4 m1, mat4 m2)
 
 FORCE_INLINE void glm_mat4_inv(mat4 dst, mat4 mat)
 {
-  f32 t[6];
-  f32 det;
-  f32 a = mat[0][0], b = mat[0][1], c = mat[0][2], d = mat[0][3],
+  f64 t[6];
+  f64 det;
+  f64 a = mat[0][0], b = mat[0][1], c = mat[0][2], d = mat[0][3],
       e = mat[1][0], f = mat[1][1], g = mat[1][2], h = mat[1][3],
       i = mat[2][0], j = mat[2][1], k = mat[2][2], l = mat[2][3],
       m = mat[3][0], n = mat[3][1], o = mat[3][2], p = mat[3][3];
@@ -633,11 +634,11 @@ FORCE_INLINE void glm_mat4_inv(mat4 dst, mat4 mat)
 
 FORCE_INLINE void glm_mat4_from_quaternion(mat4 dst, quaternion q)
 {
-  f32 x = q[0], y = q[1], z = q[2], w = q[3];
-  f32 x2 = x + x, y2 = y + y, z2 = z + z;
-  f32 xx = x * x2, xy = x * y2, xz = x * z2;
-  f32 yy = y * y2, yz = y * z2, zz = z * z2;
-  f32 wx = w * x2, wy = w * y2, wz = w * z2;
+  f64 x = q[0], y = q[1], z = q[2], w = q[3];
+  f64 x2 = x + x, y2 = y + y, z2 = z + z;
+  f64 xx = x * x2, xy = x * y2, xz = x * z2;
+  f64 yy = y * y2, yz = y * z2, zz = z * z2;
+  f64 wx = w * x2, wy = w * y2, wz = w * z2;
 
   dst[0][0] = 1.0f - (yy + zz);
   dst[1][0] = xy - wz;
@@ -670,20 +671,20 @@ FORCE_INLINE void glm_mat4_compose(mat4 dst, vec3 position, vec3 scale, quaterni
   glm_mat4_scale(dst, scale);
 }
 
-FORCE_INLINE void glm_mat4_perspective(mat4 dst, f32 fov, f32 aspect, f32 near, f32 far)
+FORCE_INLINE void glm_mat4_perspective(mat4 dst, f64 fov, f64 aspect, f64 near, f64 far)
 {
-  f32 top = near * tanf(glm_rad(fov) * 0.5f);
-  f32 bottom = -top;
-  f32 left = top * aspect;
-  f32 right = -left;
+  f64 top = near * tanf(glm_rad(fov) * 0.5f);
+  f64 bottom = -top;
+  f64 left = top * aspect;
+  f64 right = -left;
 
-  f32 x = 2.0f * near / (right - left);
-  f32 y = 2.0f * near / (top - bottom);
+  f64 x = 2.0f * near / (right - left);
+  f64 y = 2.0f * near / (top - bottom);
 
-  f32 a = (right + left) / (right - left);
-  f32 b = (top + bottom) / (top - bottom);
-  f32 c = -(far + near) / (far - near);
-  f32 d = -2.0f * far * near / (far - near);
+  f64 a = (right + left) / (right - left);
+  f64 b = (top + bottom) / (top - bottom);
+  f64 c = -(far + near) / (far - near);
+  f64 d = -2.0f * far * near / (far - near);
 
   dst[0][0] = x;
   dst[1][0] = 0.0f;

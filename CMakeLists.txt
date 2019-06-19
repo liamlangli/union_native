@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.12.3)
+cmake_minimum_required(VERSION 3.10.2)
 
 project(rayt LANGUAGES C)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
 
 # pkg config
 find_package(PkgConfig)
@@ -10,10 +12,10 @@ aux_source_directory(src/private PROJECT_PRIVATE_SRC)
 set(PROJECT_SRC src/main.c ${PROJECT_PRIVATE_SRC})
 set(PROJECT_TEST_SRC src/test.c ${PROJECT_PRIVATE_SRC})
 
-include_directories(/usr/local/include src/include)
+include_directories(/usr/include /usr/local/include src/public)
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 target_link_libraries(${PROJECT_NAME} ${WEBP_LDFLAGS})
 
 add_executable(${PROJECT_NAME}_test ${PROJECT_SRC})
-target_link_libraries(${PROJECT_NAME}_test ${WEBP_LDFLAGS})
+target_link_libraries(${PROJECT_NAME}_test ${WEBP_LDFLAGS} m)
