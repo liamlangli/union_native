@@ -2,6 +2,6 @@ Ray Tracing
 ==========
 
 # output
-![preview](./output/2019-6-11.jpg)
+![preview](./output/2019-6-20.jpg)
 
 

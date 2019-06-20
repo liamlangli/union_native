@@ -332,7 +332,7 @@ FORCE_INLINE void glm_vec3_cross(vec3 dst, vec3 a, vec3 b)
 
 FORCE_INLINE f64 glm_vec3_distance(vec3 a, vec3 b)
 {
-  return sqrt(glm_pow2(b[0] - a[0] + glm_pow2(b[1] - a[1]) + glm_pow2(b[2] - a[2])));
+  return sqrt(glm_pow2(b[0] - a[0]) + glm_pow2(b[1] - a[1]) + glm_pow2(b[2] - a[2]));
 }
 
 FORCE_INLINE void glm_vec3_clamp(vec3 dst, f64 minVal, f64 maxVal)

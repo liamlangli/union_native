@@ -7,7 +7,7 @@ Array* array_create()
 {
   Array *arr = (Array*)malloc(sizeof(Array));
   arr->size = 0;
-  arr->capacity = 100;
+  arr->capacity = 100000;
   arr->buffer = (void**)calloc(arr->capacity, sizeof(void*));
   return arr;
 }

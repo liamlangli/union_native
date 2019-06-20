@@ -7,13 +7,18 @@ bool material_diffuse_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
 {
   rgb albedo;
   vec3 unit;
+  MaterialDiffuse *material;
+
+  material = (MaterialDiffuse*)hit->target->material;
+
   sampler_uniform(unit);
   glm_vec3_add(unit, unit, hit->N);
 
   glm_vec3_copy(ray->direction, unit);
   glm_vec3_copy(ray->origin, hit->p);
 
-  glm_vec3_mul(attenuation, hit->target->material->albedo, attenuation);
+  glm_vec3_mul(attenuation, material->super.albedo, attenuation);
+  glm_vec3_mul_f(attenuation, attenuation, GLM_1_PI);
   glm_vec3_add(color, color, attenuation);
   return true;
 }
@@ -23,6 +28,7 @@ bool material_metal_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
   vec3 unit;
   vec3 reflect;
   MaterialMetal *material;
+  rgb albedo;
 
   material = (MaterialMetal*)hit->target->material;
   ray_reflect(reflect, ray->direction, hit->N);
@@ -32,11 +38,12 @@ bool material_metal_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
   glm_vec3_add(unit, unit, reflect);
 
   glm_vec3_copy(ray->direction, unit);
+  glm_vec3_normalize(ray->direction);
   glm_vec3_copy(ray->origin, hit->p);
 
   glm_vec3_mul(attenuation, material->super.albedo, attenuation);
   glm_vec3_add(color, color, attenuation);
-  return (glm_vec3_dot(ray->direction, hit->N) > 0.0);
+  return glm_vec3_dot(ray->direction, hit->N) > 0.0;
 }
 
 bool material_dielectric_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
@@ -68,6 +75,7 @@ bool material_dielectric_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
   {
     ray_reflect(out_direction, ray->direction, hit->N);
     roughness = material->roughness;
+    return false;
   }
 
   sampler_uniform(unit);
@@ -76,6 +84,7 @@ bool material_dielectric_scatter(rgb color, rgb attenuation, Ray *ray, Hit *hit)
   glm_vec3_normalize(ray->direction);
 
   glm_vec3_mul(albedo, material->super.albedo, attenuation);
+  glm_vec3_mul_f(attenuation, attenuation, GLM_1_PI);
   glm_vec3_add(color, color, albedo);
   return true;
 }

@@ -2,11 +2,13 @@
 
 #include <stdlib.h>
 
+const f64 epsilon = 0.000001;
+
 void sphere_hit_func(Ray *ray, Hitable *hitable, Hit *hit)
 {
   Sphere *s = (Sphere*)hitable; 
   f64 t = hit_sphere(ray, s->center, s->radius);
-  if (t > 0.0 && t < hit->t)
+  if (t > epsilon && t < hit->t)
   {
     hit->t = t;
     hit->target = (Hitable*)hitable;
@@ -21,7 +23,7 @@ void plane_hit_func(Ray *ray, Hitable *hitable, Hit *hit)
 {
   Plane *p = (Plane*)hitable;
   f64 t = hit_plane(ray, p->normal, p->offset);
-  if (t > 0.0 && t < hit->t)
+  if (t > epsilon && t < hit->t)
   {
     hit->t = t;
     hit->target = (Hitable*)hitable;
@@ -52,10 +54,10 @@ Hitable *hitable_sphere_create(vec3 center, f64 radius, Material *material)
 
 vec3 sky_u = {1.0, 1.0, 1.0};
 vec3 sky_d = {0.5, 0.7, 1.0};
-const u32 MAX_DEPTH = 10;
+const u32 MAX_DEPTH = 9;
 void scene_traverse(rgb outColor, rgb attenuation, Array *scene, Ray *ray, Hit *hit, u32 depth)
 {
-  if (depth >= MAX_DEPTH)
+  if (depth > MAX_DEPTH)
   {
     return;
   }
@@ -69,15 +71,17 @@ void scene_traverse(rgb outColor, rgb attenuation, Array *scene, Ray *ray, Hit *
     hitable->hit(ray, hitable, hit);
   }
 
-  if (hit->t > 0.0 && hit->t < DBL_MAX && hit->target->material->scatter(color, attenuation, ray, hit))
+  if (hit->t > epsilon && hit->t < 100.0 && hit->target->material->scatter(color, attenuation, ray, hit))
   { 
     glm_vec3_add(outColor, outColor, color);
     scene_traverse(outColor, attenuation, scene, ray, hit, depth + 1);
   }
   else
   {
-    glm_vec3_lerp(color, sky_u, sky_d, hit->t);
-    glm_vec3_mul_f(color, color, pow(0.5, (f64)depth));
-    glm_vec3_add(outColor, outColor, color);
+    if (depth == 0) {
+      glm_vec3_lerp(color, sky_d, sky_u, ray->direction[1]);
+      glm_vec3_mul(color, color, attenuation);
+      glm_vec3_add(outColor, outColor, color);
+    }
   }
 }
