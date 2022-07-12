@@ -4,11 +4,14 @@ use winit::{
     window::WindowBuilder,
 };
 
-use v8;
+use rusty_v8 as v8;
 
 fn main() {
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_decorations(false)
+        .with_transparent(true)
+        .build(&event_loop).unwrap();
 
     let platform = v8::new_default_platform(0, false).make_shared();
     v8::V8::initialize_platform(platform);
