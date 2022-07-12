@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 winit = "0.26.1"
+v8 = "0.45.0"
