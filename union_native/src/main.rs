@@ -4,7 +4,13 @@ use winit::{
     window::WindowBuilder,
 };
 
+use union_gfx::{Device, NativeDevice};
+
 fn main() {
+
+    let device = NativeDevice();
+
+
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     window.set_title(String::from("union native").as_str());
