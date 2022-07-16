@@ -1,16 +1,16 @@
 
 use rusty_v8 as v8;
 
-pub struct NativeDevice<'s> {
-    context: v8::Local<'s, v8::Context>,
-    context_scope: v8::ContextScope<'static, v8::HandleScope<'static>>
+pub struct NativeDevice<'s, 'i> {
+    pub context: v8::Local<'s, v8::Context>,
+    pub context_scope: v8::ContextScope<'i, v8::HandleScope<'s>>
 }
 
 pub trait Device {
     fn version(&self) -> &str;
 }
 
-impl<'s> NativeDevice<'static>
+impl<'s, 'i> NativeDevice<'s, 'i>
 {
     pub fn new(
         isolate_scope: &'s mut v8::HandleScope<'s, ()>,
@@ -26,8 +26,8 @@ impl<'s> NativeDevice<'static>
     }
 }
 
-impl<'s> Device
-for NativeDevice<'s> {
+impl<'s, 'i> Device
+for NativeDevice<'s, 'i> {
     fn version(&self) -> &str {
         "0.0.1"
     }

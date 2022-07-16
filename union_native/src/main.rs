@@ -4,12 +4,11 @@ use winit::{
     window::WindowBuilder,
 };
 
-use union_gfx::{Device, NativeDevice};
+// use union_gfx::{NativeDevice};
 
 fn main() {
 
-    let device = NativeDevice();
-
+    // let device = NativeDevice();
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
