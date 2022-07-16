@@ -16,7 +16,6 @@ fn main() {
     let mut isolate = v8::Isolate::new(v8::CreateParams::default());
     let mut scope = v8::HandleScope::new(&mut isolate);
     let mut engine = ScriptEngine::new(&mut scope);
-    // let device = NativeDevice();
     engine.run_script("ts/test/public/index.js");
 
     let event_loop = EventLoop::new();
