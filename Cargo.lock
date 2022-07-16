@@ -920,6 +920,7 @@ dependencies = [
 name = "union_native"
 version = "0.1.0"
 dependencies = [
+ "rusty_v8",
  "union_gfx",
  "winit",
 ]

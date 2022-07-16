@@ -1,16 +1,23 @@
-use union_gfx::run_script;
+use union_gfx::ScriptEngine;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
-// use union_gfx::{NativeDevice};
+use rusty_v8 as v8;
 
 fn main() {
 
+    let platform = v8::new_default_platform(0, false).make_shared();
+    v8::V8::initialize_platform(platform);
+    v8::V8::initialize();
+
+    let mut isolate = v8::Isolate::new(v8::CreateParams::default());
+    let mut scope = v8::HandleScope::new(&mut isolate);
+    let mut engine = ScriptEngine::new(&mut scope);
     // let device = NativeDevice();
-    run_script("ts/test/public/index.js");
+    engine.run_script("ts/test/public/index.js");
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();

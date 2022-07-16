@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 union_gfx = { path = "../union_gfx" }
 winit = "0.26.1"
+rusty_v8 = "0.32.1"
