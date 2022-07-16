@@ -1,0 +1,10 @@
+{
+  "name": "@union_native/types",
+  "version": "0.0.3",
+  "description": "union_native typescript type",
+  "main": "",
+  "types": "index.d.ts",
+  "repository": "https://github.com/liamlangli/union_native",
+  "author": "liamlangli <lilang8936@gmail.com>",
+  "license": "MIT"
+}

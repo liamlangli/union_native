@@ -1,3 +1,4 @@
+use union_gfx::run_script;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -9,6 +10,7 @@ use winit::{
 fn main() {
 
     // let device = NativeDevice();
+    run_script("ts/test/public/index.js");
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();

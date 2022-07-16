@@ -1,0 +1,19 @@
+{
+  "name": "@union_native/ts",
+  "version": "0.0.1",
+  "description": "union native test script",
+  "main": "index.js",
+  "repository": "https://github.com/liamlangli/union_native",
+  "author": "liamlangli <lilang8936@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "node esbuild.js",
+    "build": "node esbuild.build.js"
+  },
+  "devDependencies": {
+    "@union_native/types": "^0.0.3",
+    "esbuild": "^0.14.49",
+    "typescript": "^4.7.4"
+  }
+}
