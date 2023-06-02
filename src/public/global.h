@@ -10,6 +10,11 @@
 #define EXPORT
 #define FORCE_INLINE static inline
 
+#define MACRO_CONCAT_IMPL(a, b) a##b
+#define MACRO_CONCAT(a, b) MACRO_CONCAT_IMPL(a, b)
+#define MACRO_VAR(name) MACRO_CONCAT(name, __LINE__)
+#define MACRO_PAD(n) char MACRO_VAR(_padding_)[n]
+
 typedef char * string;
 
 typedef unsigned char u8;

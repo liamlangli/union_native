@@ -1,9 +1,17 @@
 {
     "files.associations": {
+        "*.tmsl": "hlsl",
+        "*.shader": "hlsl",
+        "*.inc": "cpp",
+        "*.und": "xml",
+        "*.uss": "plaintext",
+        "*.py": "python",
         "graphics.h": "c",
         "dtype.h": "c",
         "encode.h": "c",
-        "glm_ext.h": "c"
+        "glm_ext.h": "c",
+        "allocator.h": "c",
+        "types.h": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }
