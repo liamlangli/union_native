@@ -11,7 +11,8 @@
         "encode.h": "c",
         "glm_ext.h": "c",
         "allocator.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "iosfwd": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }
