@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-project(rayt LANGUAGES C)
+project(rayt)
+set(CMAKE_C_STANDARD 99)
 
 # if macOS platform
 if(APPLE)
@@ -22,9 +23,32 @@ pkg_check_modules(WEBP REQUIRED libwebp)
 
 aux_source_directory(src/private PRIVATE_SRC)
 aux_source_directory(src/io IO_SRC)
-
-include_directories(/usr/include /usr/local/include src/public src/foundation src/io)
-
 aux_source_directory(src/foundation FOUNDATION_SRC)
-add_executable(${PROJECT_NAME}_new src/main_new.c ${FOUNDATION_SRC})
-target_link_libraries(${PROJECT_NAME}_new)
+
+if(APPLE)
+  aux_source_directory(src/foundation/osx OSX_SRC)
+  list(APPEND FOUNDATION_SRC ${OSX_SRC})
+endif()
+
+include_directories(
+  /usr/include
+  /usr/local/include
+  src/public
+  src/foundation
+  src/io)
+
+if(APPLE)
+  aux_source_directory(src/foundation/osx OSX_SRC)
+  list(APPEND FOUNDATION_SRC ${OSX_SRC})
+
+  #append external
+  list(APPEND FOUNDATION_SRC ${DEVICE_HEADER})
+endif()
+
+add_executable(${PROJECT_NAME} src/main_new.c ${FOUNDATION_SRC})
+target_link_libraries(${PROJECT_NAME})
+
+if(APPLE)
+  target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+  target_link_libraries(${PROJECT_NAME} "-framework Metal")
+endif()

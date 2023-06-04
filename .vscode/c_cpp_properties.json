@@ -5,6 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/public/**",
+                "${workspaceFolder}/src/foundation/**",
+                "${workspaceFolder}/src/foundation/osx/**",
+                "${workspaceFolder}/external/metal-cpp/SingleHeader/**",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
