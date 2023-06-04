@@ -19,7 +19,6 @@ typedef id (*MethodImp)(id, SEL, ...);
 typedef MethodImp (*get_method_imp)(Class, SEL);
 #define method ((get_method_imp)class_getMethodImplementation)
 
-
 // poor man's bindings!
 void NSLog(id format, ...);
 typedef enum NSApplicationActivationPolicy {
@@ -156,6 +155,46 @@ void on_window_notification(id self, SEL cmd, id nsNotification) {
     // AppData *appData = (AppData *) object_getIvar(self, AppDelegate_AppData);
 }
 
+// displayLink: CADisplayLink
+void render_frame(id self, SEL cmd, id displayLink) {
+    // printf("self: %lx\n", (uintptr_t) self);
+    AppData *appData = (AppData *) object_getIvar(self, AppDelegate_AppData);
+    // printf("appData: %lx\n", (uintptr_t) appData);
+
+    id autoreleasePool = msg(cls_msg(NSAutoreleasePool, alloc), init);
+    {
+        // read events
+        id event = App_NextEvent_Imp(appData->app, selNextEvent, INT_MAX, 0, NSDefaultRunLoopMode, 1);
+        if (event) {
+            printf("event: %lx\n", (uintptr_t) event);
+            // TODO!
+        }
+
+        // draw with metal
+        {
+            id drawable = msg(appData->metalLayer, sel("nextDrawable"));
+            // MTLRenderPassDescriptor
+            id renderPassDesc = cls_msg(cls("MTLRenderPassDescriptor"), sel("renderPassDescriptor"));
+            // renderPassDesc.colorAttachments[0]
+            id renderPassColor0 = msg(msg(renderPassDesc, sel("colorAttachments")), sel("objectAtIndexedSubscript:"), 0);
+            msg(renderPassColor0, sel("setTexture:"), msg(drawable, sel("texture")));
+            msg(renderPassColor0, sel("setLoadAction:"), MTLLoadActionClear);
+            msg(renderPassColor0, sel("setClearColor:"), (MTLClearColor) { .red = 0, .green = 104.0/255.0, .blue = 55.0/255.0, .alpha = 1.0 });
+
+            // MTLCommandBuffer
+            id cmdBuffer = msg(appData->cmdQueue, sel("commandBuffer"));
+            id cmdEnc = msg(cmdBuffer, sel("renderCommandEncoderWithDescriptor:"), renderPassDesc);
+            msg(cmdEnc, sel("setRenderPipelineState:"), appData->pipelineState);
+            msg(cmdEnc, sel("setVertexBuffer:offset:atIndex:"), appData->vertexBuffer, 0, 0);
+            msg(cmdEnc, sel("drawPrimitives:vertexStart:vertexCount:"), MTLPrimitiveTypeTriangle, 0, 3, 1);
+            msg(cmdEnc, sel("endEncoding"));
+
+            msg(cmdBuffer, sel("presentDrawable:"), drawable);
+            msg(cmdBuffer, sel("commit"));
+        }
+    }
+    msg(autoreleasePool, drain);
+}
 
 static void init_delegate_class()
 {
@@ -174,8 +213,7 @@ static void init_delegate_class()
 
 void *metal_device_create()
 {
-
-
+    return NULL;
 }
 
 #endif // OS_OSX

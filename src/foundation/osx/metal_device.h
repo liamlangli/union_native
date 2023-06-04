@@ -3,7 +3,7 @@
 
 #ifdef OS_OSX
 
-void* metal_device_create(void* device);
+void* metal_device_create();
 
 #endif
 
