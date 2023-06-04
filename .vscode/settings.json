@@ -12,7 +12,8 @@
         "glm_ext.h": "c",
         "allocator.h": "c",
         "types.h": "c",
-        "iosfwd": "c"
+        "iosfwd": "c",
+        "array.inl": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }

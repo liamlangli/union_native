@@ -18,3 +18,7 @@ static void *internal_alloc(void *allocator, void* old_ptr, u64 old_size, u64 ne
     }
     return new_ptr;
 }
+
+allocator_api *g_allocator = &(allocator_api){
+    .realloc = internal_alloc,
+};

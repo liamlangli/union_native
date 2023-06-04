@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project(rayt LANGUAGES C)
 
+# if macOS platform
+if(APPLE)
+  add_definitions(-DOS_OSX)
+elseif(UNIX)
+  add_definitions(-DOS_LINUX)
+elseif(WIN32)
+  add_definitions(-DOS_WIN)
+endif()
+
 if(UNIX AND NOT APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
 endif()
