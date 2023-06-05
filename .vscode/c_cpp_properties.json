@@ -6,9 +6,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/foundation/osx/**",
-                "${workspaceFolder}/src/foundation/linux/**",
-                "${workspaceFolder}/src/foundation/win/**"
+                "${workspaceFolder}/src/foundation/osx/**"
             ],
             "defines": ["OS_OSX"],
             "compilerPath": "/usr/bin/clang",
@@ -24,9 +22,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/foundation/osx/**",
                 "${workspaceFolder}/src/foundation/linux/**",
-                "${workspaceFolder}/src/foundation/win/**"
+                "${workspaceFolder}/external/glad/include/**"
             ],
             "defines": ["OS_LINUX"],
             "compilerPath": "/usr/bin/clang",

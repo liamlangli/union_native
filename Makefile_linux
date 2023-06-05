@@ -8,9 +8,12 @@ INC=-I/usr/local/include \
 	-Isrc/public \
 	-Isrc/foundation \
 	-Isrc/foundation/linux \
-	-Iexternal/glfw/include
+	-Iexternal/glad/include
 LIBS=-L/usr/local/lib -lglfw -lm
-FOUNDATION_SRC=src/foundation/allocator.c src/foundation/worker.c src/foundation/linux/linux_window.c
+FOUNDATION_SRC=src/foundation/allocator.c \
+	src/foundation/worker.c \
+	src/foundation/linux/linux_window.c \
+	external/glad/src/gles2.c
 
 all: $(FOUNDATION_SRC)
 	mkdir -p build
