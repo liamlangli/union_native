@@ -15,9 +15,12 @@ FOUNDATION_SRC=src/foundation/allocator.c \
 	src/foundation/linux/linux_window.c \
 	external/glad/src/gles2.c
 
-all: $(FOUNDATION_SRC)
+all: collect
 	mkdir -p build
 	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(FOUNDATION_SRC) $(LIBS)
+
+collect:
+	python build_tool/collect_source.py
 
 run: all
 	$(APP)
