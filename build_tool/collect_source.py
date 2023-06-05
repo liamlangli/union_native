@@ -14,7 +14,7 @@ def recursive_traverse(folder, result):
         if os.path.isdir(sub_path):
             recursive_traverse(sub_path, result)
         else:
-            if n.endswith('.cpp') or n.endswith('.c'):
+            if n.endswith('.cpp') or n.endswith('.c') or n.endswith('.m'):
                 result.append(sub_path)
 
 def iterate_traverse(folders, result):
@@ -23,7 +23,7 @@ def iterate_traverse(folders, result):
         for n in nodes:
             sub_path = os.path.join(folder, n)
             if not os.path.isdir(sub_path):
-                if n.endswith('.cpp') or n.endswith('.c'):
+                if n.endswith('.cpp') or n.endswith('.c') or n.endswith('.m'):
                     result.append(sub_path)
 
 if __name__ == '__main__':

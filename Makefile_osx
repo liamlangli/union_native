@@ -5,11 +5,16 @@ APP=build/app
 XCRUN=xcrun -sdk macosx
 ENTRY_POINT=src/main.c
 
-INC=-Isrc/foundation -Isrc/public
-LIBS=-framework Metal -framework Cocoa
+INC=-I/usr/local/include \
+	-Isrc/public \
+	-Isrc/foundation \
+	-Isrc/foundation/osx
+
+LIBS = `pkg-config --cflags --libs glfw3` -L/usr/local/lib -lm
+LIBS += -framework AppKit -framework Metal -framework QuartzCore
 
 all: collect
-	$(CC) $(CCFLAGS) $(INC) ${LIBS} -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES)
+	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
 	$(APP)

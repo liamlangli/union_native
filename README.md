@@ -1,8 +1,5 @@
-Ray Tracing
+unative
 ==========
-
-# output
-![preview](./output/2019-6-20.jpg)
 
 # new version
 use clang as default compiler [OSX & Linux]

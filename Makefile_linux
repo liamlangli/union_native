@@ -10,14 +10,10 @@ INC=-I/usr/local/include \
 	-Isrc/foundation/linux \
 	-Iexternal/glad/include
 LIBS=-L/usr/local/lib -lglfw -lm
-FOUNDATION_SRC=src/foundation/allocator.c \
-	src/foundation/worker.c \
-	src/foundation/linux/linux_window.c \
-	external/glad/src/gles2.c
 
 all: collect
 	mkdir -p build
-	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(FOUNDATION_SRC) $(LIBS)
+	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
 	$(APP)
