@@ -5,7 +5,7 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 
-[Makefile(.*)]
+[Makefile_(.*)]
 charset = utf-8
 indent_style = tab
 indent_size = 4

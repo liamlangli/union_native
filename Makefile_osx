@@ -3,19 +3,16 @@
 CC=clang
 APP=build/app
 XCRUN=xcrun -sdk macosx
-ENTRY_POINT=src/main_new.c
+ENTRY_POINT=src/main.c
 
 INC=-Isrc/foundation -Isrc/public
 LIBS=-framework Metal -framework Cocoa
-FOUNDATION_SRC=src/foundation/allocator.c src/foundation/worker.c
 
-all: $(FOUNDATION_SRC)
-	echo $(UNAME_S)
-	$(CC) $(CCFLAGS) $(INC) ${LIBS} -o $(APP) $(ENTRY_POINT) $(FOUNDATION_SRC)
+all: collect
+	$(CC) $(CCFLAGS) $(INC) ${LIBS} -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES)
 
 run: all
 	$(APP)
-
 
 build/base.metallib: resource/shader/metal/base.metal
 	$(XCRUN) metal -c $^ -o build/base.air
