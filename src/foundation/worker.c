@@ -5,6 +5,6 @@ typedef struct {
     void (*execute)(void *, u64);
     void *data;
     u64 id;
-} Worker;
+} worker_t;
 
 

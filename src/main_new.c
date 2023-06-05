@@ -1,14 +1,10 @@
 #include "simd.h"
 #include "array.inl"
 
-int main() {
-    Float3 a;
+#include "window.h"
 
-    Float3 *points = 0;
-    array_ensure(points, 100, g_allocator);
-    array_push(points, (Float3){.x = 100}, g_allocator);
-
-    printf("%lu\n", array_size(points)); // prints "0"
-
+int main(int argc, char **argv) {
+    window_t *window = platform_window_create("Hello World", 800, 600);
+    printf("create window\n");
     return 0;
 }

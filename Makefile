@@ -1,21 +1,22 @@
-.PHONY: all clean
 
-CC=clang
-APP=build/app
-XCRUN=xcrun -sdk macosx
-ENTRY_POINT=src/main_new.c
+CCFLAGS = -pedantic -std=c11 -g -O0
 
-INC=-Isrc/foundation -Isrc/public
-LIBS=-framework Metal -framework Cocoa
-FOUNDATION_SRC=src/foundation/allocator.c src/foundation/worker.c
+# detect current os and set the correct path
+ifeq ($(OS),Windows_NT)
+	OS=Windows
+else
+	OS=$(shell uname -s)
+endif
 
-all: build/base.metallib $(FOUNDATION_SRC)
-	$(CC) -g -O0 $(INC) ${LIBS} -o $(APP) $(ENTRY_POINT) $(FOUNDATION_SRC)
-
-run: all
-	$(APP)
-
-build/base.metallib: resource/shader/metal/base.metal
-	$(XCRUN) metal -c $^ -o build/base.air
-	$(XCRUN) metallib build/base.air -o $@
-
+ifeq ($(OS),Windows)
+	include Makefile_win
+	CCFLAGS += -DOS_WINDOWS
+else ifeq ($(OS),Linux)
+	include Makefile_linux
+	CCFLAGS += -DOS_LINUX
+else ifeq ($(OS),Darwin)
+	include Makefile_osx
+	CCFLAGS += -DOS_OSX
+else
+	$(error OS not supported)
+endif

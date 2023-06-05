@@ -14,7 +14,9 @@
         "types.h": "c",
         "iosfwd": "c",
         "array.inl": "c",
-        "metal_device.h": "c"
+        "metal_device.h": "c",
+        "glfw3.h": "c",
+        "numbers": "cpp"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }

@@ -9,6 +9,6 @@ typedef struct {
     u64 (*async_dispathch)(u64 (*execute)(void *data, u64 id), void *data, const char* worker_name);
 } job_system_api;
 
-job_system_api* job_system_default();
+job_system_api* job_system_default(void);
 
 #endif

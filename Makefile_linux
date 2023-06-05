@@ -1,0 +1,20 @@
+.PHONY: all clean
+
+CC=clang
+APP=build/app
+ENTRY_POINT=src/main_new.c
+
+INC=-I/usr/local/include \
+	-Isrc/public \
+	-Isrc/foundation \
+	-Isrc/foundation/linux \
+	-Iexternal/glfw/include
+LIBS=-L/usr/local/lib -lglfw -lm
+FOUNDATION_SRC=src/foundation/allocator.c src/foundation/worker.c src/foundation/linux/linux_window.c
+
+all: $(FOUNDATION_SRC)
+	mkdir -p build
+	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(FOUNDATION_SRC) $(LIBS)
+
+run: all
+	$(APP)

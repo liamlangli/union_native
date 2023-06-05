@@ -1,21 +1,40 @@
 {
     "configurations": [
         {
+            "name": "OSX",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/public/**",
+                "${workspaceFolder}/src/foundation/**",
+                "${workspaceFolder}/src/foundation/osx/**",
+                "${workspaceFolder}/src/foundation/linux/**",
+                "${workspaceFolder}/src/foundation/win/**"
+            ],
+            "defines": ["OS_OSX"],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64",
+            "configurationProvider": "vector-of-bool.cmake-tools",
+            "compileCommands": "${workspaceFolder}/Makefile"
+        },
+        {
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
                 "${workspaceFolder}/src/foundation/osx/**",
-                "${workspaceFolder}/external/metal-cpp/SingleHeader/**",
+                "${workspaceFolder}/src/foundation/linux/**",
+                "${workspaceFolder}/src/foundation/win/**"
             ],
-            "defines": [],
+            "defines": ["OS_LINUX"],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
             "configurationProvider": "vector-of-bool.cmake-tools",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+            "compileCommands": "${workspaceFolder}/Makefile"
         }
     ],
     "version": 4

@@ -21,23 +21,23 @@
 
 typedef struct {
     f32 x, y;
-} Float2;
+} float2_t;
 
 typedef struct {
     f32 x, y, z;
-} Float3;
+} float3_t;
 
 typedef struct {
     f32 x, y, z, w;
-} Float4;
+} float4_t;
 
-typedef Float4 Quaternion;
+typedef float4_t quaternion_t;
 
 typedef struct {
     float xx, xy, xz, xw;
     float yx, yy, yz, yw;
     float zx, zy, zz, zw;
     float wx, wy, wz, ww;
-} Float4x4;
+} float4x4_t;
 
 #endif
