@@ -19,7 +19,9 @@ all: collect
 run: all
 	$(APP)
 
-build/base.metallib: resource/shader/metal/base.metal
-	$(XCRUN) metal -c $^ -o build/base.air
-	$(XCRUN) metallib build/base.air -o $@
+collect:
+	mkdir -p build
+	python build_tool/collect_source.py $(PLATFORM)
 
+clear:
+	rm -rf build

@@ -2,8 +2,8 @@
 #define _global_
 
 #include <stdio.h>
+#include <stdbool.h>
 
-#define bool int
 #define false 0
 #define true 1
 

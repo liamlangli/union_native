@@ -16,7 +16,8 @@
         "array.inl": "c",
         "metal_device.h": "c",
         "glfw3.h": "c",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "stdbool.h": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }

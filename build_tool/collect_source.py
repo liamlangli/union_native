@@ -10,7 +10,7 @@ def recursive_traverse(folder, result):
     print("search path: " + folder)
     nodes = os.listdir(folder)
     for n in nodes:
-        sub_path = os.path.join(folder, n)
+        sub_path = os.path.join(folder, n).replace("\\","/")
         if os.path.isdir(sub_path):
             recursive_traverse(sub_path, result)
         else:
@@ -21,7 +21,7 @@ def iterate_traverse(folders, result):
     for folder in folders:
         nodes = os.listdir(folder)
         for n in nodes:
-            sub_path = os.path.join(folder, n)
+            sub_path = os.path.join(folder, n).replace("\\","/")
             if not os.path.isdir(sub_path):
                 if n.endswith('.cpp') or n.endswith('.c') or n.endswith('.m'):
                     result.append(sub_path)

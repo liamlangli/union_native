@@ -12,8 +12,14 @@ INC=-I/usr/local/include \
 LIBS=-L/usr/local/lib -lglfw -lm
 
 all: collect
-	mkdir -p build
 	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
 	$(APP)
+
+collect:
+	mkdir -p build
+	python build_tool/collect_source.py $(PLATFORM)
+
+clear:
+	rm -rf build
