@@ -17,7 +17,9 @@
         "metal_device.h": "c",
         "glfw3.h": "c",
         "numbers": "cpp",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "windows.h": "c",
+        "os_window.h": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled"
 }

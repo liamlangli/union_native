@@ -1,5 +1,5 @@
-#ifndef _worker_h_
-#define _worker_h_
+#ifndef _job_system_h_
+#define _job_system_h_
 
 #include "global.h"
 

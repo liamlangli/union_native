@@ -1,4 +1,4 @@
-#include "linux_window.h"
+#include "os_window.h"
 
 #ifdef OS_LINUX
 

@@ -1,5 +1,7 @@
 #include "osx_window.h"
 
+#ifdef OS_OSX
+
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
@@ -89,3 +91,5 @@ void platform_window_destroy(window_t *window) {
     free(metal_device);
     free(window);
 }
+
+#endif
