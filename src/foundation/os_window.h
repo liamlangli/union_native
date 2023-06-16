@@ -60,7 +60,7 @@ enum OS_WINDOW_STYLE {
 };
 
 extern window_t* platform_window_create(const char* title, rect_t rect);
-extern void platform_window_update(window_t* window);
+extern bool platform_window_update(window_t* window);
 extern void platform_window_destroy(window_t* window);
 
 #endif // _window_h_

@@ -8,7 +8,7 @@ endif
 
 ifeq ($(OS),Windows)
 	include build_tool/win/Makefile
-	CCFLAGS += -DOS_WINDOWS
+	CCFLAGS = -pedantic -std=c11 -g -O0 -DOS_WINDOWS
 	PLATFORM=OS_WINDOWS
 else ifeq ($(OS),Linux)
 	include build_tool/linux/Makefile
