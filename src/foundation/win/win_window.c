@@ -41,7 +41,7 @@ static void __glfw_init(void) {
     VkInstanceCreateInfo instance_creation_info     = (VkInstanceCreateInfo){ 0 };
     instance_creation_info.sType                    = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instance_creation_info.pNext                    = NULL;
-    instance_creation_info.flags                    = 0;
+    instance_creation_info.flags                    = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     instance_creation_info.pApplicationInfo         = &application_info;
     instance_creation_info.enabledExtensionCount    = instance_extension_count;
     instance_creation_info.ppEnabledExtensionNames  = instance_extension_buffer;
@@ -57,11 +57,12 @@ static void __glfw_init(void) {
 
     u32 physical_device_count = 0;
     VkPhysicalDevice physical_devices[4];
-    result = vkEnumeratePhysicalDevices(instance, &physical_device_count, physical_devices);
+    result = vkEnumeratePhysicalDevices(instance, &physical_device_count, NULL);
     if (physical_device_count == 0 || result != VK_SUCCESS) {
         printf("failed to find GPUs with vulkan supported.\n");
         exit(2);
     }
+    vkEnumeratePhysicalDevices(instance, &physical_device_count, physical_devices);
 
     VkPhysicalDeviceProperties physical_device_properties[4];
     u32 discrete_gpu_list[4];
