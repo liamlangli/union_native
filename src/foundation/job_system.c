@@ -6,5 +6,3 @@ typedef struct {
     void *data;
     u64 id;
 } worker_t;
-
-
