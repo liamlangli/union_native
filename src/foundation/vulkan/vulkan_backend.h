@@ -1,6 +1,8 @@
 #ifndef _vulkan_backend_h_
 #define _vulkan_backend_h_
 
+#if defined(OS_WINDOWS) || defined(OS_LINUX)
+
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -96,4 +98,5 @@ void vk_delete_empty_fences(VkFence **fences);
 void vk_present_image(VkDevice *device, GLFWwindow *native_window, VkCommandBuffer *command_buffer, VkFence *front_fence, VkFence *bacK_fence, VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain, VKqueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames);
 void test_loop(GLFWwindow *native_window);
 
+#endif // OS_WINDOWS or OS_LINUX
 #endif

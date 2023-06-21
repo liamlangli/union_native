@@ -6,25 +6,18 @@ import os
 import sys
 
 
-def recursive_traverse(folder, result):
+def recursive_traverse(folder, source_files, include_folders, MacOSX=False):
     print("search path: " + folder)
     nodes = os.listdir(folder)
     for n in nodes:
         sub_path = os.path.join(folder, n).replace("\\","/")
         if os.path.isdir(sub_path):
-            recursive_traverse(sub_path, result)
+            recursive_traverse(sub_path, source_files, include_folders, MacOSX)
         else:
-            if n.endswith('.cpp') or n.endswith('.c') or n.endswith('.m'):
-                result.append(sub_path)
-
-def iterate_traverse(folders, result):
-    for folder in folders:
-        nodes = os.listdir(folder)
-        for n in nodes:
-            sub_path = os.path.join(folder, n).replace("\\","/")
-            if not os.path.isdir(sub_path):
-                if n.endswith('.cpp') or n.endswith('.c') or n.endswith('.m'):
-                    result.append(sub_path)
+            if n.endswith('.cpp') or n.endswith('.c') or (MacOSX and n.endswith('.m')):
+                source_files.append(sub_path)
+            elif n.endswith('.h'):
+                include_folders.add(os.path.dirname(sub_path))
 
 if __name__ == '__main__':
     # read first input arguments
@@ -36,22 +29,30 @@ if __name__ == '__main__':
 
     folders = []
     if PLATFORM == "OS_WINDOWS":
-        folders = ["src/foundation", "src/foundation/win"]
+        folders = ["src/foundation"]
     elif PLATFORM == "OS_LINUX":
-        folders = ["src/foundation", "src/foundation/linux"]
+        folders = ["src/foundation"]
     elif PLATFORM == "OS_OSX":
-        folders = ["src/foundation", "src/foundation/osx"]
+        folders = ["src/foundation"]
     else:
         print("unknown platform")
         exit(1)
 
-    result = []
-    iterate_traverse(folders, result)
+    source_files = []
+    include_folders = set()
+    include_folders.add("src/public")
+    for folder in folders:
+        include_folders.add(folder)
+        recursive_traverse(folder, source_files, include_folders, PLATFORM == "OS_OSX")
+
     print("====")
-    print("source files: \n" + '\n'.join(result))
+    print("source files: \n" + '\n'.join(source_files))
+    print("====")
+    print("include folders: \n" + '\n'.join(include_folders))
     print("====")
 
     with open(OUTPUT_FILENAME, 'w') as f:
         f.write("SOURCE_FILES = \\\n")
-        for r in result:
-            f.write(r + " \\\n")
+        f.write(" \\\n".join(source_files))
+        f.write("\nSOURCE_INC = \\\n-I")
+        f.write("\\\n-I".join(include_folders))

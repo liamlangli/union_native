@@ -1,6 +1,6 @@
 #include "vulkan_backend.h"
 
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS) || defined(OS_LINUX)
 
 VkInstance vk_create_instance() {
     VkApplicationInfo app_info = {
@@ -249,6 +249,5 @@ VkSurfaceKHR vk_create_surface(GLFWwindow* native_window, VkInstance *instance) 
 
 void vk_delete_surface(VkSurfaceKHR *surface, VkInstance *instance);
 VkBool32 vk_get_surface_supported(VkSurfaceKHR *surface, VkPhysicalDevice *physical_device, u32 graphics_queue_family_index);
-
 
 #endif

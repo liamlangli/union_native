@@ -5,10 +5,7 @@ APP=build/app
 XCRUN=xcrun -sdk macosx
 ENTRY_POINT=src/main.c
 
-INC=-I/usr/local/include \
-	-Isrc/public \
-	-Isrc/foundation \
-	-Isrc/foundation/osx
+INC=-I/usr/local/include $(SOURCE_INC)
 
 LIBS = `pkg-config --cflags --libs glfw3` -L/usr/local/lib -lm
 LIBS += -framework AppKit -framework Metal -framework QuartzCore

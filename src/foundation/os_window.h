@@ -59,8 +59,8 @@ enum OS_WINDOW_STYLE {
     OS_WINDOW_STYLE_BORDERLESS = 8
 };
 
-extern window_t* platform_window_create(const char* title, rect_t rect);
-extern bool platform_window_update(window_t* window);
-extern void platform_window_destroy(window_t* window);
+window_t* platform_window_create(const char* title, rect_t rect);
+bool platform_window_update(window_t* window);
+void platform_window_destroy(window_t* window);
 
 #endif // _window_h_

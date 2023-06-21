@@ -1,5 +1,7 @@
 #include "os_window.h"
 
+#if defined(OS_WINDOWS)
+
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -403,3 +405,5 @@ void platform_window_destroy(window_t *window) {
     glfwDestroyWindow(window->native_window);
     window->native_window = 0;
 }
+
+#endif

@@ -25,7 +25,8 @@
         "stdlib.h": "c",
         "math.h": "c",
         "global.h": "c",
-        "vulkan.h": "c"
+        "vulkan.h": "c",
+        "vulkan_backend.h": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled",
     "cmake.configureOnOpen": true
