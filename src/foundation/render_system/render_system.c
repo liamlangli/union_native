@@ -22,6 +22,10 @@ void *render_system_get_gpu_device(void) {
     return g_render_system.gpu_device;
 }
 
+void render_system_present(void) {
+    metal_present();
+}
+
 #else // OS_WINDOWS or OS_LINUX
 
 void render_system_init(void) {

@@ -42,41 +42,17 @@ window_t *platform_window_create(const char* title, rect_t rect) {
 }
 
 bool platform_window_update(window_t *window) {
-    // MTLClearColor color = MTLClearColorMake(0, 0, 0, 1);
-    // metal_device_t *metal_device = window->native_handle;
-    // id<MTLCommandQueue> queue = metal_device->queue;
-    // CAMetalLayer *swapchain = metal_device->swapchain;
+    bool window_request_closed = glfwWindowShouldClose(window->native_window);
+    glfwPollEvents();
 
-    // while (!glfwWindowShouldClose(metal_device->native_window)) {
-    //     glfwPollEvents();
-    //     @autoreleasepool {
-    //         color.red = (color.red > 1.0) ? 0 : color.red + 0.01;
-
-    //         id<CAMetalDrawable> surface = [swapchain nextDrawable];
-
-    //         MTLRenderPassDescriptor *pass = [MTLRenderPassDescriptor renderPassDescriptor];
-    //         pass.colorAttachments[0].clearColor = color;
-    //         pass.colorAttachments[0].loadAction  = MTLLoadActionClear;
-    //         pass.colorAttachments[0].storeAction = MTLStoreActionStore;
-    //         pass.colorAttachments[0].texture = surface.texture;
-
-    //         id<MTLCommandBuffer> buffer = [queue commandBuffer];
-    //         id<MTLRenderCommandEncoder> encoder = [buffer renderCommandEncoderWithDescriptor:pass];
-    //         [encoder endEncoding];
-    //         [buffer presentDrawable:surface];
-    //         [buffer commit];
-    //     }
-    // }
-    return true;
+    return window_request_closed ? false : true;
 }
 
 void platform_window_destroy(window_t *window) {
-    // glfwDestroyWindow(window->native_handle);
-    // glfwTerminate();
+    glfwDestroyWindow(window->native_window);
+    glfwTerminate();
 
-    // metal_device_t *metal_device = window->native_handle;
-    // free(metal_device);
-    // free(window);
+    free(window);
 }
 
 #endif
