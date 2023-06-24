@@ -3,6 +3,8 @@
 
 #include "os_window.h"
 #include "render_system.h"
+#include "foundation/os.h"
+
 
 int main(int argc, char **argv) {
     render_system_init();

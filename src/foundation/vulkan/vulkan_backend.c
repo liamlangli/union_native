@@ -1,6 +1,6 @@
-#include "vulkan_backend.h"
-
 #if defined(OS_WINDOWS) || defined(OS_LINUX)
+
+#include "vulkan_backend.h"
 
 VkInstance vk_create_instance() {
     VkApplicationInfo app_info = {

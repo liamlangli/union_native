@@ -3,6 +3,7 @@
 
 #include "global.h"
 #include "allocator.h"
+#include "types.h"
 
 typedef struct file_o {
     u64 handle;
@@ -24,7 +25,7 @@ typedef struct os_file_io_api {
     bool (*write)(file_o file, const void *buffer, u64 size);
     i64 (*read_at)(file_o file, u64 offset, void *buffer, u64 size);
     bool (*write_at)(file_o file, u64 offset, const void *buffer, u64 size);
-    void (*set_last_modified_time)(const char *path, file_time_o time);
+    void (*set_last_modified_time)(file_o file, file_time_o time);
     void (*close)(file_o file);
 } os_file_io_api;
 
@@ -82,9 +83,9 @@ typedef struct socket_address_t {
 #define SOCKET_IP_LOCALHOST {1, 0, 0, 127}
 #define SOCKET_IP_BROADCAST {255, 255, 255, 255}
 
-enum os_socket_oype {
-    OS_socket_oYPE_TCP = 1,
-    OS_socket_oYPE_UDP = 2,
+enum os_socket_type {
+    OS_SOCKET_TYPE_TCP = 1,
+    OS_SOCKET_TYPE_UDP = 2,
 };
 
 enum os_socket_error {
@@ -114,7 +115,7 @@ enum os_socket_option {
 typedef struct os_socket_api {
     void (*init)(void);
     void (*shutdown)(void);
-    socket_o (*socket)(enum os_socket_oype type);
+    socket_o (*socket)(enum os_socket_type type);
     void (*set_option)(socket_o socket, enum os_socket_option option, bool enabled);
     bool (*bind)(socket_o socket, socket_address_t address);
     bool (*getsockname)(socket_o socket, socket_address_t *address);
@@ -128,7 +129,7 @@ typedef struct os_socket_api {
     bool (*close)(socket_o socket);
 
     u32 (*getaddrinfo)(const char *host, const char *service, socket_address_t *addresses, u32 size);
-    void *(getaddrinfo_async)(const char *host, const char *service);
+    // void *(*getaddrinfo_async)(const char *host, const char *service);
     enum os_socket_getaddrinfo (*getaddrinfo_result)(void *request, socket_address_t *addresses, u32 size);
 } os_socket_api;
 
@@ -166,16 +167,16 @@ typedef struct fiber_o {
 
 typedef struct os_thread_api {
     // critical sections
-    void (*create_critial_section)(critical_section_o *cs);
-    void (*enter_critial_section)(critical_section_o *cs);
-    void (*leave_critial_section)(critical_section_o *cs);
-    void (*destroy_critial_section)(critical_section_o *cs);
+    void (*create_critical_section)(critical_section_o *cs);
+    void (*enter_critical_section)(critical_section_o *cs);
+    void (*leave_critical_section)(critical_section_o *cs);
+    void (*destroy_critical_section)(critical_section_o *cs);
 
     // semaphores
-    semaphore_o (*create_semaphore)(u32 initial_count);
+    semaphore_o (*semaphore_create)(u32 initial_count);
     void (*semaphore_add)(semaphore_o sem, u32 count);
     void (*semaphore_wait)(semaphore_o sem);
-    void (*semaphore_poll)(semaphore_o sem);
+    bool (*semaphore_poll)(semaphore_o sem);
     void (*semaphore_destroy)(semaphore_o sem);
 
     // threads
@@ -203,12 +204,24 @@ typedef struct os_system_api {
     bool (*open_file)(const char *file);
 } os_system_api;
 
+typedef struct os_time_api {
+    clock_o (*now)(void);
+    f64 (*delta)(clock_o from, clock_o to);
+    clock_o (*add)(clock_o from, f64 delta);
+
+    file_time_o (*file_time_now)(void);
+    f64 (*file_time_delta)(file_time_o from, file_time_o to);
+} os_time_api;
+
 struct os_api {
     struct os_file_io_api *file_io;
     struct os_file_system_api *file_system;
     struct os_socket_api *socket;
     struct os_thread_api *thread;
+    struct os_time_api *time;
     struct os_system_api *system;
 };
+
+extern struct os_api *os_api;
 
 #endif // _os_h_

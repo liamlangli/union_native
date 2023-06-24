@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     folders = []
     if PLATFORM == "OS_WINDOWS":
-        folders = ["src/foundation"]
+        folders = ["src/foundation", "src/ui"]
     elif PLATFORM == "OS_LINUX":
         folders = ["src/foundation"]
     elif PLATFORM == "OS_OSX":

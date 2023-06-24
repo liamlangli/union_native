@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/foundation/osx/**"
+                "${workspaceFolder}/src/foundation/metal/**",
+                "${workspaceFolder}/src/ui/**",
             ],
             "defines": ["OS_OSX"],
             "compilerPath": "/usr/bin/clang",
