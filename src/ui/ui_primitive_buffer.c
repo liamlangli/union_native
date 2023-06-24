@@ -76,5 +76,45 @@ static inline enum ui_clip_result clip_rect(rect_t rect, rect_t clip) {
 }
 
 static inline rect_t rect_intersect(rect_t r1, rect_t r2) {
-    
+    float l = MACRO_MAX(r1.x, r2.x);
+    float r = MACRO_MIN(r1.x + r1.w, r2.x + r2.w);
+    float t = MACRO_MAX(r1.y, r2.y);
+    float b = MACRO_MIN(r1.y + r1.h, r2.y + r2.h);
+    if (l >= r || t >= b) {
+        return (rect_t){0};
+    }
+    return (rect_t){.x = l, .y = t, .w = r - l, .h = b - t};
+}
+
+static inline u32 prev(u32 i, u32 n, bool closed) {
+    if (i == UINT32_MAX)
+        return UINT32_MAX;
+    else if (i > 0)
+        return i - 1;
+    else if (!closed)
+        return UINT32_MAX;
+    else
+        return n - 1;
+}
+
+static inline u32 next(u32 i, u32 n, bool closed) {
+    if (i == UINT32_MAX)
+        return UINT32_MAX;
+    else if (i + 1 < n)
+        return i + 1;
+    else if (!closed)
+        return UINT32_MAX;
+    else
+        return 0;
+}
+
+typedef struct polyline_t {
+    ui_style_t style;
+    float2_t *points;
+    f32 width, feather;
+} polyline_t;
+
+// struct 
+static u32 stroke_polyline(const polyline_t *polyline) {
+
 }
