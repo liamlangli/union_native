@@ -130,14 +130,14 @@ static polyline_t __polyline;
 
 
 // struct 
-static u32 stroke_polyline() {
+static u32 stroke_polyline(void) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     u32 num_point = __polyline.num_point;
-    
+
 }
 
-static u32 fill_polyline() {
+static u32 fill_polyline(void) {
 
 }
 

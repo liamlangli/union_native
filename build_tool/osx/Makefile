@@ -8,6 +8,7 @@ ENTRY_POINT=src/main.c
 INC=-I/usr/local/include $(SOURCE_INC)
 
 LIBS = `pkg-config --cflags --libs glfw3` -L/usr/local/lib -lm
+LIBS += -Lexternal/quickjs/lib/osx -lquickjs
 LIBS += -framework AppKit -framework Metal -framework QuartzCore
 
 all: collect

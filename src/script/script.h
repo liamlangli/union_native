@@ -14,4 +14,6 @@ typedef struct script_api {
     void (*eval_file)(script_context_t *context, const char *filename);
 } script_api;
 
+extern script_api* script;
+
 #endif _script_h_

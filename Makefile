@@ -23,3 +23,5 @@ else
 endif
 
 -include build/Makefile_source
+
+INC += -Iexternal/quickjs/include
