@@ -1,5 +1,5 @@
-#ifndef _global_
-#define _global_
+#ifndef _global_h_
+#define _global_h_
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -22,6 +22,8 @@ typedef unsigned long u64;
 typedef long i64;
 typedef float f32;
 typedef double f64;
+
+#define EPSILON 0.00001f
 
 #define MACRO_CONCAT_IMPL(a, b) a##b
 #define MACRO_CONCAT(a, b) MACRO_CONCAT_IMPL(a, b)
