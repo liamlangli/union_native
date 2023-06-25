@@ -134,11 +134,11 @@ static u32 stroke_polyline(void) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     u32 num_point = __polyline.num_point;
-
+    return 0;
 }
 
 static u32 fill_polyline(void) {
-
+    return 0;
 }
 
 static void round_rect_corner(float2_t *points, u32 offset, float2_t center, float2_t c, float2_t s) {

@@ -25,3 +25,4 @@ endif
 -include build/Makefile_source
 
 INC += -Iexternal/quickjs/include
+CCFLAGS += -DSCRIPT_BACKEND_JS

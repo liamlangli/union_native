@@ -18,7 +18,7 @@ VULKAN_INC=-I"D:/VulkanSDK/1.3.250.0/Include"
 VULKAN_LIB=-L"D:/VulkanSDK/1.3.250.0/Lib" -l"vulkan-1"
 
 QUICKJS_INC=-I"external/quickjs/include"
-QUICKJS_LIB=-L"external/quickjs/lib/mingw_w64" -lquickjs
+QUICKJS_LIB=-L"external/quickjs/lib/mingw_w64" -lquickjs -lpthread
 
 INC +=-Isrc -Isrc/foundation -Isrc/public $(MINGW_INC)
 LIBS = $(MINGW_LIB)

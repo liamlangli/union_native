@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-VkInstance vk_create_instance() {
+VkInstance vk_create_instance(void) {
     VkApplicationInfo app_info = {
         VK_STRUCTURE_TYPE_APPLICATION_INFO,
         VK_NULL_HANDLE,
@@ -71,7 +71,7 @@ u32 vk_get_best_physical_device_index(VkPhysicalDevice *physical_devices, u32 ph
     u32 *integrated_gpu_indices = (uint32_t *)malloc(physical_device_number * sizeof(uint32_t));
 
     for(uint32_t i = 0; i < physical_device_number; i++){
-        vkGetPhysicalDeviceProperties(physical_devices[i], &physical_device_mem_props[i]);
+        vkGetPhysicalDeviceProperties(physical_devices[i], &physical_device_props[i]);
         vkGetPhysicalDeviceMemoryProperties(physical_devices[i], &physical_device_mem_props[i]);
 
         if(physical_device_props[i].deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
@@ -246,7 +246,9 @@ void vk_delete_device(VkDevice *device) {
 }
 
 VkSurfaceKHR vk_create_surface(GLFWwindow* native_window, VkInstance *instance) {
-
+    VkSurfaceKHR surface;
+    glfwCreateWindowSurface(*instance, native_window, VK_NULL_HANDLE, &surface);
+    return surface;
 }
 
 void vk_delete_surface(VkSurfaceKHR *surface, VkInstance *instance);

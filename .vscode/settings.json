@@ -28,7 +28,10 @@
         "global.h": "c",
         "vulkan.h": "c",
         "vulkan_backend.h": "c",
-        "ui.h": "c"
+        "ui.h": "c",
+        "quickjs.h": "c",
+        "script.h": "c",
+        "xlocale": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled",
     "cmake.configureOnOpen": true

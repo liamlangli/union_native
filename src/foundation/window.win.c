@@ -394,8 +394,7 @@ window_t *platform_window_create(const char *title, rect_t rect) {
 
 bool platform_window_update(window_t *window) {
     glfwPollEvents();
-
-    return !glfwWindowShouldClose(window);
+    return !glfwWindowShouldClose(window->native_window);
 }
 
 void platform_window_destroy(window_t *window) {

@@ -17,7 +17,7 @@ enum VK_QUEUE_MODE {
     INVALID_QUEUE_MODE = 2
 };
 
-VkInstance vk_create_instance();
+VkInstance vk_create_instance(void);
 void vk_destroy_instance(VkInstance *instance);
 
 u32 vk_get_physical_device_number(VkInstance *instance);
@@ -72,8 +72,8 @@ VkPipelineLayout vk_create_pipeline_layout(VkDevice *device);
 void vk_delete_pipeline_layout(VkDevice *device, VkPipelineLayout *layout);
 VkPipelineShaderStageCreateInfo vk_configure_vertex_shader_stage_create_info(VkShaderModule *module, const char *entry_name);
 VkPipelineShaderStageCreateInfo vk_configure_fragment_shader_stage_create_info(VkShaderModule *module, const char *entry_name);
-VkPipelineVertexInputStateCreateInfo vk_configure_vertex_input_state_create_info();
-VkPipelineInputAssemblyStateCreateInfo vk_configure_input_assembly_state_create_info();
+VkPipelineVertexInputStateCreateInfo vk_configure_vertex_input_state_create_info(void);
+VkPipelineInputAssemblyStateCreateInfo vk_configure_input_assembly_state_create_info(void);
 VkViewport vk_configure_viewport(VkExtent2D *extent);
 VkRect2D vk_configure_scissor(VkExtent2D *extent, u32 left, u32 right, u32 up, u32 down);
 VkPipelineViewportStateCreateInfo vk_configure_viewport_state_create_info(VkViewport *viewport, VkRect2D *scissor);
