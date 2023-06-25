@@ -5,14 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Launch",
+            "name": "(lldb) Launch [Windows]",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/app.exe",
             "args": [],
             "cwd": "${fileDirname}",
             "console": "externalTerminal"
+        },
+        {
+            "name": "(lldb) Launch [OSX|Linux]",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/app",
+            "args": [],
+            "cwd": "${fileDirname}",
+            "console": "externalTerminal"
         }
-
     ]
 }

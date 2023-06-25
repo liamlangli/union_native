@@ -1,4 +1,4 @@
-#include "global.h"
+#include "public/global.h"
 
 #if defined(_MSC_VER) && !defined(__clang__)
 

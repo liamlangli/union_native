@@ -1,8 +1,8 @@
 #ifndef _array_h_
 #define _array_h_
 
-#include "global.h"
-#include "allocator.h"
+#include "public/global.h"
+#include "foundation/allocator.h"
 
 #include <string.h>
 

@@ -1,27 +1,39 @@
 #include "render_system.h"
 
 #if defined(OS_OSX)
-#include "metal_backend.h"
+#include "component/render_system/metal/metal_backend.h"
 #else // OS_WINDOWS or OS_LINUX
-#include "foundation/vulkan/vulkan_backend.h"
+#include "component/render_system/vulkan/vulkan_backend.h"
 #endif
 
+#include "component/os_window/os_window.h"
+
 #if defined(OS_OSX)
+
+typedef struct swapchain_o {
+    metal_swapchain_t *swapchain;
+} swapchain_o;
+
 typedef struct render_system_t {
-    void *gpu_device;
+    metal_device_t *gpu_device;
 } render_system_t;
+
 static render_system_t g_render_system;
 
 void render_system_init(void) {
     g_render_system.gpu_device = metal_create_default_device();
 }
 
-void *render_system_get_gpu_device(void) {
-    return g_render_system.gpu_device;
+void render_system_swapchain_present(swapchain_o *swapchain) {
+    metal_present(swapchain->swapchain);
 }
 
-void render_system_present(void) {
-    metal_present();
+swapchain_o* render_system_create_swapchain(window_t *window)
+{
+    GLFWwindow *native_window = (GLFWwindow*)platform_window_get_native_handle(window);
+    swapchain_o *swapchain = malloc(sizeof(swapchain_o));
+    swapchain->swapchain = metal_create_swapchain(g_render_system.gpu_device, native_window);
+    return swapchain;
 }
 
 void render_system_terminate(void) {
@@ -73,10 +85,11 @@ void render_system_init(void) {
     vk_delete_queue_family_properties(queue_family_props);
 }
 
-swapchain_o* render_system_create_swapchain(GLFWwindow *window)
+swapchain_o* render_system_create_swapchain(window_t *window)
 {
+    GLFWwindow *native_window = (GLFWwindow*)window;
     swapchain_o *swapchain = (swapchain_o*)malloc(sizeof(swapchain_o));
-    VkSurfaceKHR surface = vk_create_surface(window, &g_render_system.instance);
+    VkSurfaceKHR surface = vk_create_surface(native_window, &g_render_system.instance);
     VkBool32 surface_supported = vk_get_surface_supported(&surface, &g_render_system.best_physical_device, g_render_system.best_physical_device_index);
     if (!surface_supported) {
         printf("vulkan surface not supported!\n");
@@ -92,7 +105,7 @@ void *render_system_get_gpu_device(void) {
     return NULL;
 }
 
-void render_system_present(void) {
+void render_system_swapchain_present(swapchain_o *swapchain) {
     
 }
 

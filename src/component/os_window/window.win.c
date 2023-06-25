@@ -43,6 +43,10 @@ window_t *platform_window_create(const char *title, rect_t rect) {
     return win;
 }
 
+void *platform_window_get_native_window(window_t *window) {
+    return (void*)window->native_window;
+}
+
 bool platform_window_update(window_t *window) {
     glfwPollEvents();
     return !glfwWindowShouldClose(window->native_window);

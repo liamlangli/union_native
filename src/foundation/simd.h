@@ -1,8 +1,8 @@
 #ifndef _simd_h_
 #define _simd_h_
 
-#include "global.h"
-#include "math.h"
+#include "public/global.h"
+#include <math.h>
 #include <float.h>
 
 #define SIMD_E 2.71828182845904523536028747135266250        /* e           */

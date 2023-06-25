@@ -1,7 +1,7 @@
 #ifndef _job_system_h_
 #define _job_system_h_
 
-#include "global.h"
+#include "public/global.h"
 
 typedef struct {
     // dispatch 

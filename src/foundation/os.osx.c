@@ -4,7 +4,6 @@
 #include "array.inl"
 #include "allocator.h"
 
-
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>

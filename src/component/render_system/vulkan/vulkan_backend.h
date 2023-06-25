@@ -9,7 +9,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "types.h"
+#include "foundation/types.h"
 
 enum VK_QUEUE_MODE {
     SINGLE_QUEUE_MODE = 0,

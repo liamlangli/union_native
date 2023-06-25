@@ -6,6 +6,13 @@
 #define GLFW_INCLUDE_ES32 
 #include "GLFW/glfw3.h"
 
+typedef struct window_t {
+    GLFWwindow* native_handle;
+    string_t title;
+    int width;
+    int height;
+} window_t;
+
 window_t* platform_window_create(const char* title, int width, int height)
 {
     glfwInit();

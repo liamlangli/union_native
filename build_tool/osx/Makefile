@@ -5,7 +5,7 @@ APP=build/app
 XCRUN=xcrun -sdk macosx
 ENTRY_POINT=src/main.c
 
-INC=-I/usr/local/include $(SOURCE_INC)
+INC += -Isrc
 
 LIBS = `pkg-config --cflags --libs glfw3` -L/usr/local/lib -lm
 LIBS += -Lexternal/quickjs/lib/osx -lquickjs

@@ -1,7 +1,7 @@
-#ifndef _window_h_
-#define _window_h_
+#ifndef _os_window_h_
+#define _os_window_h_
 
-#include "types.h"
+#include "foundation/types.h"
 
 typedef struct window_t window_t;
 
@@ -60,7 +60,8 @@ enum OS_WINDOW_STYLE {
 };
 
 window_t* platform_window_create(const char* title, rect_t rect);
+void* platform_window_get_native_handle(window_t* window);
 bool platform_window_update(window_t* window);
 void platform_window_destroy(window_t* window);
 
-#endif // _window_h_
+#endif // _os_window_h_

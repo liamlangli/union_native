@@ -1,7 +1,7 @@
 #ifndef _script_h_
 #define _script_h_
 
-#include "global.h"
+#include "public/global.h"
 
 #if defined(SCRIPT_BACKEND_JS)
 #include "quickjs.h"

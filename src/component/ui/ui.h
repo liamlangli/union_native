@@ -1,7 +1,7 @@
 #ifndef _ui_h_
 #define _ui_h_
 
-#include "types.h"
+#include "foundation/types.h"
 
 typedef struct ui_style_t {
     f32 line_width;

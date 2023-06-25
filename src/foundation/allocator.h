@@ -1,8 +1,8 @@
 #ifndef _allocator_h_
 #define _allocator_h_
 
-#include "global.h"
-#include "types.h"
+#include "public/global.h"
+#include "foundation/types.h"
 
 typedef struct {
     void* allocator;

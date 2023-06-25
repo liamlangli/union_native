@@ -3,12 +3,17 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
-
 typedef struct metal_device_t {
     id<MTLDevice> gpu;
     id<MTLCommandQueue> queue;
     CAMetalLayer *swapchain;
 } metal_device_t;
+
+typedef struct metal_swapchain_t {
+    NSWindow *nswindow;
+    CAMetalLayer *layer;
+} metal_swapchain_t;
+
 static metal_device_t *g_metal_device;
 
 typedef struct metal_library_t {
@@ -30,12 +35,18 @@ metal_device_t* metal_create_default_device(void) {
     return metal_device;
 }
 
-GLFWwindow* metal_create_window(const char* title, rect_t rect) {
-    GLFWwindow *native_window = glfwCreateWindow((i32)rect.w, (i32)rect.h, title, NULL, NULL);
+metal_swapchain_t* metal_create_swapchain(metal_device_t* device, GLFWwindow* native_window) {
+    metal_swapchain_t *swapchain = (metal_swapchain_t*)malloc(sizeof(metal_swapchain_t));
+    swapchain->layer = g_metal_device->swapchain;
     NSWindow *nswindow = glfwGetCocoaWindow(native_window);
     nswindow.contentView.layer = g_metal_device->swapchain;
     nswindow.contentView.wantsLayer = YES;
-    return native_window;
+    swapchain->nswindow = nswindow;
+    return swapchain;
+}
+
+void metal_destroy_swapchain(metal_swapchain_t* swapchain) {
+    free(swapchain);
 }
 
 metal_library_t* metal_create_library_from_source(metal_device_t* device, const char* source)
@@ -53,9 +64,9 @@ metal_library_t* metal_create_library_from_source(metal_device_t* device, const 
     return metal_library;
 }
 
-void metal_present(void) {
+void metal_present(metal_swapchain_t *swapchain) {
     @autoreleasepool {
-        id<CAMetalDrawable> surface = [g_metal_device->swapchain nextDrawable];
+        id<CAMetalDrawable> surface = [swapchain->layer nextDrawable];
 
         MTLRenderPassDescriptor *pass = [MTLRenderPassDescriptor renderPassDescriptor];
         pass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);

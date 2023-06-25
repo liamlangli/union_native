@@ -821,6 +821,4 @@ void vk_record_command_buffers(VkCommandBuffer **command_buffers, VkRenderPass *
 	free(command_buffer_begin_infos);
 }
 
-
-
 #endif

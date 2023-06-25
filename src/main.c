@@ -1,10 +1,10 @@
-#include "simd.h"
-#include "array.inl"
-
-#include "os_window.h"
-#include "foundation/render_system/render_system.h"
+#include "foundation/simd.h"
+#include "foundation/array.inl"
 #include "foundation/os.h"
-#include "script/script.h"
+
+#include "component/os_window/os_window.h"
+#include "component/render_system/render_system.h"
+#include "component/script/script.h"
 
 #include <string.h>
 
@@ -21,8 +21,9 @@ int main(int argc, char **argv) {
 
     rect_t window_rect = (rect_t){.x = 0.f, .y = 0.f, .w = 800, .h = 600 };
     window_t *window = platform_window_create("Hello World", window_rect);
+    swapchain_o *swapchain = render_system_create_swapchain(window);
     while(platform_window_update(window)) {
-        render_system_present();
+        render_system_swapchain_present(swapchain);
     }
     platform_window_destroy(window);
 

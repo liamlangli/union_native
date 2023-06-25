@@ -4,10 +4,12 @@
             "name": "OSX",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
                 "${workspaceFolder}/src/foundation/metal/**",
                 "${workspaceFolder}/src/ui/**",
+                "${workspaceFolder}/external/glfw/3.3.8/include/**"
             ],
             "defines": ["OS_OSX", "SCRIPT_BACKEND_JS"],
             "compilerPath": "/usr/bin/clang",

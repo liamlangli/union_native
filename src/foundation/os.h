@@ -1,9 +1,9 @@
 #ifndef _os_h_
 #define _os_h_
 
-#include "global.h"
-#include "allocator.h"
-#include "types.h"
+#include "public/global.h"
+#include "foundation/allocator.h"
+#include "foundation/types.h"
 
 typedef struct file_o {
     u64 handle;
