@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.pbjson": "json",
         "*.tmsl": "hlsl",
         "*.shader": "hlsl",
         "*.inc": "cpp",
@@ -26,7 +27,8 @@
         "math.h": "c",
         "global.h": "c",
         "vulkan.h": "c",
-        "vulkan_backend.h": "c"
+        "vulkan_backend.h": "c",
+        "ui.h": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled",
     "cmake.configureOnOpen": true

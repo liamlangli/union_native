@@ -3,7 +3,7 @@
 #if defined(OS_OSX)
 #include "metal_backend.h"
 #else // OS_WINDOWS or OS_LINUX
-#include "vulkan_backend.h"
+#include "foundation/vulkan/vulkan_backend.h"
 #endif
 
 typedef struct render_system_t {
@@ -34,6 +34,10 @@ void render_system_init(void) {
 
 void *render_system_get_gpu_device(void) {
     return NULL;
+}
+
+void render_system_present(void) {
+    
 }
 
 #endif

@@ -1,11 +1,8 @@
+#if defined(OS_WINDOWS) || defined(OS_LINUX)
+
 #include "os_window.h"
 
-#if defined(OS_WINDOWS)
-
-#include <vulkan/vulkan.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
+#include "foundation/vulkan/vulkan_backend.h"
 #include "foundation/array.inl"
 
 typedef struct window_t {

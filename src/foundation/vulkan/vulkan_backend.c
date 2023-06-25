@@ -2,6 +2,8 @@
 
 #include "vulkan_backend.h"
 
+#include <stdlib.h>
+
 VkInstance vk_create_instance() {
     VkApplicationInfo app_info = {
         VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -56,7 +58,7 @@ VkPhysicalDevice *vk_get_physical_devices(VkInstance *instance, u32 physical_dev
 }
 
 void vk_delete_physical_device(VkPhysicalDevice **physical_devices) {
-    free(*physical_devices);
+    free((void*)*physical_devices);
 }
 
 u32 vk_get_best_physical_device_index(VkPhysicalDevice *physical_devices, u32 physical_device_number) {
@@ -88,15 +90,15 @@ u32 vk_get_best_physical_device_index(VkPhysicalDevice *physical_devices, u32 ph
 
     if(discrete_gpu_number != 0){
         for(uint32_t i = 0; i < discrete_gpu_number; i++){
-            if(best_physical_device_memory < getPhysicalDeviceTotalMemory(&physical_device_mem_props[discrete_gpu_indices[i]])){
-                best_physical_device_memory = getPhysicalDeviceTotalMemory(&physical_device_mem_props[discrete_gpu_indices[i]]);
+            if(best_physical_device_memory < vk_get_physical_device_total_memory(&physical_device_mem_props[discrete_gpu_indices[i]])){
+                best_physical_device_memory = vk_get_physical_device_total_memory(&physical_device_mem_props[discrete_gpu_indices[i]]);
                 best_physical_device_index = discrete_gpu_indices[i];
             }
         }
-    }else if(integrated_gpu_number != 0){
+    } else if (integrated_gpu_number != 0){
         for(uint32_t i = 0; i < integrated_gpu_number; i++){
-            if(best_physical_device_memory < getPhysicalDeviceTotalMemory(&physical_device_mem_props[integrated_gpu_indices[i]])){
-                best_physical_device_memory = getPhysicalDeviceTotalMemory(&physical_device_mem_props[integrated_gpu_indices[i]]);
+            if(best_physical_device_memory < vk_get_physical_device_total_memory(&physical_device_mem_props[integrated_gpu_indices[i]])){
+                best_physical_device_memory = vk_get_physical_device_total_memory(&physical_device_mem_props[integrated_gpu_indices[i]]);
                 best_physical_device_index = integrated_gpu_indices[i];
             }
         }

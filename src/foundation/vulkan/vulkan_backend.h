@@ -1,7 +1,9 @@
+#if defined(OS_WINDOWS) || defined(OS_LINUX)
+
 #ifndef _vulkan_backend_h_
 #define _vulkan_backend_h_
 
-#if defined(OS_WINDOWS) || defined(OS_LINUX)
+#include <stdint.h>
 
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
@@ -53,7 +55,7 @@ u32 vk_get_swapchain_image_number(VkDevice *device, VkSwapchainKHR *swapchain);
 VkImage *vk_get_swapchain_images(VkDevice *device, VkSwapchainKHR *swapchain, u32 swapchain_image_number);
 void vk_delete_swapchain_images(VkImage *images);
 
-VkImageView *vk_create_image_views(VKDevice *device, VKImage **images, VkSurfaceFormatKHR *format, u23 image_number, u32 image_array_layers);
+VkImageView *vk_create_image_views(VkDevice *device, VkImage **images, VkSurfaceFormatKHR *format, u32 image_number, u32 image_array_layers);
 void vk_delete_image_views(VkDevice *device, VkImageView **image_views, u32 image_view_number);
 
 VkRenderPass vk_create_render_pass(VkDevice *device, VkSurfaceFormatKHR *format);
@@ -75,11 +77,11 @@ VkPipelineInputAssemblyStateCreateInfo vk_configure_input_assembly_state_create_
 VkViewport vk_configure_viewport(VkExtent2D *extent);
 VkRect2D vk_configure_scissor(VkExtent2D *extent, u32 left, u32 right, u32 up, u32 down);
 VkPipelineViewportStateCreateInfo vk_configure_viewport_state_create_info(VkViewport *viewport, VkRect2D *scissor);
-VkPipelineRasterizationStateCreateInfo vk_configure_rasterization_state_create_info();
-VkPipelineMultisampleStateCreateInfo vk_configure_multisample_state_create_info();
-VkPipelineColorBlendAttachmentState vk_configure_color_blend_attachment_state();
+VkPipelineRasterizationStateCreateInfo vk_configure_rasterization_state_create_info(void);
+VkPipelineMultisampleStateCreateInfo vk_configure_multisample_state_create_info(void);
+VkPipelineColorBlendAttachmentState vk_configure_color_blend_attachment_state(void);
 VkPipelineColorBlendStateCreateInfo vk_configure_color_blend_state_create_info(VkPipelineColorBlendAttachmentState *color_blend_attachment_state);
-VkPipeline vk_create_graphics_pipeline(VkDevice *device, VkPipelineLayout *pipeline_layout, VkShaderModule *vertex_shader_module, VkShaderModule *fragment_shader_module, VkrenderPass *pass, VkExtent2D *extent);
+VkPipeline vk_create_graphics_pipeline(VkDevice *device, VkPipelineLayout *pipeline_layout, VkShaderModule *vertex_shader_module, VkShaderModule *fragment_shader_module, VkRenderPass *pass, VkExtent2D *extent);
 void vk_delete_graphics_pipeline(VkDevice *device, VkPipeline *graphics_pipeline);
 
 VkCommandPool vk_create_command_pool(VkDevice *device, u32 queue_family_index);
@@ -92,10 +94,10 @@ VkSemaphore *vk_create_semaphores(VkDevice *device, u32 max_frames);
 void vk_delete_semaphores(VkDevice *device, VkSemaphore **semaphores, u32 max_frames);
 VkFence *vk_create_fences(VkDevice *device, u32 max_frames);
 void vk_delete_fences(VkDevice *device, VkFence **fences, u32 max_frames);
-VKFence *vk_create_empty_fences(u32 max_frames);
+VkFence *vk_create_empty_fences(u32 max_frames);
 void vk_delete_empty_fences(VkFence **fences);
 
-void vk_present_image(VkDevice *device, GLFWwindow *native_window, VkCommandBuffer *command_buffer, VkFence *front_fence, VkFence *bacK_fence, VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain, VKqueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames);
+void vk_present_image(VkDevice *device, GLFWwindow *native_window, VkCommandBuffer *command_buffer, VkFence *front_fence, VkFence *bacK_fence, VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain, VkQueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames);
 void test_loop(GLFWwindow *native_window);
 
 #endif // OS_WINDOWS or OS_LINUX

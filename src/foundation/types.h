@@ -4,6 +4,7 @@
 #include "simd.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef struct {
     float3_t location;
