@@ -31,7 +31,16 @@
         "ui.h": "c",
         "quickjs.h": "c",
         "script.h": "c",
-        "xlocale": "c"
+        "xlocale": "c",
+        "atomic": "c",
+        "list": "c",
+        "map": "c",
+        "set": "c",
+        "vector": "c",
+        "istream": "c",
+        "ostream": "c",
+        "sstream": "c",
+        "streambuf": "c"
     },
     "C_Cpp.configurationWarnings": "Disabled",
     "cmake.configureOnOpen": true
