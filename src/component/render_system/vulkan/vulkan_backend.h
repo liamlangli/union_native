@@ -97,8 +97,8 @@ void vk_delete_fences(VkDevice *device, VkFence **fences, u32 max_frames);
 VkFence *vk_create_empty_fences(u32 max_frames);
 void vk_delete_empty_fences(VkFence **fences);
 
-void vk_present_image(VkDevice *device, GLFWwindow *native_window, VkCommandBuffer *command_buffer, VkFence *front_fence, VkFence *bacK_fence, VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain, VkQueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames);
-void test_loop(GLFWwindow *native_window);
+void vk_present_image(VkDevice *device, VkCommandBuffer *command_buffer, VkFence *front_fences, VkFence *back_fences, VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain, VkQueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames);
+void vk_wait_device_idle(VkDevice *device);
 
 #endif // OS_WINDOWS or OS_LINUX
 #endif

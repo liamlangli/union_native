@@ -707,8 +707,8 @@ VkPipeline vk_create_graphics_pipeline(VkDevice *device, VkPipelineLayout *pipel
     VkRenderPass *pass, VkExtent2D *extent) {
     char entryName[] = "main";
 	VkPipelineShaderStageCreateInfo shader_stage_create_info[] = {
-		configureVertexShaderStageCreateInfo(vertex_shader_module, vertex_entry),
-		configureFragmentShaderStageCreateInfo(fragment_shader_module, fragment_entry)
+		vk_configure_vertex_shader_stage_create_info(vertex_shader_module, vertex_entry),
+		vk_configure_fragment_shader_stage_create_info(fragment_shader_module, fragment_entry)
 	};
 	VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info = vk_configure_vertex_input_state_create_info();
 	VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info = vk_configure_input_assembly_state_create_info();
@@ -819,6 +819,112 @@ void vk_record_command_buffers(VkCommandBuffer **command_buffers, VkRenderPass *
 
 	free(render_pass_begin_infos);
 	free(command_buffer_begin_infos);
+}
+
+VkSemaphore *vk_create_semaphores(VkDevice *device, u32 max_frames) {
+	VkSemaphoreCreateInfo semaphore_ceate_info = {
+		VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+		VK_NULL_HANDLE,
+		0
+	};
+
+	VkSemaphore *semaphore = (VkSemaphore *)malloc(max_frames * sizeof(VkSemaphore));
+	for(uint32_t i = 0; i < max_frames; i++){
+		vkCreateSemaphore(*device, &semaphore_ceate_info, VK_NULL_HANDLE, &semaphore[i]);
+	}
+
+	return semaphore;
+}
+
+void vk_delete_semaphores(VkDevice *device, VkSemaphore **semaphores, u32 max_frames) {
+		for(uint32_t i = 0; i < max_frames; i++){
+		vkDestroySemaphore(*device, (*semaphores)[i], VK_NULL_HANDLE);
+	}
+	free(*semaphores);
+}
+
+VkFence *vk_create_fences(VkDevice *device, u32 max_frames) {
+	VkFenceCreateInfo fence_create_info = {
+		VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+		VK_NULL_HANDLE,
+		VK_FENCE_CREATE_SIGNALED_BIT
+	};
+
+	VkFence *fences = (VkFence *)malloc(max_frames * sizeof(VkFence));
+	for(uint32_t i = 0; i < max_frames; i++){
+		vkCreateFence(*device, &fence_create_info, VK_NULL_HANDLE, &fences[i]);
+	}
+
+	return fences;
+}
+
+void vk_delete_fences(VkDevice *device, VkFence **fences, u32 max_frames) {
+	for(uint32_t i = 0; i < max_frames; i++){
+		vkDestroyFence(*device, (*fences)[i], VK_NULL_HANDLE);
+	}
+	free(*fences);
+}
+
+VkFence *vk_create_empty_fences(u32 max_frames) {
+	VkFence *fence = (VkFence *)malloc(max_frames * sizeof(VkFence));
+	for(uint32_t i = 0; i < max_frames; i++){
+		fence[i] = VK_NULL_HANDLE;
+	}
+	return fence;
+}
+
+void vk_delete_empty_fences(VkFence **fences) {
+	free(*fences);
+}
+
+void vk_present_image(VkDevice *device, VkCommandBuffer *command_buffer, VkFence *front_fences, VkFence *back_fences,
+	VkSemaphore *wait_semaphores, VkSemaphore *signal_semaphores, VkSwapchainKHR *swapchain,
+	VkQueue *drawing_queue, VkQueue *presenting_queue, u32 max_frames) {
+	uint32_t current_frame = 0;
+
+	vkWaitForFences(*device, 1, &front_fences[current_frame], VK_TRUE, UINT64_MAX);
+	uint32_t image_index = 0;
+	vkAcquireNextImageKHR(*device, *swapchain, UINT64_MAX, wait_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+
+	if(back_fences[image_index] != VK_NULL_HANDLE){
+		vkWaitForFences(*device, 1, &back_fences[image_index], VK_TRUE, UINT64_MAX);
+	}
+
+	back_fences[image_index] = front_fences[current_frame];
+
+	VkPipelineStageFlags pipeline_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	VkSubmitInfo submitInfo = {
+		VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		VK_NULL_HANDLE,
+		1,
+		&wait_semaphores[current_frame],
+		&pipeline_stage,
+		1,
+		&command_buffer[image_index],
+		1,
+		&signal_semaphores[current_frame]
+	};
+	vkResetFences(*device, 1, &front_fences[current_frame]);
+	vkQueueSubmit(*drawing_queue, 1, &submitInfo, front_fences[current_frame]);
+
+	VkPresentInfoKHR present_info = {
+		VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		VK_NULL_HANDLE,
+		1,
+		&signal_semaphores[current_frame],
+		1,
+		&(*swapchain),
+		&image_index,
+		VK_NULL_HANDLE
+	};
+	vkQueuePresentKHR(*presenting_queue, &present_info);
+
+	current_frame = (current_frame + 1) % max_frames;
+}
+
+void vk_wait_device_idle(VkDevice *device) {
+	vkDeviceWaitIdle(*device);
 }
 
 #endif

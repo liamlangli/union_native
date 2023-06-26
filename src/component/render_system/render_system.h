@@ -8,6 +8,7 @@ typedef struct swapchain_o swapchain_o;
 
 void render_system_init(void);
 swapchain_o* render_system_create_swapchain(window_t *window);
+void render_system_destroy_swapchain(swapchain_o *swapchain);
 void render_system_swapchain_present(swapchain_o *swapchain);
 void render_system_terminate(void);
 

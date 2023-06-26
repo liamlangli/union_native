@@ -2,16 +2,11 @@
 
 #include "os_window.h"
 
-#include "foundation/vulkan/vulkan_backend.h"
+#include "component/render_system/vulkan/vulkan_backend.h"
 #include "foundation/array.inl"
 
 typedef struct window_t {
     GLFWwindow *native_window;
-    VkSurfaceKHR surface;
-    VkSwapchainKHR swapchain;
-
-    u32 swap_image_count;
-    VkImage swap_images[3];
 } window_t;
 
 static void __glfw_init(void) {
@@ -37,8 +32,6 @@ window_t *platform_window_create(const char *title, rect_t rect) {
     GLFWwindow *native_window = glfwCreateWindow(width, height, title, VK_NULL_HANDLE, VK_NULL_HANDLE);
     const GLFWvidmode *video_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	glfwSetWindowPos(native_window, x, y);
-
-    // win->surface = vk_create_surface(native_window, );
 
     return win;
 }
