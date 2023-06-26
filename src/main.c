@@ -9,16 +9,11 @@
 #include <string.h>
 
 int main(int argc, char **argv) {
-    printf("start creating context\n");
     script_context_t context = script->create_context();
-    printf("context created\n");
-
     script_value_t value = script->eval(&context, "1 + 2", 5);
-    printf("script eval successs.\n");
-    printf("eval returns: %d\n", script->to_int(&context, value));
+    printf("eval 1 + 2 returns: %d\n", script->to_int(&context, value));
 
     render_system_init();
-
     rect_t window_rect = (rect_t){.x = 0.f, .y = 0.f, .w = 800, .h = 600 };
     window_t *window = platform_window_create("Hello World", window_rect);
     swapchain_o *swapchain = render_system_create_swapchain(window);
@@ -26,7 +21,5 @@ int main(int argc, char **argv) {
         render_system_swapchain_present(swapchain);
     }
     platform_window_destroy(window);
-
-
     return 0;
 }

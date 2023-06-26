@@ -18,11 +18,11 @@ enum VK_QUEUE_MODE {
 };
 
 VkInstance vk_create_instance(void);
-void vk_destroy_instance(VkInstance *instance);
+void vk_delete_instance(VkInstance *instance);
 
 u32 vk_get_physical_device_number(VkInstance *instance);
 VkPhysicalDevice *vk_get_physical_devices(VkInstance *instance, u32 physical_device_number);
-void vk_delete_physical_device(VkPhysicalDevice **physical_devices);
+void vk_delete_physical_devices(VkPhysicalDevice **physical_devices);
 
 u32 vk_get_best_physical_device_index(VkPhysicalDevice *physical_devices, u32 physical_device_number);
 u32 vk_get_physical_device_total_memory(VkPhysicalDeviceMemoryProperties *physical_device_mem_props);

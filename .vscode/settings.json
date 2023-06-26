@@ -42,8 +42,23 @@
         "sstream": "c",
         "streambuf": "c",
         "render_system.h": "c",
-        "os.h": "c"
-    },
-    "C_Cpp.configurationWarnings": "Disabled",
-    "cmake.configureOnOpen": true
+        "os.h": "c",
+        "metal_backend.h": "c",
+        "strings.h": "c",
+        "fcntl.h": "c",
+        "io.h": "c",
+        "errno.h": "c",
+        "dirent.h": "c",
+        "semaphore.h": "c",
+        "stdio.h": "c",
+        "signal.h": "c",
+        "file.h": "c",
+        "stat.h": "c",
+        "chrono": "c",
+        "iomanip": "c",
+        "xlocbuf": "c",
+        "__config": "c",
+        "__tree": "c",
+        "locale": "c"
+    }
 }

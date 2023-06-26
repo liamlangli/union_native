@@ -128,6 +128,10 @@ static file_stat_t file_system_stat(const char *path) {
     };
 }
 
+static struct os_file_system_api file_system = {
+    .stat = file_system_stat
+};
+
 #pragma region Socket
 
 static i32 to_socket(socket_o opaque) {
@@ -699,6 +703,7 @@ static struct os_time_api time_api = {
 
 static struct os_api os = {
     .file_io = &file_io,
+    .file_system = &file_system,
     .socket = &socket_api,
     .thread = &thread,
     .time = &time_api,

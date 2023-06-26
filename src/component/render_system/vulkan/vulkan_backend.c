@@ -27,7 +27,7 @@ VkInstance vk_create_instance(void) {
     u32 num_ext = 0;
     const char *const *extensions = glfwGetRequiredInstanceExtensions(&num_ext);
 
-    VkInstanceCreateInfo instanceCreateInfo = {
+    VkInstanceCreateInfo instance_create_info = {
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         VK_NULL_HANDLE,
         0,
@@ -39,11 +39,11 @@ VkInstance vk_create_instance(void) {
     };
 
     VkInstance instance;
-    vkCreateInstance(&instanceCreateInfo, VK_NULL_HANDLE, &instance);
+    vkCreateInstance(&instance_create_info, VK_NULL_HANDLE, &instance);
     return instance;
 }
 
-void vk_destroy_instance(VkInstance *instance) {
+void vk_delete_instance(VkInstance *instance) {
     vkDestroyInstance(*instance, NULL);
 }
 
@@ -59,7 +59,7 @@ VkPhysicalDevice *vk_get_physical_devices(VkInstance *instance, u32 physical_dev
     return physical_devices;
 }
 
-void vk_delete_physical_device(VkPhysicalDevice **physical_devices) {
+void vk_delete_physical_devices(VkPhysicalDevice **physical_devices) {
     free((void*)*physical_devices);
 }
 
@@ -209,16 +209,16 @@ VkDevice vk_create_device(VkPhysicalDevice *physical_device, u32 queue_family_nu
 		device_queue_create_info[i].pQueuePriorities = queue_priorities[i];
 	}
 
-	const char extensionList[][VK_MAX_EXTENSION_NAME_SIZE] = {
+	const char extension_list[][VK_MAX_EXTENSION_NAME_SIZE] = {
 		"VK_KHR_swapchain"
 	};
 	const char *extensions[] = {
-		extensionList[0]
+		extension_list[0]
 	};
-	VkPhysicalDeviceFeatures physicalDeviceFeatures;
-	vkGetPhysicalDeviceFeatures(*physical_device, &physicalDeviceFeatures);
+	VkPhysicalDeviceFeatures physical_device_features;
+	vkGetPhysicalDeviceFeatures(*physical_device, &physical_device_features);
 
-	VkDeviceCreateInfo deviceCreateInfo = {
+	VkDeviceCreateInfo device_create_info = {
 		VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		VK_NULL_HANDLE,
 		0,
@@ -227,12 +227,12 @@ VkDevice vk_create_device(VkPhysicalDevice *physical_device, u32 queue_family_nu
 		0,
 		VK_NULL_HANDLE,
 		1,
-		extensions,
-		&physicalDeviceFeatures
+		(const char * const *)extensions,
+		&physical_device_features
 	};
 
 	VkDevice device;
-	vkCreateDevice(*physical_device, &deviceCreateInfo, VK_NULL_HANDLE, &device);
+	vkCreateDevice(*physical_device, &device_create_info, VK_NULL_HANDLE, &device);
 
 	for(uint32_t i = 0; i < queue_family_number; i++){
 		free(queue_priorities[i]);
@@ -259,13 +259,13 @@ void vk_delete_surface(VkSurfaceKHR *surface, VkInstance *instance) {
 
 VkBool32 vk_get_surface_supported(VkSurfaceKHR *surface, VkPhysicalDevice *physical_device, u32 graphics_queue_family_index) {
     VkBool32 surface_supported = 0;
-    vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, graphics_queue_family_index, *surface, &surface_supported);
+    vkGetPhysicalDeviceSurfaceSupportKHR(*physical_device, graphics_queue_family_index, *surface, &surface_supported);
     return surface_supported;
 }
 
 VkSurfaceCapabilitiesKHR vk_get_surface_capabilities(VkSurfaceKHR *surface, VkPhysicalDevice *physical_device) {
     VkSurfaceCapabilitiesKHR surface_caps;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, *surface, &surface_caps);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*physical_device, *surface, &surface_caps);
     return surface_caps;
 }
 
@@ -499,8 +499,14 @@ void vk_delete_framebuffers(VkDevice *device, VkFramebuffer **framebuffers, u32 
 }
 
 char* vk_get_shader_code(const char *filename, u32 *shader_size) {
+	file_stat_t file_stat = os_api->file_system->stat(filename);
+	if (!file_stat.exists)
+		return NULL;
+	u64 size = file_stat.size;
+	char *buffer = malloc(size);
     file_o file = os_api->file_io->open_input(filename);
-    os_api->file_io->read(file, shader_size, sizeof(u32));
+    os_api->file_io->read(file, buffer, size);
+	return buffer;
 }
 
 void vk_delete_shader_code(char **shader_code) {
