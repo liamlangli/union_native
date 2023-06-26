@@ -1,9 +1,14 @@
 #!python3
+import os
+import sys
+from path_util import gurad_dir
+
 OUTPUT_FILENAME="build/Makefile_source"
 ROOT="src"
 
-import os
-import sys
+OS_WINDOWS = "OS_WINDOWS"
+OS_LINUX = "OS_LINUX"
+OS_OSX = "OS_OSX"
 
 def recursive_traverse(folder, source_files, MacOSX=False):
     print("search path: " + folder)
@@ -25,13 +30,14 @@ if __name__ == '__main__':
         exit(1)
 
     folders = ["src/foundation", "src/component", "src/plugin"]
-    if not (PLATFORM == "OS_WINDOWS" or PLATFORM == "OS_LINUX" or PLATFORM == "OS_OSX"):
+    if not (PLATFORM == OS_WINDOWS or PLATFORM == OS_LINUX or PLATFORM == OS_OSX):
         print("unknown platform")
         exit(1)
 
+    gurad_dir("build")
     source_files = []
     for folder in folders:
-        recursive_traverse(folder, source_files, PLATFORM == "OS_OSX")
+        recursive_traverse(folder, source_files, PLATFORM == OS_OSX)
 
     print("====")
     print("source files: \n" + '\n'.join(source_files))

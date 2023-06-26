@@ -17,9 +17,5 @@ all: collect
 run: all
 	$(APP)
 
-collect:
-	mkdir -p build
-	python build_tool/collect_source.py $(PLATFORM)
-
 clear:
 	rm -rf build

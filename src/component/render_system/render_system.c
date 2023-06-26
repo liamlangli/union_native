@@ -179,11 +179,12 @@ void render_system_swapchain_present(swapchain_o *swapchain) {
     vkWaitForFences(render_system.device, 1, &front_fences[current_frame], VK_TRUE, UINT64_MAX);
     u32 image_index = 0;
     vkAcquireNextImageKHR(render_system.device, swapchain->swapchain, UINT64_MAX, wait_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+
     if(back_fences[image_index] != VK_NULL_HANDLE){
 		vkWaitForFences(render_system.device, 1, &back_fences[image_index], VK_TRUE, UINT64_MAX);
 	}
-    	back_fences[image_index] = front_fences[current_frame];
 
+    back_fences[image_index] = front_fences[current_frame];
 	VkPipelineStageFlags pipeline_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	VkSubmitInfo submitInfo = {

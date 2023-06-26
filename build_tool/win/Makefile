@@ -33,8 +33,5 @@ run: all
 	cp $(GLFW_DLL) $(BUILD_PATH)
 	./$(APP)
 
-collect:
-	python build_tool/collect_source.py $(PLATFORM)
-
 clear:
 	rm build

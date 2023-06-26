@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     printf("eval 1 + 2 returns: %d\n", script->to_int(&context, value));
 
     render_system_init();
-    rect_t window_rect = (rect_t){.x = 0.f, .y = 0.f, .w = 800, .h = 600 };
+    rect_t window_rect = (rect_t){.x = 100.f, .y = 100.f, .w = 800, .h = 600 };
     window_t *window = platform_window_create("Hello World", window_rect);
     swapchain_o *swapchain = render_system_create_swapchain(window);
     while(platform_window_update(window)) {
