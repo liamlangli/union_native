@@ -7,7 +7,7 @@ from path_util import gurad_dir
 HLSL_INPUT_DIR = "resource/shader/hlsl"
 METAL_INPUT_DIR = "resource/shader/metal"
 
-SPRIV_OUTPUT_DIR = "build/spriv"
+SPRIV_OUTPUT_DIR = "build/spirv"
 METALLIB_OUTPUT_DIR = "build/metallib"
 
 OS_WINDOWS = "OS_WINDOWS"
@@ -31,8 +31,8 @@ def convert_hlsl_to_spriv():
     recursive_traverse(HLSL_INPUT_DIR, source_files, ".hlsl")
     for source in source_files:
         filename = os.path.basename(source)
-        vertex_output_filename = os.path.join(SPRIV_OUTPUT_DIR, filename.replace(".hlsl", "_vertex.spriv"))
-        pixel_output_filename = os.path.join(SPRIV_OUTPUT_DIR, filename.replace(".hlsl", "_pixel.spriv"))
+        vertex_output_filename = os.path.join(SPRIV_OUTPUT_DIR, filename.replace(".hlsl", "_vertex.spv"))
+        pixel_output_filename = os.path.join(SPRIV_OUTPUT_DIR, filename.replace(".hlsl", "_pixel.spv"))
         print("convert " + source)
         os.system("dxc -spirv -T vs_6_0 -E vertex_main -Fo " + vertex_output_filename + " " + source)
         os.system("dxc -spirv -T ps_6_0 -E pixel_main -Fo " + pixel_output_filename + " " + source)
