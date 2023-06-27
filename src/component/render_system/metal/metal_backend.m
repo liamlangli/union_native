@@ -69,11 +69,11 @@ metal_library_t* metal_create_library_from_source(metal_device_t* device, const 
     dispatch_data_t data = dispatch_data_create(source, size, dispatch_get_main_queue(), DISPATCH_DATA_DESTRUCTOR_DEFAULT);
     id<MTLLibrary> library = [g_metal_device->gpu newLibraryWithData:data error:&error];
     dispatch_release(data);
+    free(*source);
     if (error) {
         NSLog(@"Error compiling shader: %@", error.localizedDescription);
         return NULL;
     }
-
 
     metal_library_t *metal_library = (metal_library_t*)malloc(sizeof(metal_library_t));
     metal_library->library = library;
