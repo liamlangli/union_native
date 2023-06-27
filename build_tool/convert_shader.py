@@ -41,6 +41,14 @@ def convert_metal_to_metallib():
     gurad_dir(METALLIB_OUTPUT_DIR)
     source_files = []
     recursive_traverse(METAL_INPUT_DIR, source_files, ".metal")
+    intermediate_files = []
+    for source in source_files:
+        filename = os.path.basename(source)
+        air_filename = os.path.join(METALLIB_OUTPUT_DIR, filename.replace(".metal", ".air"))
+        intermediate_files.append(air_filename)
+        print("convert " + source)
+        os.system("xcrun -sdk macosx metal -c " + source + " -o " + air_filename)
+    os.system("xcrun -sdk macosx metallib " + " ".join(intermediate_files) + " -o " + os.path.join(METALLIB_OUTPUT_DIR, "default.metallib"))
 
 def convert():
     # read first input arguments

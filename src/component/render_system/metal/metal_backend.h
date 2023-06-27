@@ -19,10 +19,13 @@ typedef struct metal_render_pass_t metal_render_pass_t;
 typedef struct metal_compute_pass_t metal_compute_pass_t;
 
 metal_device_t* metal_create_default_device(void);
-metal_swapchain_t* metal_create_swapchain(metal_device_t* device, GLFWwindow* native_window);
-void metal_destroy_swapchain(metal_swapchain_t* swapchain);
+void metal_delete_device(metal_device_t* device);
 
-metal_library_t* metal_create_library_from_source(metal_device_t* device, const char* source);
+metal_swapchain_t* metal_create_swapchain(metal_device_t* device, GLFWwindow* native_window);
+void metal_delete_swapchain(metal_swapchain_t* swapchain);
+
+metal_library_t* metal_create_library_from_source(metal_device_t* device, const char* filename);
+void metal_delete_library(metal_library_t* library);
 
 void metal_present(metal_swapchain_t* swapchain);
 

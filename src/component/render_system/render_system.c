@@ -16,12 +16,14 @@ typedef struct swapchain_o {
 
 typedef struct render_system_t {
     metal_device_t *gpu_device;
+    metal_library_t *library;
 } render_system_t;
 
-static render_system_t system;
+static render_system_t render_system;
 
 void render_system_init(void) {
     render_system.gpu_device = metal_create_default_device();
+    render_system.library = metal_create_library_from_source(render_system.gpu_device, "build/metallib/default.metallib");
 }
 
 void render_system_swapchain_present(swapchain_o *swapchain) {

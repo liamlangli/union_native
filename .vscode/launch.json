@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/app.exe",
             "args": [],
-            "cwd": "${fileDirname}",
-            "console": "externalTerminal"
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
         },
         {
             "name": "(lldb) Launch [OSX|Linux]",
@@ -19,8 +19,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/app",
             "args": [],
-            "cwd": "${fileDirname}",
-            "console": "externalTerminal"
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
         }
     ]
 }

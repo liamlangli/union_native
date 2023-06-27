@@ -57,6 +57,7 @@ typedef struct file_system_change_t {
 
 typedef struct os_file_system_api {
     file_stat_t (*stat)(const char *path);
+    bool (*read_file)(const char *path, void **buffer, u64 *size);
 
     bool (*make_directory)(const char *path);
     bool (*remove_file)(const char *path);

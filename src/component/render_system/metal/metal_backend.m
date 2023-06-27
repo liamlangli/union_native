@@ -3,6 +3,8 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
+#import "foundation/os.h"   
+
 typedef struct metal_device_t {
     id<MTLDevice> gpu;
     id<MTLCommandQueue> queue;
@@ -35,6 +37,10 @@ metal_device_t* metal_create_default_device(void) {
     return metal_device;
 }
 
+void metal_destroy_device(metal_device_t* device) {
+    free(device);
+}
+
 metal_swapchain_t* metal_create_swapchain(metal_device_t* device, GLFWwindow* native_window) {
     metal_swapchain_t *swapchain = (metal_swapchain_t*)malloc(sizeof(metal_swapchain_t));
     swapchain->layer = g_metal_device->swapchain;
@@ -45,23 +51,37 @@ metal_swapchain_t* metal_create_swapchain(metal_device_t* device, GLFWwindow* na
     return swapchain;
 }
 
-void metal_destroy_swapchain(metal_swapchain_t* swapchain) {
+void metal_delete_swapchain(metal_swapchain_t* swapchain) {
     free(swapchain);
 }
 
-metal_library_t* metal_create_library_from_source(metal_device_t* device, const char* source)
+metal_library_t* metal_create_library_from_source(metal_device_t* device, const char* filename)
 {
-    id<MTLDevice> gpu = device->gpu;
-    NSError *error = NULL;
-    id<MTLLibrary> library = [gpu newLibraryWithSource:[NSString stringWithUTF8String:source] options:nil error:&error];
-    if (error) {
-        printf("Error creating library: %s\n", [[error localizedDescription] UTF8String]);
+    // char *source = os_read_file(filename);
+    void *source = NULL;
+    u64 size = 0;
+    if (!os_api->file_system->read_file(filename, &source, &size)) {
         return NULL;
     }
+
+    // load metallib from data
+    NSError *error = nil;
+    dispatch_data_t data = dispatch_data_create(source, size, dispatch_get_main_queue(), DISPATCH_DATA_DESTRUCTOR_DEFAULT);
+    id<MTLLibrary> library = [g_metal_device->gpu newLibraryWithData:data error:&error];
+    dispatch_release(data);
+    if (error) {
+        NSLog(@"Error compiling shader: %@", error.localizedDescription);
+        return NULL;
+    }
+
 
     metal_library_t *metal_library = (metal_library_t*)malloc(sizeof(metal_library_t));
     metal_library->library = library;
     return metal_library;
+}
+
+void metal_delete_library(metal_library_t* library) {
+    free(library);
 }
 
 void metal_present(metal_swapchain_t *swapchain) {
