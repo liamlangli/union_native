@@ -1,48 +1,7 @@
+#if defined(OS_WINDOWS) || defined(OS_LINUX)
+
 #include "component/render_system/render_system.h"
-
-#if defined(OS_OSX)
-#include "component/render_system/metal/metal_backend.h"
-#else // OS_WINDOWS or OS_LINUX
 #include "component/render_system/vulkan/vulkan_backend.h"
-#endif
-
-#include "component/os_window/os_window.h"
-
-#if defined(OS_OSX)
-
-typedef struct swapchain_o {
-    metal_swapchain_t *swapchain;
-} swapchain_o;
-
-typedef struct render_system_t {
-    metal_device_t *gpu_device;
-    metal_library_t *library;
-} render_system_t;
-
-static render_system_t render_system;
-
-void render_system_init(void) {
-    render_system.gpu_device = metal_create_default_device();
-    render_system.library = metal_create_library_from_source(render_system.gpu_device, "build/metallib/default.metallib");
-}
-
-void render_system_swapchain_present(swapchain_o *swapchain) {
-    metal_present(swapchain->swapchain);
-}
-
-swapchain_o* render_system_create_swapchain(window_t *window)
-{
-    GLFWwindow *native_window = (GLFWwindow*)platform_window_get_native_handle(window);
-    swapchain_o *swapchain = malloc(sizeof(swapchain_o));
-    swapchain->swapchain = metal_create_swapchain(render_system.gpu_device, native_window);
-    return swapchain;
-}
-
-void render_system_terminate(void) {
-    
-}
-
-#else // OS_WINDOWS or OS_LINUX
 
 typedef struct render_system_t {
     VkInstance instance;
@@ -73,6 +32,10 @@ typedef struct swapchain_o {
     VkSemaphore *wait_semaphores, *signal_semaphores;
     VkFence *front_fences, *back_fences;
 } swapchain_o;
+
+typedef struct graphics_pipeline_o {
+    VkPipeline pipeline;
+} graphics_pipeline_o;
 
 void render_system_init(void) {
     glfwInit();
@@ -153,7 +116,7 @@ swapchain_o* render_system_create_swapchain(window_t *window)
     return render_swapchain;
 }
 
-void render_system_destroy_swapchain(swapchain_o *swapchain) {
+void render_system_delete_swapchain(swapchain_o *swapchain) {
     u32 max_frames = swapchain->max_frames;
     u32 swapchain_image_count = swapchain->swapchain_image_count;
     vk_delete_empty_fences(&swapchain->back_fences);
@@ -217,6 +180,11 @@ void render_system_swapchain_present(swapchain_o *swapchain) {
 	swapchain->current_frame = (current_frame + 1) % max_frames;
 }
 
+graphic_pipeline_o *render_system_create_graphics_pipeline(render_pass_o *pass, rect_t viewport, char* vertex_source, const char* pixel_source)
+{
+
+}
+
 void render_system_terminate(void) {
     vk_delete_command_pool(&render_system.device, &render_system.command_pool);
     vk_delete_device(&render_system.device);
@@ -225,4 +193,3 @@ void render_system_terminate(void) {
 }
 
 #endif
-
