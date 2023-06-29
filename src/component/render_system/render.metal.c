@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #if defined(OS_OSX)
 
 #include "component/render_system/render_system.h"

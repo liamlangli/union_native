@@ -182,7 +182,8 @@ void render_system_swapchain_present(swapchain_o *swapchain) {
 
 graphic_pipeline_o *render_system_create_graphics_pipeline(render_pass_o *pass, rect_t viewport, char* vertex_source, const char* pixel_source)
 {
-
+    graphic_pipeline_o *pipeline = malloc(sizeof(graphics_pipeline_o));
+    return pipeline;
 }
 
 void render_system_terminate(void) {
