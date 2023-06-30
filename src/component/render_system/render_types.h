@@ -3,11 +3,11 @@
 
 #include "foundation/types.h"
 
-typedef struct render_resource_o {
+typedef struct render_handle_t {
     u32 id;
     u32 bindless_srv;
     u32 bindless_uav;
-} render_resource_o;
+} render_handle_t;
 
 typedef enum render_shader_stage {
     SHADER_STAGE_VERTEX,
@@ -26,9 +26,39 @@ typedef enum render_shader_stage {
     SHADER_STAGE_MAX
 } render_shader_stage;
 
-typedef enum render_state {
-    RENDER_STATE_TESSELLATION,
-    RENDER_STATE_RASTER
-} render_state;
+typedef enum render_state_block_type {
+    RENDER_STATE_BLOCK_TYPE_TESSELLATION,
+    RENDER_STATE_BLOCK_TYPE_RASTER,
+    RENDER_STATE_BLOCK_TYPE_DEPTH_STENCIL,
+    RENDER_STATE_BLOCK_TYPE_TEXTURE_SAMPLER,
+    RENDER_STATE_BLOCK_TYPE_RENDER_TARGET_BLEND,
+    RENDER_STATE_BLOCK_TYPE_BLEND,
+    RENDER_STATE_BLOCK_TYPE_MULTI_SAMPLE,
+    RENDER_STATE_BLOCK_TYPE_MAX
+} render_state_block_type;
+
+typedef enum render_state_value_type {
+    RENDER_STATE_VALUE_TYEP_BOOL,
+    RENDER_STATE_VALUE_TYEP_UINT32,
+    RENDER_STATE_VALUE_TYEP_FLOAT32,
+    RENDER_STATE_VALUE_TYEP_COMPARE_OP,
+    RENDER_STATE_VALUE_TYEP_CULL,
+    RENDER_STATE_VALUE_TYEP_FRONT_FACE,
+    RENDER_STATE_VALUE_TYEP_POLYGON_MODE,
+    RENDER_STATE_VALUE_TYEP_FITLER,
+    RENDER_STATE_VALUE_TYEP_ADDRESS_MODE,
+    RENDER_STATE_VALUE_TYEP_BORDER_COLOR,
+    RENDER_STATE_VALUE_TYEP_BLEND_FACTOR,
+    RENDER_STATE_VALUE_TYEP_BLEND_OP,
+    RENDER_STATE_VALUE_TYEP_BLEND_WRITE_MASK,
+    RENDER_STATE_VALUE_TYEP_LOGIC_OP,
+    RENDER_STATE_VALUE_TYEP_BLOCK = 0xff000000,
+    RENDER_STATE_VALUE_TYPE_MAX
+} render_state_value_type;
+
+typedef struct render_shader_blob_t {
+    u64 size;
+    u8 *data;
+} render_shader_blob_t;
 
 #endif // _render_types_h_
