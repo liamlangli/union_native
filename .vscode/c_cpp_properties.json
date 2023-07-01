@@ -7,8 +7,7 @@
                 "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/public/**",
                 "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/foundation/metal/**",
-                "${workspaceFolder}/src/ui/**",
+                "${workspaceFolder}/src/component/render_system/**",
                 "${workspaceFolder}/external/glfw/3.3.8/include/**"
             ],
             "defines": [

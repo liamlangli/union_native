@@ -340,7 +340,7 @@ static u32 socket_getaddrinfo(const char *host, const char *service, socket_addr
 }
 
 struct getaddrinfo_async_query {
-    allocator_api *allocator;
+    allocator_i *allocator;
     char *host; // array
     char *service; // array
     struct socket_address_t *address; // array
@@ -432,7 +432,7 @@ static void thread_destroy_semaphore(semaphore_o sem_o) {
 }
 
 struct thread_data_t {
-    allocator_api *allocator;
+    allocator_i *allocator;
     thread_entry_f *entry_point;
     void *user_data;
     const char *name;
@@ -483,7 +483,7 @@ static u32 thread_processor_id(void) {
 
 static thread_o thread_create_thread(thread_entry_f *entry, void *user_data, u32 stack_size, const char *name) {
     struct thread_data_t *td = malloc(sizeof(struct thread_data_t));
-    td->allocator = g_allocator;
+    // td->allocator = g_allocator;
     td->entry_point = entry;
     td->user_data = user_data;
     td->name = name;

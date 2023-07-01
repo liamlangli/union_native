@@ -64,7 +64,7 @@ typedef struct os_file_system_api {
     bool (*remove_directory)(const char *path);
     bool (*rename)(const char *old_name, const char *new_name);
     bool (*copy_file)(const char *from, const char *to);
-    const char *(*getcwd)(allocator_api *allocator);
+    const char *(*getcwd)(allocator_i *allocator);
 } os_file_system_api;
 
 typedef struct socket_o {

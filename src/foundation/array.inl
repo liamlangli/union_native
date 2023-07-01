@@ -49,7 +49,7 @@ typedef struct {
 #define array_free(a, allocator) array_free_at(a, allocator, __FILE__, __LINE__)
 
 static inline void *array_set_capacity_internal(void* arr, u64 new_capacity, u64 item_size,
-    allocator_api *allocator, const char* file, u32 line)
+    allocator_i *allocator, const char* file, u32 line)
 {
     u8 *p = arr ? (u8*)array_header(arr) : 0;
     const u64 extra = sizeof(array_header_t);
@@ -74,7 +74,7 @@ static inline void *array_set_capacity_internal(void* arr, u64 new_capacity, u64
 }
 
 static inline void *array_grow_internal(void* arr, u64 to_at_least, u64 item_size,
-    allocator_api *allocator, const char *file, u32 line)
+    allocator_i *allocator, const char *file, u32 line)
 {
     const u64 capacity = arr ? array_capacity(arr) : 0;
     if (capacity >= to_at_least)
