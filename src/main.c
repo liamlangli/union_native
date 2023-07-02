@@ -10,8 +10,13 @@
 
 int main(int argc, char **argv) {
     script_context_t context = script->create_context();
-    script_value_t value = script->eval(&context, "1 + 2", 5);
-    printf("eval 1 + 2 returns: %d\n", script->to_int(&context, value));
+    // script_value_t value = script->eval(&context, "1 + 2", 5);
+    char *content = NULL;
+    u64 size = 0;
+    if(os_api->file_system->read_file("example/triangle/triangle.js", (void**)&content, &size)) {
+        script_value_t value = script->eval(&context, content, size);
+        printf("eval returns: %d\n", script->to_int(&context, value));
+    }
 
     render_system_init();
     rect_t window_rect = (rect_t){.x = 100.f, .y = 100.f, .w = 800, .h = 600 };

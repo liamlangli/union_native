@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "platform.h"
+
 #define false 0
 #define true 1
 

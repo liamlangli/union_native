@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "foundation/os.h"
 
-#if defined(OS_WINDOWS) || defined(OS_LINUX)
+#if defined(RENDE_BACKEND_VULKAN)
 
 #include "vulkan_backend.h"
 

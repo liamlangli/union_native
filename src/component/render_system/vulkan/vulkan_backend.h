@@ -1,4 +1,4 @@
-#if defined(OS_WINDOWS) || defined(OS_LINUX)
+#if defined(RENDE_BACKEND_VULKAN)
 
 #ifndef _vulkan_backend_h_
 #define _vulkan_backend_h_

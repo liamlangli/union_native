@@ -1,5 +1,4 @@
-#ifndef _metal_backend_h_
-#define _metal_backend_h_
+#pragma once
 
 #if defined(OS_OSX)
 
@@ -10,6 +9,8 @@
 
 #include "public/global.h"
 #include "foundation/types.h"
+
+struct alloctor_i;
 
 typedef struct metal_device_t metal_device_t;
 typedef struct metal_swapchain_t metal_swapchain_t;
@@ -29,5 +30,15 @@ void metal_delete_library(metal_library_t* library);
 
 void metal_present(metal_swapchain_t* swapchain);
 
+typedef struct metal_backend_i {
+    void *instance;
+    bool (*init)(void *instance);
+
+} metal_backend_i;
+
+typedef struct metal_api {
+    metal_backend_i *(*create_backend)(struct allocator_i *allocator);
+    void (*destroy_backend)(metal_backend_i *backend);
+} metal_api;
+
 #endif // OS_OSX
-#endif
