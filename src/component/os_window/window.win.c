@@ -1,9 +1,9 @@
+#include "os_window.h"
+#include "foundation/array.inl"
+
 #if defined(OS_WINDOWS) || defined(OS_LINUX)
 
-#include "os_window.h"
-
 #include "component/render_system/vulkan/vulkan_backend.h"
-#include "foundation/array.inl"
 
 typedef struct window_t {
     GLFWwindow *native_window;

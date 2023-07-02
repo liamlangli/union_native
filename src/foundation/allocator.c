@@ -5,7 +5,7 @@
 
 static allocator_state_t g_allocator_state;
 
-static void *system_realloc(void *allocator, void* old_ptr, u64 old_size, u64 new_size, const char *file, u32 line)
+static void *system_realloc(struct allocator_i *allocator, void* old_ptr, u64 old_size, u64 new_size, const char *file, u32 line)
 {
     atomic_fetch_add_u64(&g_allocator_state.system_allocation_count, (new_size ? 1 : 0) - (old_size ? 1 : 0));
     atomic_fetch_add_u64(&g_allocator_state.system_allocated_bytes, new_size - old_size);

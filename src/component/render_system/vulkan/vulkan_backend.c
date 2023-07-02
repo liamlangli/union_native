@@ -1,10 +1,9 @@
+#include <stdlib.h>
+#include "foundation/os.h"
+
 #if defined(OS_WINDOWS) || defined(OS_LINUX)
 
 #include "vulkan_backend.h"
-
-#include "foundation/os.h"
-
-#include <stdlib.h>
 
 VkInstance vk_create_instance(void) {
     VkApplicationInfo app_info = {

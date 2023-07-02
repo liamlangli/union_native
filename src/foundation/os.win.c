@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #if defined(OS_WINDOWS)
 
 #include "foundation/os.h"

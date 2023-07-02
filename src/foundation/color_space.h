@@ -3,6 +3,8 @@
 #include "foundation/types.h"
 #include "foundation/simd.h"
 
+struct autorelease_allocator_i;
+
 enum {
     COLOR_SPACE_SETTINGS_COLOR_PRIMARY,
     COLOR_SPACE_SETTINGS_TRANSFER_FUNCTION,
@@ -57,7 +59,7 @@ typedef struct color_space_desc_t {
 
 struct color_space_api {
     bool (*color_space_equal)(const color_space_desc_t *a, const color_space_desc_t *b);
-    const char *(*human_readable)(const color_space_desc_t *color_space, struct allocator *allocator);
+    const char *(*human_readable)(const color_space_desc_t *color_space, struct autorelease_allocator_i *allocator);
     void (*color_space_to_cie_xyz)(f32 xr, f32 yr, f32 xg, f32 tg, f32 xb, f32 yb, f32 xw, f32 yw, float4x4_t *res);
 };
 

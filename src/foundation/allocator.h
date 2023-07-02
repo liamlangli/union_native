@@ -10,7 +10,7 @@ typedef struct allocator_i {
     u32 mem_scope;
     MACRO_PAD(4);
 
-    void *(*realloc)(allocator_i *allocator, void *ptr, u64 old_size, u64 new_size, const char *file, u32 line);
+    void *(*realloc)(struct allocator_i *allocator, void *ptr, u64 old_size, u64 new_size, const char *file, u32 line);
 } allocator_i;
 
 #define macro_alloc(a, sz) (a)->relloc((a), NULL, 0, sz, __FILE__, __LINE__)
@@ -42,7 +42,7 @@ struct allocator_api {
     allocator_i (*create_leaky_root_scope) (const allocator_i *parent, const char *desc);
 
     allocator_i (*create_fixed_vm) (u64 reserve_size, u32 mem_scope);
-} allocator_api;
+};
 
 extern struct allocator_api *allocator_api;
 
