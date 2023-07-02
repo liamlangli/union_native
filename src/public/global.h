@@ -1,5 +1,4 @@
-#ifndef _global_h_
-#define _global_h_
+#pragma once
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -39,4 +38,3 @@ typedef double f64;
 #define MACRO_OFFSET_OF_MEMEBER(structure, member) (u32)((char *)&((structure *)0)->member - (char *)0)
 #define MACRO_SIZEOF_MEMBER(structure, member) ((u32)sizeof(((structure *)0)->member))
 
-#endif

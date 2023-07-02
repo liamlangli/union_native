@@ -1,5 +1,4 @@
-#ifndef _os_h_
-#define _os_h_
+#pragma once
 
 #include "public/global.h"
 #include "foundation/allocator.h"
@@ -224,5 +223,3 @@ struct os_api {
 };
 
 extern struct os_api *os_api;
-
-#endif // _os_h_

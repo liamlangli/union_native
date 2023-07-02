@@ -1,5 +1,4 @@
-#ifndef _job_system_h_
-#define _job_system_h_
+#pragma once
 
 #include "public/global.h"
 
@@ -11,4 +10,3 @@ typedef struct {
 
 job_system_api* job_system_default(void);
 
-#endif

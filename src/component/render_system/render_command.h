@@ -1,5 +1,4 @@
-#ifndef _render_command_h_
-#define _render_command_h_
+#pragma once
 
 #include "foundation/types.h"
 #include "component/render_system/render_types.h"
@@ -96,15 +95,15 @@ typedef struct render_queue_bind_t {
 
 enum { RENDER_MAX_VIEWPORT_SCISSOR_RECTS = 8 };
 
-typedef struct render_set_viewport_t {
+typedef struct render_set_viewports_t {
     rect_t viewports[RENDER_MAX_VIEWPORT_SCISSOR_RECTS];
     u32 viewport_count;
-} render_viewport_t;
+} render_viewports_t;
 
-typedef struct render_set_scissor_t {
+typedef struct render_set_scissors_t {
     rect_t scissors[RENDER_MAX_VIEWPORT_SCISSOR_RECTS];
     u32 scissor_count;
-} render_scissor_t;
+} render_scissors_t;
 
 typedef struct render_profile_begin_t {
     const char* category;
@@ -391,5 +390,3 @@ typedef struct render_trace_call_t {
     u32 raygen_index;
     render_shader_resource_binders_t binders;
 } render_trace_call_t;
-
-#endif

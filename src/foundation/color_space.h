@@ -1,5 +1,4 @@
-#ifndef _color_space_h_
-#define _color_space_h_
+#pragma once
 
 #include "foundation/types.h"
 #include "foundation/simd.h"
@@ -63,5 +62,3 @@ struct color_space_api {
 };
 
 extern struct color_space_api *color_space_api;
-
-#endif

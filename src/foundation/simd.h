@@ -1,5 +1,4 @@
-#ifndef _simd_h_
-#define _simd_h_
+#pragma once
 
 #include "public/global.h"
 #include <math.h>
@@ -39,5 +38,3 @@ typedef struct {
     float zx, zy, zz, zw;
     float wx, wy, wz, ww;
 } float4x4_t;
-
-#endif

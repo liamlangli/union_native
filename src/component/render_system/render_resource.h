@@ -1,5 +1,4 @@
-#ifndef _render_resource_h_
-#define _render_resource_h_
+#pragma once
 
 #include "foundation/types.h"
 #include "component/render_system/render_types.h"
@@ -232,5 +231,3 @@ typedef struct render_resource_bind_point_t {
     u32 usage; // render_resource_bind_usage_flag_t
     u32 count;
 } render_resource_bind_point_t;
-
-#endif

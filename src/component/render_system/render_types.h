@@ -1,5 +1,4 @@
-#ifndef _render_types_h_
-#define _render_types_h_
+#pragma once
 
 #include "foundation/types.h"
 
@@ -61,4 +60,3 @@ typedef struct render_shader_blob_t {
     u8 *data;
 } render_shader_blob_t;
 
-#endif // _render_types_h_

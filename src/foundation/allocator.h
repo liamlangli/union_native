@@ -1,5 +1,4 @@
-#ifndef _allocator_h_
-#define _allocator_h_
+#pragma once
 
 #include "foundation/types.h"
 #include "foundation/atomic.inl"
@@ -47,4 +46,3 @@ struct allocator_api {
 
 extern struct allocator_api *allocator_api;
 
-#endif

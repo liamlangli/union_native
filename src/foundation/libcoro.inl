@@ -1,5 +1,3 @@
-// tm_docgen off
-
 /*
  * Copyright (c) 2001-2012,2015 Marc Alexander Lehmann <schmorp@schmorp.de>
  *

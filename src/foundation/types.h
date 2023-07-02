@@ -1,5 +1,4 @@
-#ifndef _types_h_
-#define _types_h_
+#pragma once
 
 #include "simd.h"
 #include <string.h>
@@ -50,4 +49,3 @@ typedef struct color_srgb_t {
 #define ATOMIC _Atomic
 #endif
 
-#endif

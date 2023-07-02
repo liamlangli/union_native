@@ -1,5 +1,4 @@
-#ifndef _array_h_
-#define _array_h_
+#pragma once
 
 #include "public/global.h"
 #include "foundation/allocator.h"
@@ -84,6 +83,3 @@ static inline void *array_grow_internal(void* arr, u64 to_at_least, u64 item_siz
     const u64 new_capacity = MACRO_MAX(min_new_capacity, to_at_least);
     return array_set_capacity_internal(arr, new_capacity, item_size, allocator, file, line);
 }
-
-
-#endif

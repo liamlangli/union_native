@@ -1,5 +1,4 @@
-#ifndef _render_backend_h_
-#define _render_backend_h_
+#pragma once
 
 #include "component/render_system/render_types.h"
 #include "component/render_system/render_command_buffer.h"
@@ -27,4 +26,3 @@ typedef struct render_backend_i {
 
     void (*create_command_buffers)(render_backend_o *instance, render_command_t swapchain, u32 count);
 } render_backend_i;
-#endif // _render_backend_h_

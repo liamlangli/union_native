@@ -1,5 +1,4 @@
-#ifndef _render_system_h_
-#define _render_system_h_
+#pragma once
 
 #include "component/os_window/os_window.h"
 #include "foundation/types.h"
@@ -19,4 +18,3 @@ void render_system_delete_graphics_pipeline(graphic_pipeline_o *pipeline);
 
 void render_system_terminate(void);
 
-#endif

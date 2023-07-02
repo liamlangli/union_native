@@ -1,5 +1,4 @@
-#ifndef _json_h_
-#define _json_h_
+#pragma once
 
 #include "types.h"
 
@@ -76,5 +75,3 @@ struct json_api {
     // void (*parse)(const char *json, struct );
     void (*print)(void);
 };
-
-#endif
