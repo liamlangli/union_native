@@ -16,3 +16,11 @@ union_native
     - Network abstract layer. [tcp/udp/http]
     - Basic primitive drawing layer.
     - User interface rendering layer.
+
+# Build
+- Collect source files.   
+    `make collect`
+- Convert shader files.   
+    `make convert`
+- Build & Run.   
+    `make run`

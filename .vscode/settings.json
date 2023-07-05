@@ -59,6 +59,25 @@
         "xlocbuf": "c",
         "__config": "c",
         "__tree": "c",
-        "locale": "c"
+        "locale": "c",
+        "platform.h": "c",
+        "array": "c",
+        "compare": "c",
+        "format": "c",
+        "functional": "c",
+        "memory": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "variant": "c",
+        "xmemory": "c",
+        "xstring": "c",
+        "xtr1common": "c",
+        "xutility": "c",
+        "__hash_table": "c",
+        "charconv": "c",
+        "forward_list": "c",
+        "limits": "c"
     }
 }

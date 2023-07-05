@@ -40,3 +40,5 @@ typedef double f64;
 #define MACRO_OFFSET_OF_MEMEBER(structure, member) (u32)((char *)&((structure *)0)->member - (char *)0)
 #define MACRO_SIZEOF_MEMBER(structure, member) ((u32)sizeof(((structure *)0)->member))
 
+#define MACRO_REINTERPRET_CAST(new_type, value) (*((new_type *)&(value)))
+
