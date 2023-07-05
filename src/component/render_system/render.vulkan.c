@@ -1,7 +1,7 @@
 #include "component/render_system/render_system.h"
 #include "component/render_system/vulkan/vulkan_backend.h"
 
-#if defined(OS_WINDOWS) || defined(OS_LINUX)
+#if defined(RENDER_BACKEND_VULKAN)
 
 typedef struct render_system_t {
     VkInstance instance;

@@ -1,4 +1,4 @@
-#if defined(RENDE_BACKEND_VULKAN)
+#if defined(RENDER_BACKEND_VULKAN)
 
 #ifndef _vulkan_backend_h_
 #define _vulkan_backend_h_
