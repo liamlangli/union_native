@@ -6,9 +6,26 @@
 #include "component/render_system/render_system.h"
 #include "component/script/script.h"
 
+#include "plugin/arg_parse/arg_parse.h"
+
 #include <string.h>
 
+const char *description = """ union native """
+""" Cross-platform script driven application framework. \n""";
+
 int main(int argc, char **argv) {
+    arg_parser_o *parser = arg_parse->create_parser();
+    arg_parse->set_description(parser, description); 
+    arg_parse->add_string(parser, "w", "workspace", "set working directory.", "./");
+    arg_parse->help(parser);
+    arg_parse->parse(parser, argc, argv);
+
+    char *workspace;
+    if (arg_parse->get_string(parser, "w", "workspace", &workspace)) {
+        printf("workspace: %s\n", workspace);
+    }
+
+
     script_context_t context = script->create_context();
     // script_value_t value = script->eval(&context, "1 + 2", 5);
     char *content = NULL;

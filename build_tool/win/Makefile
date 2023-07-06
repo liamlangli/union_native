@@ -1,5 +1,7 @@
 .PHONY: all clean
 
+VULKAN_INSTALL_PATH=D:/VulkanSDK/1.3.250.0
+
 CC=clang
 BUILD_PATH=build/
 APP=$(BUILD_PATH)app.exe
@@ -14,8 +16,8 @@ GLFW_INC=-I"external/glfw/3.3.8/include"
 GLFW_LIB=-L"external/glfw/3.3.8/lib-vc2019" -lglfw3dll
 GLFW_DLL="external/glfw/3.3.8/lib-vc2019/glfw3.dll"
 
-VULKAN_INC=-I"D:/VulkanSDK/1.3.250.0/Include"
-VULKAN_LIB=-L"D:/VulkanSDK/1.3.250.0/Lib" -l"vulkan-1"
+VULKAN_INC=-I$(VULKAN_INSTALL_PATH)/Include
+VULKAN_LIB=-L$(VULKAN_INSTALL_PATH)/Lib -l"vulkan-1"
 
 QUICKJS_INC=-I"external/quickjs/include"
 QUICKJS_LIB=-L"external/quickjs/lib/mingw_w64" -lquickjs -lpthread
