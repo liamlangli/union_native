@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-const char *description = """ union native """
+const char *description = """[union native]"""
 """ Cross-platform script driven application framework. \n""";
 
 int main(int argc, char **argv) {
@@ -24,7 +24,6 @@ int main(int argc, char **argv) {
     if (arg_parse->get_string(parser, "w", "workspace", &workspace)) {
         printf("workspace: %s\n", workspace);
     }
-
 
     script_context_t context = script->create_context();
     // script_value_t value = script->eval(&context, "1 + 2", 5);

@@ -14,6 +14,8 @@
  limitations under the License.
 */
 
+#pragma clang diagnostic ignored "-Weverything"
+
 #include "spirv_reflect.h"
 #include <assert.h>
 #include <stdbool.h>

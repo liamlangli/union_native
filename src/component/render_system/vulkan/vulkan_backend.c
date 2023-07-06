@@ -760,7 +760,7 @@ VkCommandPool vk_create_command_pool(VkDevice *device, u32 queue_family_index) {
     	VkCommandPoolCreateInfo command_pool_create_info = {
 		VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 		VK_NULL_HANDLE,
-		0,
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		queue_family_index
 	};
 

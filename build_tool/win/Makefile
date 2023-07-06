@@ -3,9 +3,9 @@
 VULKAN_INSTALL_PATH=D:/VulkanSDK/1.3.250.0
 
 CC=clang
-BUILD_PATH=build/
-APP=$(BUILD_PATH)app.exe
-ENTRY_POINT=src/main.c
+BUILD_PATH=build
+APP=$(BUILD_PATH)/main.exe
+ENTRY_POINT=src/app/main.c
 
 CCFLAGS += -Wgnu-include-next
 
@@ -32,7 +32,7 @@ all:
 	MSYS_NO_PATHCONV=1 $(CC) $(CCFLAGS) -o $(APP) $(INC) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
-	cp $(GLFW_DLL) $(BUILD_PATH)
+	cp $(GLFW_DLL) $(BUILD_PATH)/
 	./$(APP)
 
 clear:

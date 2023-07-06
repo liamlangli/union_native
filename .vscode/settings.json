@@ -79,6 +79,7 @@
         "charconv": "c",
         "forward_list": "c",
         "limits": "c",
-        "arg_parse.h": "c"
+        "arg_parse.h": "c",
+        "stb_image.h": "c"
     }
 }

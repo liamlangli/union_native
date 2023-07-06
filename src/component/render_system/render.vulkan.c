@@ -11,6 +11,7 @@ typedef struct render_system_t {
     VkPhysicalDevice *physical_devices;
     VkPhysicalDevice *best_physical_device;
     u32 best_physical_device_index;
+    u32 best_queue_family_index;
     VkCommandPool command_pool;
 } render_system_t;
 
@@ -56,6 +57,7 @@ void render_system_init(void) {
     render_system.device = device;
 
     u32 best_queue_family_index = vk_get_best_graphics_queue_family_index(queue_family_props, queue_family_count);
+    render_system.best_queue_family_index = best_queue_family_index;
     VkQueue graphics_queue = vk_get_drawing_queue(&device, best_queue_family_index);
     u32 graphics_queue_mode = vk_get_graphics_queue_mode(queue_family_props, best_queue_family_index);
     render_system.graphics_queue = graphics_queue;
@@ -135,9 +137,11 @@ void render_system_delete_swapchain(swapchain_o *swapchain) {
 void render_system_swapchain_present(swapchain_o *swapchain) {
     VkFence *back_fences = swapchain->back_fences;
     VkFence *front_fences = swapchain->front_fences;
+    VkImage *images = swapchain->swapchain_images;
     VkSemaphore *wait_semaphores = swapchain->wait_semaphores;
     VkSemaphore *signal_semaphores = swapchain->signal_semaphores;
     VkCommandBuffer *command_buffers = swapchain->command_buffers;
+    u32 queue_family_index = render_system.best_queue_family_index;
     u32 current_frame = swapchain->current_frame;
     u32 max_frames = swapchain->max_frames;
 
@@ -148,6 +152,54 @@ void render_system_swapchain_present(swapchain_o *swapchain) {
     if(back_fences[image_index] != VK_NULL_HANDLE){
 		vkWaitForFences(render_system.device, 1, &back_fences[image_index], VK_TRUE, UINT64_MAX);
 	}
+
+    VkCommandBufferBeginInfo cb_begin = { 0 };
+    cb_begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cb_begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    
+    VkImageSubresourceRange image_range = {
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        0,
+        1,
+        0,
+        1
+    };
+
+    VkImageMemoryBarrier present_to_clear_barrier = {
+        VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        VK_NULL_HANDLE,
+        VK_ACCESS_MEMORY_READ_BIT,
+        VK_ACCESS_TRANSFER_WRITE_BIT,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        queue_family_index,
+        queue_family_index,
+        images[image_index],
+        image_range,
+    };
+
+    // Change layout of image to be optimal for presenting
+    VkImageMemoryBarrier clear_to_present_barrier = { 
+        VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        VK_NULL_HANDLE,
+        VK_ACCESS_TRANSFER_WRITE_BIT,
+        VK_ACCESS_MEMORY_READ_BIT,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        queue_family_index,
+        queue_family_index,
+        images[image_index],
+        image_range
+    };
+
+    vkBeginCommandBuffer(command_buffers[image_index], &cb_begin);
+    VkClearColorValue clear_color = {1.0f, 0.f, 0.f, 1.0f};
+    VkClearValue clear_value;
+    vkCmdPipelineBarrier(command_buffers[image_index], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, 1, &present_to_clear_barrier);
+    vkCmdClearColorImage(command_buffers[image_index], images[image_index], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
+    vkCmdPipelineBarrier(command_buffers[image_index], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, 1, &clear_to_present_barrier);
+
+    vkEndCommandBuffer(command_buffers[image_index]);
 
     back_fences[image_index] = front_fences[current_frame];
 	VkPipelineStageFlags pipeline_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

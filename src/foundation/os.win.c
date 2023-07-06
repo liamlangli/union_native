@@ -130,8 +130,24 @@ static file_stat_t file_system_stat(const char *path)
     return res;
 }
 
+static bool file_system_read_file(const char *path, void **buffer, u64 *size)
+{
+    file_stat_t stat = file_system_stat(path);
+    if (!stat.exists || stat.is_directory)
+        return false;
+
+    char* source = malloc(stat.size);
+    file_o file = file_io_open_input(path);
+    file_io_read(file, source, stat.size);
+
+    *buffer = source;
+    *size = stat.size;
+    return true;
+}
+
 static struct os_file_system_api file_system = {
-    .stat = file_system_stat,
+    .stat = &file_system_stat,
+    .read_file = &file_system_read_file
 };
 
 #pragma endregion

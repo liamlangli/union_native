@@ -20,7 +20,7 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
             "configurationProvider": "vector-of-bool.cmake-tools",
-            "compileCommands": "${workspaceFolder}/Makefile"
+            // "compileCommands": "${workspaceFolder}/Makefile"
         },
         {
             "name": "Linux",
@@ -64,7 +64,7 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x64",
             "configurationProvider": "vector-of-bool.cmake-tools",
-            "compileCommands": "${workspaceFolder}/Makefile"
+            // "compileCommands": "${workspaceFolder}/Makefile"
         }
     ],
     "version": 4
