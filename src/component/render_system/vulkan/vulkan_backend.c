@@ -313,7 +313,7 @@ VkSwapchainKHR vk_create_swapchain(VkDevice *device, VkSurfaceKHR *surface, VkSu
 	u32 queue_family_index_count = 0;
     u32 *ptr_queue_family_indices = VK_NULL_HANDLE;
 	u32 queue_family_indices[] = {0, 1};
-	if(graphics_queue_mode == 1){
+	if(graphics_queue_mode == DOUBLE_QUEUE_MODE){
 		image_sharing_mode = VK_SHARING_MODE_CONCURRENT;
 		queue_family_index_count = 2;
 		ptr_queue_family_indices = queue_family_indices;

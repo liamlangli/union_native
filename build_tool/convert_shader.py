@@ -4,11 +4,9 @@ import os
 import sys
 from path_util import gurad_dir
 
-HLSL_INPUT_DIR = "resource/shader/hlsl"
-METAL_INPUT_DIR = "resource/shader/metal"
+HLSL_INPUT_DIR = "resource/shader/"
 
 SPRIV_OUTPUT_DIR = "build/spirv"
-METALLIB_OUTPUT_DIR = "build/metallib"
 
 OS_WINDOWS = "OS_WINDOWS"
 OS_LINUX = "OS_LINUX"
@@ -38,17 +36,8 @@ def convert_hlsl_to_spriv():
         os.system("dxc -spirv -T ps_6_0 -E pixel_main -Fo " + pixel_output_filename + " " + source)
 
 def convert_metal_to_metallib():
-    gurad_dir(METALLIB_OUTPUT_DIR)
-    source_files = []
-    recursive_traverse(METAL_INPUT_DIR, source_files, ".metal")
-    intermediate_files = []
-    for source in source_files:
-        filename = os.path.basename(source)
-        air_filename = os.path.join(METALLIB_OUTPUT_DIR, filename.replace(".metal", ".air"))
-        intermediate_files.append(air_filename)
-        print("convert " + source)
-        os.system("xcrun -sdk macosx metal -c " + source + " -o " + air_filename)
-    os.system("xcrun -sdk macosx metallib " + " ".join(intermediate_files) + " -o " + os.path.join(METALLIB_OUTPUT_DIR, "default.metallib"))
+    # TODO: convert hlsl shader to metallib
+    pass 
 
 def convert():
     # read first input arguments

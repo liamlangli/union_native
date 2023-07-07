@@ -80,6 +80,7 @@
         "forward_list": "c",
         "limits": "c",
         "arg_parse.h": "c",
-        "stb_image.h": "c"
+        "stb_image.h": "c",
+        "ios": "c"
     }
 }

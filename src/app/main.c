@@ -34,13 +34,19 @@ int main(int argc, char **argv) {
         printf("eval returns: %d\n", script->to_int(&context, value));
     }
 
-    render_system_init();
+    render_system->init();
     rect_t window_rect = (rect_t){.x = 100.f, .y = 100.f, .w = 800, .h = 600 };
     window_t *window = platform_window_create("Hello World", window_rect);
-    swapchain_o *swapchain = render_system_create_swapchain(window);
+    swapchain_o *swapchain = render_system->create_swapchain(window);
+    render_pass_o *render_pass = render_system->get_swapchain_render_pass(swapchain);
+
     while(platform_window_update(window)) {
-        render_system_swapchain_present(swapchain);
+        render_system->present_swapchain(swapchain);
     }
+
+    render_system->delete_swapchain(swapchain);
+    render_system->terminate();
+
     platform_window_destroy(window);
     return 0;
 }
