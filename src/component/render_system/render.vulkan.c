@@ -231,7 +231,7 @@ static void render_system_swapchain_present(swapchain_o *swapchain) {
 	swapchain->current_frame = (current_frame + 1) % max_frames;
 }
 
-static graphics_pipeline_o* render_system_create_graphics_pipeline(render_pass_o *pass, const char* vertex_source, const char* pixel_source)
+static graphics_pipeline_o* render_system_create_graphics_pipeline(render_pass_o *pass, shader_t *shader)
 {
     graphics_pipeline_o *pipeline = malloc(sizeof(graphics_pipeline_o));
     // VkPipelineLayout layout = vk_create_pipeline_layout(&render_instance.device);
