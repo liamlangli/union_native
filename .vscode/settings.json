@@ -81,6 +81,9 @@
         "limits": "c",
         "arg_parse.h": "c",
         "stb_image.h": "c",
-        "ios": "c"
+        "ios": "c",
+        "xiosbase": "c",
+        "__locale": "c",
+        "ui_draw.h": "c"
     }
 }

@@ -1,26 +1,4 @@
-#include "ui.h"
-
-enum ui_corner {
-    TOP_LEFT = 0 << 24,
-    TOP_RIGHT = 1 << 24,
-    BOTTOM_LEFT = 2 << 24,
-    BOTTOM_RIGHT = 3 << 24,
-};
-
-enum ui_primitive_type {
-    UI_PRIMITIVE_TYPE_TRIANGLE = 1 << 26,
-    UI_PRIMITIVE_TYPE_TRIANGLE_TEXTURED = 2 << 26,
-    UI_PRIMITIVE_TYPE_RECTANGLE = 3 << 26,
-    UI_PRIMITIVE_TYPE_RECTANGLE_TEXTURED = 4 << 26,
-    UI_PRIMITIVE_TYPE_SCREEN = 7 << 26,
-    UI_PRIMITIVE_TYPE_ICON = 8 << 26,
-    UI_PRIMITIVE_TYPE_ATLAS = 9 << 26,
-    UI_PRIMITIVE_TYPE_DASH = 10 << 26,
-    UI_PRIMITIVE_TYPE_ENTITY = 11 << 26,
-    UI_PRIMITIVE_TYPE_DASH_ANIMATED = 12 << 26,
-    UI_PRIMITIVE_TYPE_GLYPH = 32 << 26,
-    UI_PRIMITIVE_TYPE_GLYPH_CODE = 33 << 26,
-};
+#include "component/ui/ui_primitive_buffer.h"
 
 enum ui_clip_result {
     CLIP_RESULT_DISCARD = 0,
@@ -35,24 +13,7 @@ static const f32 rr_cos[4] = {
     0.9424777960769379f,
     1.2566370614359172f
 };
-
-typedef struct ui_primitive_layer_t {
-    f32* vertices;
-    u32* indices;
-
-    u32 vertex_count;
-    u32 index_count;
-
-    u32 last_vertex_count;
-    u32 last_index_count;
-} ui_primitive_layer_t;
-
-const i32 MAX_UI_PRIMITIVE_LAYERS = 4;
-
-typedef struct ui_primitive_buffer_t {
-    ui_primitive_layer_t layers[4];
-} ui_primitive_buffer_t;
-
+ 
 static inline u32 encode_vertex_id(enum ui_primitive_type type, enum ui_corner corner, u32 index) {
     return type | corner | (index >> 2);
 }
@@ -216,4 +177,33 @@ static void round_rect_path(rect_t rect, float4_t radiuses) {
         num_point += 6;
     }
     __polyline.num_point = num_point;
+}
+
+u32 ui_primitive_layer_write_vertex(ui_primitive_layer_t *layer, ui_vertex_t vertex) {
+    u32 offset = layer->vertex_offset;
+    layer->vertex_data[offset] = vertex;
+    layer->vertex_offset++;
+    return offset;
+}
+
+u32 ui_primitive_layer_write_index(ui_primitive_layer_t *layer, u32 index)
+{
+    u32 offset = layer->index_offset;
+    layer->index_data[offset] = index;
+    layer->index_offset++;
+    return offset;
+}
+
+ui_vertex_t* ui_primitive_layer_vertex_view(ui_primitive_layer_t *layer, u32 vertex_count)
+{
+    u32 offset = layer->vertex_offset;
+    layer->vertex_offset += vertex_count;
+    return &layer->vertex_data[offset];
+}
+
+u32* ui_primitive_layer_index_view(ui_primitive_layer_t *layer, u32 index_count)
+{
+    u32 offset = layer->index_offset;
+    layer->index_offset += index_count;
+    return &layer->index_data[offset];
 }
