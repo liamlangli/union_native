@@ -1,21 +1,21 @@
 #pragma once
 
-#include "simd.h"
+#include "foundation/simd.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct {
+typedef struct transform_t {
     float3_t location;
     quaternion_t rotation;
     float3_t scale;
 } transform_t;
 
-typedef struct {
+typedef struct rect_t {
     f32 x, y, w, h;
 } rect_t;
 
-typedef struct {
+typedef struct string_t {
     const char* data;
     u32 size;
     u32 null_terminated;

@@ -29,7 +29,7 @@ struct ui_draw_api {
     void (*fill_convex_polyline)(ui_primitive_layer_t *layer, const ui_style_t *style, const float2_t *points, u32 point_count);
 
     void (*stroke_polyline)(ui_primitive_layer_t *layer, const ui_style_t *style, const float2_t *points, u64 point_count, bool closed);
-    void (*stroke_polyline_widths)(ui_primitive_layer_t *layer, const ui_style_t *style, const float2_t *points, u64 point_count, bool closed);
+    void (*stroke_polyline_widths)(ui_primitive_layer_t *layer, const ui_style_t *style, const float2_t *points, const f32 *widths, u64 point_count, bool closed);
 
     void (*draw_glyphs)(ui_primitive_layer_t *layer, const ui_style_t *style, float2_t origin, const u16 *glyphs, u32 glyph_count);
 };  

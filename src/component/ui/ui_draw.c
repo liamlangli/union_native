@@ -9,14 +9,6 @@ enum ui_clip_result {
     CLIP_RESULT_CLIP,
 };
 
-static const int num_corner_point = 4;
-static const f32 rr_cos[4] = {
-    0.3141592653589793f,
-    0.6283185307179586f,
-    0.9424777960769379f,
-    1.2566370614359172f
-};
-
 static inline f32 u8_to_color_float(u8 c) {
     return ((f32)c) / 255.f;
 }
@@ -74,119 +66,70 @@ typedef struct polyline_t {
     f32 width, feather, dash_offset;
     color_srgb_t color;
 
+    u32 type;
+
     u32 point_count;
     float2_t *points;
     f32 *widths;
 } polyline_t;
 
-static polyline_t __polyline;
-
-typedef struct round_rect_t {
-    bool dashed;
-    u32 clip;
-    f32 width, feather, dash_offset;
-    color_srgb_t color;
-    float4_t radiuses;
-    rect_t rect;
-} round_rect_t;
-
-static void round_rect_corner(float2_t *points, u32 offset, float2_t center, float2_t c, float2_t s) {
-    points[offset + 0] = (float2_t){center.x + c.x * rr_cos[0] + s.x * rr_cos[3], center.y + c.y * rr_cos[0] + s.y * rr_cos[3]};
-    points[offset + 1] = (float2_t){center.x + c.x * rr_cos[1] + s.x * rr_cos[2], center.y + c.y * rr_cos[1] + s.y * rr_cos[2]};
-    points[offset + 2] = (float2_t){center.x + c.x * rr_cos[2] + s.x * rr_cos[1], center.y + c.y * rr_cos[2] + s.y * rr_cos[1]};
-    points[offset + 3] = (float2_t){center.x + c.x * rr_cos[3] + s.x * rr_cos[0], center.y + c.y * rr_cos[3] + s.y * rr_cos[0]};
+static inline rect_t intersect_rect(rect_t r1, rect_t r2)
+{
+    float l = r1.x > r2.x ? r1.x : r2.x;
+    float r = r1.x + r1.w < r2.x + r2.w ? r1.x + r1.w : r2.x + r2.w;
+    float t = r1.y > r2.y ? r1.y : r2.y;
+    float b = r1.y + r1.h < r2.y + r2.h ? r1.y + r1.h : r2.y + r2.h;
+    if (l >= r || t >= b)
+        return (rect_t){ 0 };
+    return (rect_t){ .x = l, .y = t, .w = r - l, .h = b - t };
 }
 
-static void round_rect_path(rect_t rect, float4_t radiuses) {
-    f32 max_radius = MACRO_MIN(rect.w * 0.25f, rect.h * 0.25f);
-    radiuses.x = MACRO_MIN(radiuses.x, max_radius);
-    radiuses.y = MACRO_MIN(radiuses.y, max_radius);
-    radiuses.z = MACRO_MIN(radiuses.z, max_radius);
-    radiuses.w = MACRO_MIN(radiuses.w, max_radius);
-
-    float2_t p0 = (float2_t){rect.x + radiuses.x, rect.y + radiuses.y};
-    float2_t p1 = (float2_t){rect.x + rect.w - radiuses.y, rect.y + radiuses.y};
-    float2_t p2 = (float2_t){rect.x + radiuses.z, rect.y + rect.h - radiuses.z};
-    float2_t p3 = (float2_t){rect.x + rect.w - radiuses.w, rect.y + rect.h - radiuses.w};
-
-    float2_t *data = __polyline.points;
-    u32 offset = 0;
-
-
-    u32 point_count = 0;
-    if (radiuses.x <= EPSILON) {
-        data[offset++] = p0;
-        point_count++;
-    } else {
-        data[offset++] = (float2_t){ rect.x, p0.y };
-        float2_t c = (float2_t){ -radiuses.x, 0.f };
-        float2_t s = (float2_t){ 0.f, -radiuses.x };
-        round_rect_corner(data, offset, p0, c, s);
-        offset += 4;
-        data[offset++] = (float2_t){ p0.x, rect.y };
-        point_count += 6;
-    }
-
-    if (radiuses.y <= EPSILON) {
-        data[offset++] = p1;
-        point_count++;
-    } else {
-        data[offset++] = (float2_t){ rect.x + rect.w, p1.y };
-        float2_t c = (float2_t){ 0.f, -radiuses.y };
-        float2_t s = (float2_t){ radiuses.y, 0.f };
-        round_rect_corner(data, offset, p1, c, s);
-        offset += 4;
-        data[offset++] = (float2_t){ p1.x, rect.y };
-        point_count += 6;
-    }
-
-    if (radiuses.w <= EPSILON) {
-        data[offset++] = p3;
-        point_count++;
-    } else {
-        data[offset++] = (float2_t){ rect.x + rect.w, p3.y };
-        float2_t c = (float2_t){ radiuses.w, 0.f };
-        float2_t s = (float2_t){ 0.f, radiuses.w };
-        round_rect_corner(data, offset, p3, c, s);
-        offset += 4;
-        data[offset++] = (float2_t){ p3.x, rect.y + rect.h };
-        point_count += 6;
-    }
-
-    if (radiuses.z <= EPSILON) {
-        data[offset++] = p2;
-        point_count++;
-    } else {
-        data[offset++] = (float2_t){ rect.x, p2.y };
-        float2_t c = (float2_t){ 0.f, radiuses.z };
-        float2_t s = (float2_t){ -radiuses.z, 0.f };
-        round_rect_corner(data, offset, p2, c, s);
-        offset += 4;
-        data[offset++] = (float2_t){ p2.x, rect.y + rect.h };
-        point_count += 6;
-    }
-    __polyline.point_count = point_count;
+static u32 add_clip_rect(ui_primitive_layer_t *layer, rect_t clip) {
+    ui_vertex_t vertex = { 0 };
+    vertex.rect_vertex.rect = clip;
+    return ui_primitive_layer_write_vertex(layer, vertex);
 }
+
+static u32 add_sub_clip_rect(ui_primitive_layer_t *layer, u32 parent, rect_t clip) {
+    if (!parent)
+        return add_clip_rect(layer, clip);
+    rect_t parent_rect = layer->vertex_data[parent].rect_vertex.rect;
+    return add_clip_rect(layer, intersect_rect(parent_rect, clip));
+}
+
+static rect_t clip_rect(ui_primitive_layer_t *layer, u32 clip) {
+    if (!clip) return (rect_t){ 0 };
+    return layer->vertex_data[clip].rect_vertex.rect;
+}
+
+static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
+    const u32 type = polyline->type;
+    const u32 stride = 1;
+    // const f32 a = 
+}
+
+static ui_count_t fill_convex_polyline_no_feather_internal();
 
 // struct
-static ui_count_t stroke_polyline_internal(enum ui_primitive_type type, ui_primitive_layer_t *layer) {
+static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     float2_t prev_point, next_point, point;
 
-    const bool closed = __polyline.closed;
-    const u32 point_data_count = __polyline.point_count;
+    const bool closed = polyline->closed;
+    const u32 point_data_count = polyline->point_count;
     const u32 point_count = point_data_count + (closed ? 1 : 0);
     const u32 stride = 1;
-    const float2_t *points = __polyline.points;
-    const f32 line_width = __polyline.width;
-    const f32 feather = __polyline.feather;
-    const f32 alpha =  u8_to_color_float(__polyline.color.a);
+    const float2_t *points = polyline->points;
+    const f32 line_width = polyline->width;
+    const f32 feather = polyline->feather;
+    const f32 alpha =  u8_to_color_float(polyline->color.a);
+    const u32 type = polyline->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = __polyline.color;
-    vertex.triangle_vertex.clip = __polyline.clip;
-    vertex.triangle_vertex.dash_offset = __polyline.dash_offset;
+    vertex.triangle_vertex.color = polyline->color;
+    vertex.triangle_vertex.clip = polyline->clip;
+    vertex.triangle_vertex.dash_offset = polyline->dash_offset;
 
     u32 vertex_count = 0;
     u32 index_count = 0;
@@ -217,7 +160,7 @@ static ui_count_t stroke_polyline_internal(enum ui_primitive_type type, ui_primi
         point = points[point_index];
         next_point = next_index == UINT32_MAX ? (float2_t){ .x = 0, .y = 0} : points[next_index];
 
-        const f32 width = __polyline.widths != NULL ? __polyline.widths[i] : line_width;
+        const f32 width = polyline->widths != NULL ? polyline->widths[i] : line_width;
         const f32 w = width > feather ? (width - feather) / 2.0f : 0.0f;
         const f32 a = width > feather ? feather : width;
 
@@ -451,23 +394,24 @@ static ui_count_t stroke_polyline_internal(enum ui_primitive_type type, ui_primi
     return (ui_count_t){ vertex_count, index_count };
 }
 
-static ui_count_t stroke_polyline_no_feather_internal(enum ui_primitive_type type, ui_primitive_layer_t *layer) {
+static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     float2_t prev_point, next_point, point;
 
-    const bool closed = __polyline.closed;
-    const u32 point_data_count = __polyline.point_count;
+    const bool closed = polyline->closed;
+    const u32 point_data_count = polyline->point_count;
     const u32 point_count = point_data_count + (closed ? 1 : 0);
     const u32 stride = 1;
-    const float2_t *points = __polyline.points;
-    const f32 width = __polyline.width;
-    const f32 alpha = u8_to_color_float(__polyline.color.a);
+    const float2_t *points = polyline->points;
+    const f32 width = polyline->width;
+    const f32 alpha = u8_to_color_float(polyline->color.a);
+    const u32 type = polyline->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = __polyline.color;
-    vertex.triangle_vertex.clip = __polyline.clip;
-    vertex.triangle_vertex.dash_offset = __polyline.dash_offset;
+    vertex.triangle_vertex.color = polyline->color;
+    vertex.triangle_vertex.clip = polyline->clip;
+    vertex.triangle_vertex.dash_offset = polyline->dash_offset;
     vertex.triangle_vertex.alpha = alpha;
 
     u32 vertex_count = 0;
@@ -499,7 +443,7 @@ static ui_count_t stroke_polyline_no_feather_internal(enum ui_primitive_type typ
         point = points[point_index];
         next_point = next_index == UINT32_MAX ? (float2_t){ .x = 0, .y = 0} : points[next_index];
 
-        const f32 width = __polyline.widths != NULL ? __polyline.widths[i] : __polyline.width;
+        const f32 width = polyline->widths != NULL ? polyline->widths[i] : polyline->width;
         const f32 w = width / 2.0f;
 
         if (prev_index == UINT32_MAX) {

@@ -22,8 +22,7 @@ enum ui_primitive_type {
 };
 
 typedef struct ui_vertex_rect_t {
-    float2_t point;
-    f32 w, h;
+    rect_t rect;
     color_srgb_t color;
     u32 clip;
     u32 texture_id;
