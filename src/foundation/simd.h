@@ -76,3 +76,11 @@ static inline float2_t float2_normalize(float2_t a) {
     float inv_sqrt = fast_inv_sqrt(a.x * a.x + a.y * a.y);
     return (float2_t){a.x * inv_sqrt, a.y * inv_sqrt};
 }
+
+static inline float2_t float2_normalize_safe(float2_t a) {
+    if (a.x == 0.0f && a.y == 0.0f) {
+        return (float2_t){1.0f, 1.0f};
+    }
+    float inv_sqrt = fast_inv_sqrt(a.x * a.x + a.y * a.y);
+    return (float2_t){a.x * inv_sqrt, a.y * inv_sqrt};
+}

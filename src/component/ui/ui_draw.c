@@ -102,34 +102,118 @@ static rect_t clip_rect(ui_primitive_layer_t *layer, u32 clip) {
     return layer->vertex_data[clip].rect_vertex.rect;
 }
 
-static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
-    const u32 type = polyline->type;
+static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
+    const u32 type = pl->type;
     const u32 stride = 1;
-    // const f32 a = 
+    const f32 a = pl->feather * 0.5f;
+    const f32 alpha = u8_to_color_float(pl->color.a);
+    const u32 type = pl->type;
+
+    u32 origin_offset = layer->vertex_offset;
+
+    u32 vertex_count = 0;
+    u32 index_count = 0;
+
+    ui_vertex_t vertex = { 0 };
+
+    const u32 point_count = pl->point_count;
+    for (u32 i = 0; i < point_count; ++i) {
+        const u32 prev_index = (i + point_count - 1) % point_count;
+        const u32 next_index = (i + 1) % point_count;
+        const float2_t prev_point = pl->points[prev_index];
+        const float2_t next_point = pl->points[next_index];
+        const float2_t point = pl->points[i];
+        const float2_t da = float2_normalize_safe(float2_sub(point, prev_point));
+        const float2_t db = float2_normalize_safe(float2_sub(point, next_point));
+        const float2_t na = { .x = -da.y, .y = da.x };
+        const float2_t nb = { .x = db.y, .y = -db.x };
+        const f32 dadb = float2_dot(da, db);
+        const f32 x = (float2_dot(nb, da) + float2_dot(na, db) * dadb) / (1.f - dadb *dadb);
+        float2_t n = {.x = na.x + x * da.x, .y = na.y + x * da.y};
+        const f32 n_len = sqrtf(n.x * n.x + n.y * n.y);
+        const f32 miter_limit = 5.0f;
+        if (n_len > miter_limit)
+            n.x *= miter_limit / n_len, n.y *= miter_limit / n_len;
+
+        vertex_count += 2;
+        vertex.triangle_vertex.point = float2_mul_add(point, n, a);
+        vertex.triangle_vertex.alpha = 0.f;
+        u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
+
+        vertex.triangle_vertex.point = float2_mul_add(point, n, -a);
+        vertex.triangle_vertex.alpha = alpha;
+        ui_primitive_layer_write_vertex(layer, vertex);
+
+        index_count += 6;
+
+        u32 left = origin_offset + i * stride * 2;
+        u32 right = origin_offset + ((i + 1) % point_count) * stride * 2;
+
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, left));
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, right));
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, left + stride));
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, left + stride));
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, right));
+        ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, right + stride));
+
+        if (left != origin_offset && right != origin_offset) {
+            ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, origin_offset + stride));
+            ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, left + stride));
+            ui_primitive_layer_write_index(layer, ui_encode_vertex_id(type, 0, right + stride));
+        }
+    }
+    return (struct ui_count_t){ vertex_count, index_count};
 }
 
-static ui_count_t fill_convex_polyline_no_feather_internal();
+static ui_count_t fill_convex_polyline_no_feather_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
+    const u32 type = pl->type;
+    const u32 stride = 1;
+    const f32 alpha = u8_to_color_float(pl->color.a);
+
+    u32 origin_offset = layer->vertex_offset;
+
+    u32 vertex_count = 0;
+    u32 index_count = 0;
+
+    ui_vertex_t vertex = { 0 };
+    vertex.triangle_vertex.alpha = alpha;
+
+    const u32 point_count = pl->point_count;
+    for (u32 i = 0; i < point_count; ++i) {
+        vertex.triangle_vertex.point = pl->points[i];
+        u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
+        vertex_count += 1;
+
+        u32 left = origin_offset + i * stride;
+        u32 right = origin_offset + ((i + 1) % point_count) * stride;
+        if (left != origin_offset && right != origin_offset) {
+            ui_primitive_layer_write_index(layer, origin_offset);
+            ui_primitive_layer_write_index(layer, left);
+            ui_primitive_layer_write_index(layer, right);
+        }
+    }
+}
 
 // struct
-static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
+static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     float2_t prev_point, next_point, point;
 
-    const bool closed = polyline->closed;
-    const u32 point_data_count = polyline->point_count;
+    const bool closed = pl->closed;
+    const u32 point_data_count = pl->point_count;
     const u32 point_count = point_data_count + (closed ? 1 : 0);
     const u32 stride = 1;
-    const float2_t *points = polyline->points;
-    const f32 line_width = polyline->width;
-    const f32 feather = polyline->feather;
-    const f32 alpha =  u8_to_color_float(polyline->color.a);
-    const u32 type = polyline->type;
+    const float2_t *points = pl->points;
+    const f32 line_width = pl->width;
+    const f32 feather = pl->feather;
+    const f32 alpha =  u8_to_color_float(pl->color.a);
+    const u32 type = pl->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = polyline->color;
-    vertex.triangle_vertex.clip = polyline->clip;
-    vertex.triangle_vertex.dash_offset = polyline->dash_offset;
+    vertex.triangle_vertex.color = pl->color;
+    vertex.triangle_vertex.clip = pl->clip;
+    vertex.triangle_vertex.dash_offset = pl->dash_offset;
 
     u32 vertex_count = 0;
     u32 index_count = 0;
@@ -160,7 +244,7 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
         point = points[point_index];
         next_point = next_index == UINT32_MAX ? (float2_t){ .x = 0, .y = 0} : points[next_index];
 
-        const f32 width = polyline->widths != NULL ? polyline->widths[i] : line_width;
+        const f32 width = pl->widths != NULL ? pl->widths[i] : line_width;
         const f32 w = width > feather ? (width - feather) / 2.0f : 0.0f;
         const f32 a = width > feather ? feather : width;
 
@@ -394,24 +478,24 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
     return (ui_count_t){ vertex_count, index_count };
 }
 
-static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *layer, const polyline_t *polyline) {
+static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
     u32 prev_index = UINT32_MAX;
     u32 next_index = UINT32_MAX;
     float2_t prev_point, next_point, point;
 
-    const bool closed = polyline->closed;
-    const u32 point_data_count = polyline->point_count;
+    const bool closed = pl->closed;
+    const u32 point_data_count = pl->point_count;
     const u32 point_count = point_data_count + (closed ? 1 : 0);
     const u32 stride = 1;
-    const float2_t *points = polyline->points;
-    const f32 width = polyline->width;
-    const f32 alpha = u8_to_color_float(polyline->color.a);
-    const u32 type = polyline->type;
+    const float2_t *points = pl->points;
+    const f32 width = pl->width;
+    const f32 alpha = u8_to_color_float(pl->color.a);
+    const u32 type = pl->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = polyline->color;
-    vertex.triangle_vertex.clip = polyline->clip;
-    vertex.triangle_vertex.dash_offset = polyline->dash_offset;
+    vertex.triangle_vertex.color = pl->color;
+    vertex.triangle_vertex.clip = pl->clip;
+    vertex.triangle_vertex.dash_offset = pl->dash_offset;
     vertex.triangle_vertex.alpha = alpha;
 
     u32 vertex_count = 0;
@@ -443,7 +527,7 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
         point = points[point_index];
         next_point = next_index == UINT32_MAX ? (float2_t){ .x = 0, .y = 0} : points[next_index];
 
-        const f32 width = polyline->widths != NULL ? polyline->widths[i] : polyline->width;
+        const f32 width = pl->widths != NULL ? pl->widths[i] : pl->width;
         const f32 w = width / 2.0f;
 
         if (prev_index == UINT32_MAX) {
