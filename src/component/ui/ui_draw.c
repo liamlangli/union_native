@@ -85,26 +85,28 @@ static inline rect_t intersect_rect(rect_t r1, rect_t r2)
 }
 
 static u32 add_clip_rect(ui_primitive_layer_t *layer, rect_t clip) {
-    ui_vertex_t vertex = { 0 };
-    vertex.rect_vertex.rect = clip;
-    return ui_primitive_layer_write_vertex(layer, vertex);
+    if (clip.w <= 0 || clip.h <= 0)
+        return 0;
+    rect_t *rect = ui_primitive_layer_alloc_rect(layer, 4);
+    *rect = clip;
+    return layer->vertex_offset;
 }
 
 static u32 add_sub_clip_rect(ui_primitive_layer_t *layer, u32 parent, rect_t clip) {
     if (!parent)
         return add_clip_rect(layer, clip);
-    rect_t parent_rect = layer->vertex_data[parent].rect_vertex.rect;
-    return add_clip_rect(layer, intersect_rect(parent_rect, clip));
+    rect_t *parent_rect = (rect_t *)&layer->vertex_data[parent];
+    return add_clip_rect(layer, intersect_rect(*parent_rect, clip));
 }
 
 static rect_t clip_rect(ui_primitive_layer_t *layer, u32 clip) {
     if (!clip) return (rect_t){ 0 };
-    return layer->vertex_data[clip].rect_vertex.rect;
+    return *(rect_t *)&layer->vertex_data[clip];
 }
 
 static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
     const u32 type = pl->type;
-    const u32 stride = 1;
+    const u32 stride = 8;
     const f32 a = pl->feather * 0.5f;
     const f32 alpha = u8_to_color_float(pl->color.a);
     const u32 type = pl->type;
@@ -114,7 +116,7 @@ static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, con
     u32 vertex_count = 0;
     u32 index_count = 0;
 
-    ui_vertex_t vertex = { 0 };
+    ui_vertex_triangle_t *vertex = (ui_vertex_triangle_t *)&layer->vertex_data[layer->vertex_offset];
 
     const u32 point_count = pl->point_count;
     for (u32 i = 0; i < point_count; ++i) {
@@ -136,13 +138,13 @@ static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, con
             n.x *= miter_limit / n_len, n.y *= miter_limit / n_len;
 
         vertex_count += 2;
-        vertex.triangle_vertex.point = float2_mul_add(point, n, a);
-        vertex.triangle_vertex.alpha = 0.f;
-        u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
+        vertex->point = float2_mul_add(point, n, a);
+        vertex->alpha = 0.f;
+        vertex = (ui_vertex_triangle_t *)((u8 *)vertex + stride);
 
-        vertex.triangle_vertex.point = float2_mul_add(point, n, -a);
-        vertex.triangle_vertex.alpha = alpha;
-        ui_primitive_layer_write_vertex(layer, vertex);
+        vertex->point = float2_mul_add(point, n, -a);
+        vertex->alpha = alpha;
+        vertex = (ui_vertex_triangle_t *)((u8 *)vertex + stride);
 
         index_count += 6;
 
@@ -167,7 +169,7 @@ static ui_count_t fill_convex_polyline_internal(ui_primitive_layer_t *layer, con
 
 static ui_count_t fill_convex_polyline_no_feather_internal(ui_primitive_layer_t *layer, const polyline_t *pl) {
     const u32 type = pl->type;
-    const u32 stride = 1;
+    const u32 stride = 8;
     const f32 alpha = u8_to_color_float(pl->color.a);
 
     u32 origin_offset = layer->vertex_offset;
@@ -175,13 +177,13 @@ static ui_count_t fill_convex_polyline_no_feather_internal(ui_primitive_layer_t 
     u32 vertex_count = 0;
     u32 index_count = 0;
 
-    ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.alpha = alpha;
+    ui_vertex_triangle_t *vertex = (ui_vertex_triangle_t *)&layer->vertex_data[layer->vertex_offset];
+    vertex->alpha = alpha;
 
     const u32 point_count = pl->point_count;
     for (u32 i = 0; i < point_count; ++i) {
-        vertex.triangle_vertex.point = pl->points[i];
-        u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
+        vertex->point = pl->points[i];
+        u32 offset = origin_offset + stride;
         vertex_count += 1;
 
         u32 left = origin_offset + i * stride;
@@ -211,9 +213,9 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
     const u32 type = pl->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = pl->color;
-    vertex.triangle_vertex.clip = pl->clip;
-    vertex.triangle_vertex.dash_offset = pl->dash_offset;
+    vertex.color = pl->color;
+    vertex.clip = pl->clip;
+    vertex.dash_offset = pl->dash_offset;
 
     u32 vertex_count = 0;
     u32 index_count = 0;
@@ -252,20 +254,20 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
             float2_t v = float2_normalize(float2_sub(next_point, point));
             float2_t left = {.x = v.y, .y = -v.x};
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w + a), point);
-            vertex.triangle_vertex.alpha = 0.f;
+            vertex.point = float2_add(float2_mul(left, w + a), point);
+            vertex.alpha = 0.f;
             u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
-            vertex.triangle_vertex.alpha = alpha;
+            vertex.point = float2_add(float2_mul(left, w), point);
+            vertex.alpha = alpha;
             ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
-            vertex.triangle_vertex.alpha = alpha;
+            vertex.point = float2_add(float2_mul(left, -w), point);
+            vertex.alpha = alpha;
             ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w - a), point);
-            vertex.triangle_vertex.alpha = 0.f;
+            vertex.point = float2_add(float2_mul(left, -w - a), point);
+            vertex.alpha = 0.f;
 
             last_edge = (struct edge_t){ offset, offset + stride, offset + stride * 2, offset + stride * 3 };
 
@@ -276,20 +278,20 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
             float2_t v = float2_normalize(float2_sub(point, prev_point));
             float2_t left = {.x = v.y, .y = -v.x};
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w + a), point);
-            vertex.triangle_vertex.alpha = 0.f;
+            vertex.point = float2_add(float2_mul(left, w + a), point);
+            vertex.alpha = 0.f;
             u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
-            vertex.triangle_vertex.alpha = alpha;
+            vertex.point = float2_add(float2_mul(left, w), point);
+            vertex.alpha = alpha;
             ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
-            vertex.triangle_vertex.alpha = alpha;
+            vertex.point = float2_add(float2_mul(left, -w), point);
+            vertex.alpha = alpha;
             ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w - a), point);
-            vertex.triangle_vertex.alpha = 0.f;
+            vertex.point = float2_add(float2_mul(left, -w - a), point);
+            vertex.alpha = 0.f;
             ui_primitive_layer_write_vertex(layer, vertex);
 
             struct edge_t edge = (struct edge_t){ offset, offset + stride, offset + stride * 2, offset + stride * 3 };
@@ -318,20 +320,20 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
             if (curve == 0.f) { 
                 const float2_t left = left_prev;
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, w + a), point);
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = float2_add(float2_mul(left, w + a), point);
+                vertex.alpha = 0.f;
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = float2_add(float2_mul(left, w), point);
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = float2_add(float2_mul(left, -w), point);
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, -w - a), point);
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = float2_add(float2_mul(left, -w - a), point);
+                vertex.alpha = 0.f;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t edge = { offset, offset + stride, offset + stride * 2, offset * stride * 3 };
@@ -362,28 +364,28 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
                 const float2_t right_a_0 = float2_mul_add(point, left_prev, -w - a);
                 const float2_t right_a_1 = float2_mul_add(point, left_next, -w - a);
 
-                vertex.triangle_vertex.point = left_a;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = left_a;
+                vertex.alpha = 0.f;
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = left_w;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = left_w;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w_0;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = right_w_0;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_a_0;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = right_a_0;
+                vertex.alpha = 0.f;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w_1;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = right_w_1;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_a_1;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = right_a_1;
+                vertex.alpha = 0.f;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t first_edge = { offset, offset + stride, offset + stride * 2, offset + stride * 3 };
@@ -426,28 +428,28 @@ static ui_count_t stroke_polyline_internal(ui_primitive_layer_t *layer, const po
                 const float2_t left_a_1 = float2_mul_add(point, left_next, w + a);
 
 
-                vertex.triangle_vertex.point = left_a_0;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = left_a_0;
+                vertex.alpha = 0.f;
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = left_w_0;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = left_w_0;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = left_a_1;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = left_a_1;
+                vertex.alpha = 0.f;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = left_w_1;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = left_w_1;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w;
-                vertex.triangle_vertex.alpha = alpha;
+                vertex.point = right_w;
+                vertex.alpha = alpha;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_a;
-                vertex.triangle_vertex.alpha = 0.f;
+                vertex.point = right_a;
+                vertex.alpha = 0.f;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t first_edge = { offset, offset + stride, offset + stride * 2, offset + stride * 3 };
@@ -493,10 +495,10 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
     const u32 type = pl->type;
 
     ui_vertex_t vertex = { 0 };
-    vertex.triangle_vertex.color = pl->color;
-    vertex.triangle_vertex.clip = pl->clip;
-    vertex.triangle_vertex.dash_offset = pl->dash_offset;
-    vertex.triangle_vertex.alpha = alpha;
+    vertex.color = pl->color;
+    vertex.clip = pl->clip;
+    vertex.dash_offset = pl->dash_offset;
+    vertex.alpha = alpha;
 
     u32 vertex_count = 0;
     u32 index_count = 0;
@@ -534,10 +536,10 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
             float2_t v = float2_normalize(float2_sub(next_point, point));
             float2_t left = {.x = v.y, .y = -v.x};
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
+            vertex.point = float2_add(float2_mul(left, w), point);
             u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
+            vertex.point = float2_add(float2_mul(left, -w), point);
             ui_primitive_layer_write_vertex(layer, vertex);
 
             last_edge = (struct edge_t){ offset, offset + stride };
@@ -549,10 +551,10 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
             float2_t v = float2_normalize(float2_sub(point, prev_point));
             float2_t left = {.x = v.y, .y = -v.x};
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
+            vertex.point = float2_add(float2_mul(left, w), point);
             u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-            vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
+            vertex.point = float2_add(float2_mul(left, -w), point);
             ui_primitive_layer_write_vertex(layer, vertex);
 
             struct edge_t edge = (struct edge_t){ offset, offset + stride };
@@ -581,10 +583,10 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
             if (curve == 0.f) { 
                 const float2_t left = left_prev;
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, w), point);
+                vertex.point = float2_add(float2_mul(left, w), point);
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = float2_add(float2_mul(left, -w), point);
+                vertex.point = float2_add(float2_mul(left, -w), point);
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t edge = { offset, offset + stride };
@@ -610,13 +612,13 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
                 const float2_t right_w_0 = float2_mul_add(point, left_prev, -w);
                 const float2_t right_w_1 = float2_mul_add(point, left_next, -w);
 
-                vertex.triangle_vertex.point = left_w;
+                vertex.point = left_w;
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w_0;
+                vertex.point = right_w_0;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w_1;
+                vertex.point = right_w_1;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t first_edge = { offset, offset + stride };
@@ -653,13 +655,13 @@ static ui_count_t stroke_polyline_no_feather_internal(ui_primitive_layer_t *laye
                 const float2_t left_w_0 = float2_mul_add(point, left_prev, w);
                 const float2_t left_w_1 = float2_mul_add(point, left_next, w);
 
-                vertex.triangle_vertex.point = left_w_0;
+                vertex.point = left_w_0;
                 u32 offset = ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = left_w_1;
+                vertex.point = left_w_1;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
-                vertex.triangle_vertex.point = right_w;
+                vertex.point = right_w;
                 ui_primitive_layer_write_vertex(layer, vertex);
 
                 struct edge_t first_edge = { offset, offset + stride * 2 };

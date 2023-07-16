@@ -48,15 +48,8 @@ typedef struct ui_vertex_tile_end_t {
     u32 _place_holder_[5];
 } ui_vertex_tile_end_t;
 
-typedef union {
-    ui_vertex_rect_t rect_vertex;
-    ui_vertex_triangle_t triangle_vertex;
-    ui_vertex_tile_begin_t tile_begin_vertex;
-    ui_vertex_tile_end_t tile_end;
-} ui_vertex_t;
-
 typedef struct ui_primitive_layer_t {
-    ui_vertex_t *vertex_data;
+    void *vertex_data;
     u32* index_data;
 
     u32 vertex_offset;
@@ -67,10 +60,11 @@ typedef struct ui_primitive_buffer_t {
     ui_primitive_layer_t layers[4];
 } ui_primitive_buffer_t;
 
-u32 ui_primitive_layer_write_vertex(ui_primitive_layer_t *layer, ui_vertex_t vertex);
+u32 ui_primitive_layer_write_vertex(ui_primitive_layer_t *layer, void* data, u32 size);
 u32 ui_primitive_layer_write_index(ui_primitive_layer_t *layer, u32 index);
-ui_vertex_t *ui_primitive_layer_vertex_view(ui_primitive_layer_t *layer, u32 vertex_count);
-u32 *ui_primitive_layer_index_view(ui_primitive_layer_t *layer, u32 index_count);
+
+void* ui_primitive_layer_vertex_view(ui_primitive_layer_t *layer, u32 size);
+u32* ui_primitive_layer_index_view(ui_primitive_layer_t *layer, u32 index_count);
 
 static inline u32 ui_encode_vertex_id(u32 primitive_type, u32 corner, u32 offset) {
     return (primitive_type | corner | (offset >> 2));

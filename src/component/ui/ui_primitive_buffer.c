@@ -179,9 +179,8 @@ static void round_rect_path(rect_t rect, float4_t radiuses) {
     __polyline.num_point = num_point;
 }
 
-u32 ui_primitive_layer_write_vertex(ui_primitive_layer_t *layer, ui_vertex_t vertex) {
+u32 ui_primitive_layer_write_vertex(ui_primitive_layer_t *layer, void *data, u32 size) {
     u32 offset = layer->vertex_offset;
-    layer->vertex_data[offset] = vertex;
     layer->vertex_offset++;
     return offset;
 }
@@ -194,10 +193,10 @@ u32 ui_primitive_layer_write_index(ui_primitive_layer_t *layer, u32 index)
     return offset;
 }
 
-ui_vertex_t* ui_primitive_layer_vertex_view(ui_primitive_layer_t *layer, u32 vertex_count)
+void* ui_primitive_layer_vertex_view(ui_primitive_layer_t *layer, u32 size)
 {
     u32 offset = layer->vertex_offset;
-    layer->vertex_offset += vertex_count;
+    layer->vertex_offset += size;
     return &layer->vertex_data[offset];
 }
 
