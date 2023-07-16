@@ -84,6 +84,7 @@
         "ios": "c",
         "xiosbase": "c",
         "__locale": "c",
-        "ui_draw.h": "c"
+        "ui_draw.h": "c",
+        "random": "c"
     }
 }

@@ -33,8 +33,11 @@ typedef struct un_uuid_t {
     u64 a, b;
 } un_uuid_t;
 
-typedef struct color_srgb_t {
-    u8 r, g, b, a;
+typedef union color_srgb_t {
+    struct {
+        u8 r, g, b, a;
+    };
+    u32 rgba;
 } color_srgb_t;
 
 #if defined(_MSC_VER)
@@ -49,3 +52,36 @@ typedef struct color_srgb_t {
 #define ATOMIC _Atomic
 #endif
 
+typedef struct bounds2_t {
+    float2_t min, max;
+} bounds2_t;
+
+typedef struct bounds3_t {
+    float3_t min, max;
+} bounds3_t;
+
+static inline bounds2_t bounds2_empty(void) {
+    return (bounds2_t){.min = float2(FLT_MAX, FLT_MAX), .max = float2(-FLT_MAX, -FLT_MAX)};
+}
+
+static inline bounds2_t bounds2_points(const float2_t *points, u32 point_count) {
+    bounds2_t result = bounds2_empty();
+    for (u32 i = 0; i < point_count; ++i) {
+        result.min = float2_min(result.min, points[i]);
+        result.max = float2_max(result.max, points[i]);
+    }
+    return result;
+}
+
+static inline bounds3_t bounds3_empty(void) {
+    return (bounds3_t){.min = float3(FLT_MAX, FLT_MAX, FLT_MAX), .max = float3(-FLT_MAX, -FLT_MAX, -FLT_MAX)};
+}
+
+static inline bounds3_t bounds3_points(const float3_t *points, u32 point_count) {
+    bounds3_t result = bounds3_empty();
+    for (u32 i = 0; i < point_count; ++i) {
+        result.min = float3_min(result.min, points[i]);
+        result.max = float3_max(result.max, points[i]);
+    }
+    return result;
+}

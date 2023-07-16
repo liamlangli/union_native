@@ -48,6 +48,14 @@ static inline f32 fast_inv_sqrt(f32 n) {
     return n;
 }
 
+static inline float2_t float2_min(float2_t a, float2_t b) {
+    return (float2_t){fminf(a.x, b.x), fminf(a.y, b.y)};
+}
+
+static inline float2_t float2_max(float2_t a, float2_t b) {
+    return (float2_t){fmaxf(a.x, b.x), fmaxf(a.y, b.y)};
+}
+
 static inline float2_t float2_sub(float2_t a, float2_t b) {
     return (float2_t){a.x - b.x, a.y - b.y};
 }
@@ -83,4 +91,12 @@ static inline float2_t float2_normalize_safe(float2_t a) {
     }
     float inv_sqrt = fast_inv_sqrt(a.x * a.x + a.y * a.y);
     return (float2_t){a.x * inv_sqrt, a.y * inv_sqrt};
+}
+
+static inline float3_t float3_min(float3_t a, float3_t b) {
+    return (float3_t){fminf(a.x, b.x), fminf(a.y, b.y), fminf(a.z, b.z)};
+}
+
+static inline float3_t float3_max(float3_t a, float3_t b) {
+    return (float3_t){fmaxf(a.x, b.x), fmaxf(a.y, b.y), fmaxf(a.z, b.z)};
 }

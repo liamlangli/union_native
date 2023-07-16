@@ -28,13 +28,18 @@ typedef struct ui_vertex_rect_t {
 
 typedef struct ui_vertex_triangle_t {
     float2_t point;
-    f32 alpha;
-    f32 dash_offset;
     color_srgb_t color;
     u32 clip;
-    u32 texture_id;
-    u32 _place_holder_;
 } ui_vertex_triangle_t;
+
+typedef struct ui_vertex_triangle_dashed_t {
+    float2_t point;
+    color_srgb_t color;
+    u32 clip;
+    f32 dash_length;
+    f32 dash_offset;
+    u32 _place_holder_[2];
+} ui_vertex_triangle_dashed_t;
 
 typedef struct ui_vertex_tile_begin_t {
     f32 x, y, w, h;
@@ -49,7 +54,7 @@ typedef struct ui_vertex_tile_end_t {
 } ui_vertex_tile_end_t;
 
 typedef struct ui_primitive_layer_t {
-    void *vertex_data;
+    u32 *vertex_data;
     u32* index_data;
 
     u32 vertex_offset;
