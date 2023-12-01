@@ -1,70 +1,18 @@
 {
     "configurations": [
         {
-            "name": "OSX",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/src/public/**",
-                "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/component/render_system/**",
-                "${workspaceFolder}/external/glfw/3.3.8/include/**"
-            ],
-            "defines": [
-                "OS_OSX",
-                "SCRIPT_BACKEND_JS",
-                "RENDER_BACKEND_METAL"
-            ],
-            "compilerPath": "/usr/bin/clang",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64",
-            "configurationProvider": "vector-of-bool.cmake-tools",
-            // "compileCommands": "${workspaceFolder}/Makefile"
-        },
-        {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/src/public/**",
-                "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/src/foundation/linux/**",
-                "${workspaceFolder}/external/glad/include/**"
-            ],
-            "defines": [
-                "OS_LINUX",
-                "SCRIPT_BACKEND_JS",
-                "RENDER_BACKEND_VULKAN"
-            ],
-            "compilerPath": "/usr/bin/clang",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64",
-            "configurationProvider": "vector-of-bool.cmake-tools",
-            "compileCommands": "${workspaceFolder}/Makefile"
-        },
-        {
-            "name": "Win",
-            "includePath": [
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/src/public/**",
-                "${workspaceFolder}/src/foundation/**",
-                "${workspaceFolder}/external/glfw/3.3.8/include/**",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/external/glfw/3.3.8/include",
                 "${workspaceFolder}/external/quickjs/include",
-                "D:/VulkanSDK/1.3.250.0/Include",
-                "D:/mingw_w64/include"
+                "${workspaceFolder}/external/glad/include"
             ],
-            "defines": [
-                "OS_WINDOWS",
-                "SCRIPT_BACKEND_JS",
-                "RENDER_BACKEND_VULKAN"
-            ],
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64",
-            "configurationProvider": "vector-of-bool.cmake-tools",
-            // "compileCommands": "${workspaceFolder}/Makefile"
+            "defines": ["OS_LINUX"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print("please input OS name")
         exit(1)
 
-    folders = ["src/foundation", "src/component", "src/plugin"]
+    folders = ["src/foundation"]
     if not (PLATFORM == OS_WINDOWS or PLATFORM == OS_LINUX or PLATFORM == OS_OSX):
         print("unknown platform")
         exit(1)

@@ -7,9 +7,8 @@ union_native
 
 # Core Components
 - Native window management.
-- Native render system.
-    - Vulkan [Windows/Linux]
-    - Metal [MacOS]
+- Render system.
+    - gles3.2
 - Script layer, port cross platform system interface to script environment.
     - Script backend [Javascript]
     - Rendering abstract layer.
@@ -20,8 +19,13 @@ union_native
 # Build
 - Collect source files.   
     `make collect`
-- Convert shader files.   
-    `make convert`
 - Build & Run.   
     `make run`
     
+
+# Dependencies
+- Linux
+    ```base
+    sudo apt install libglfw3-dev
+    ```
+- Windows platform currently unavaliable, highly recommend use wsl instead.

@@ -6,6 +6,8 @@ else
 	OS=$(shell uname -s)
 endif
 
+-include build/Makefile_source
+
 ifeq ($(OS),Windows)
 	include build_tool/win/Makefile
 	CCFLAGS = -pedantic -std=c11 -g -O0 -DOS_WINDOWS
@@ -21,8 +23,6 @@ else ifeq ($(OS),Darwin)
 else
 	$(error OS not supported)
 endif
-
--include build/Makefile_source
 
 INC += -Iexternal/quickjs/include
 CCFLAGS += -DSCRIPT_BACKEND_JS

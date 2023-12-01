@@ -25,6 +25,9 @@
 #ifndef QUICKJS_H
 #define QUICKJS_H
 
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -1045,5 +1048,7 @@ int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
+
+#pragma GCC diagnostic pop
 
 #endif /* QUICKJS_H */

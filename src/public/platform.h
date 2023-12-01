@@ -5,7 +5,7 @@
 // RENDER_BACKEND_WOOD
 
 #if defined(OS_WINDOWS) || defined(OS_LINUX)
-    #define RENDER_BACKEND_VULKAN
+    #define RENDER_BACKEND_GLES
 #elif defined(OS_OSX)
     #define RENDER_BACKEND_METAL
 #endif

@@ -1,25 +1,24 @@
 .PHONY: all clean
 
-CC=clang
+CC=gcc
 APP=build/app
-ENTRY_POINT=src/main_new.c
+ENTRY_POINT=src/app/main_linux.c
 
-INC=-I/usr/local/include \
-	-Isrc/public \
-	-Isrc/foundation \
-	-Isrc/foundation/linux \
-	-Iexternal/glad/include
-LIBS=-L/usr/local/lib -lglfw -lm
+# glad deps
+INC=-Isrc -Iexternal/glad/include 
+SOURCE_FILES+=external/glad/src/glad.c
 
-all: collect
+# quickjs deps
+INC+=-Iexternal/quickjs/include
+LIBS+=-Lexternal/quickjs/lib/linux -lquickjs -lm
+
+LIBS+=-L/usr/local/lib -lglfw
+
+all:
 	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
 	$(APP)
-
-collect:
-	mkdir -p build
-	python build_tool/collect_source.py $(PLATFORM)
 
 clear:
 	rm -rf build

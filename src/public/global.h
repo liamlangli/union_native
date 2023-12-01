@@ -26,6 +26,8 @@ typedef double f64;
 
 #define EPSILON 0.00001f
 
+#define countof(x) (sizeof(x) / sizeof((x)[0]))
+
 #define MACRO_CONCAT_IMPL(a, b) a##b
 #define MACRO_CONCAT(a, b) MACRO_CONCAT_IMPL(a, b)
 #define MACRO_VAR(name) MACRO_CONCAT(name, __LINE__)
@@ -41,4 +43,5 @@ typedef double f64;
 #define MACRO_SIZEOF_MEMBER(structure, member) ((u32)sizeof(((structure *)0)->member))
 
 #define MACRO_REINTERPRET_CAST(new_type, value) (*((new_type *)&(value)))
+
 

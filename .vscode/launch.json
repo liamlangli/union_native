@@ -5,22 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(lldb) Launch [Windows]",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/main.exe",
+            "name": "Debug",
+            "program": "${workspaceFolder}/build/app",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole"
-        },
-        {
-            "name": "(lldb) Launch [OSX|Linux]",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/main",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole"
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
