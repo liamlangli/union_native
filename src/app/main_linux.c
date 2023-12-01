@@ -44,13 +44,12 @@ int main(int argc, char** argv)
     gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress);
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-    glClearColor(.1, .2, .3, 1.);
+    glClearColor(.0, .0, .0, 1.);
 
     logger_init();
 
     script_context_t context = script_context_create();
     ustring_t source = io_read_file(argv[1]);
-    logger_write_to_file(source.data);
     script_eval(context, source);
 
     glfwSwapInterval(1);
@@ -61,6 +60,8 @@ int main(int argc, char** argv)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    
+    script_context_destroy(context);
  
     glfwDestroyWindow(window);
     glfwTerminate();

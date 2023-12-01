@@ -136,9 +136,24 @@ script_context_t script_context_create(void)
     return context;
 }
 
-JSValue script_eval(script_context_t context, ustring_t source)
+int script_eval(script_context_t context, ustring_t source)
 {
-    return JS_Eval(context.context, source.data, source.length, "<eval>", JS_EVAL_FLAG_BACKTRACE_BARRIER);
+    JSValue val;
+    int ret;
+
+    JSContext *ctx = context.context;
+
+    val = JS_Eval(context.context, source.data, source.length, "<cmdline>", 0);
+
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        ret = -1;
+    } else {
+        ret = 0;
+    }
+
+    JS_FreeValue(ctx, val);
+    return ret;
 }
 
 void script_frame_tick(script_context_t context)

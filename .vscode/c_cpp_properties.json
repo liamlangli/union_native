@@ -5,8 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/local/include",
-                "${workspaceFolder}/external/glad/include",
-                "${workspaceFolder}/external/quickjs/include"
+                "${workspaceFolder}/third_party/glad/include",
+                "${workspaceFolder}/third_party/quickjs/include"
             ],
             "defines": ["OS_LINUX"],
             "compilerPath": "/usr/bin/gcc",

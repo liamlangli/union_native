@@ -8,12 +8,12 @@ INC=-I/usr/local/include -Isrc
 LIBS=-L/usr/local/lib
 
 # glad deps
-INC+= -Iexternal/glad/include 
-SOURCE_FILES+=external/glad/src/glad.c
+INC+= -Ithird_party/glad/include 
+SOURCE_FILES+=third_party/glad/src/glad.c
 
 # quickjs deps
-INC+=-Iexternal/quickjs/include
-LIBS+=-Lexternal/quickjs/lib/linux -lquickjs -lm
+INC+=-Ithird_party/quickjs/include
+LIBS+=-Lthird_party/quickjs/lib/linux -lquickjs -lm
 
 # glfw deps
 LIBS+=-lglfw
