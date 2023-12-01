@@ -1,6 +1,4 @@
 #include "foundation/io/io.h"
-#include "foundation/render/render.h"
-#include "foundation/render/pipeline.h"
 #include "foundation/script/script.h"
 #include "foundation/logger/logger.h"
 
@@ -41,14 +39,6 @@ int main(int argc, char** argv)
     glfwSetKeyCallback(window, key_callback);
     glfwMakeContextCurrent(window);
 
-    encoder_o* encoder = render_encoder_create();
-    render_clear_depth(encoder, 1.0f);
-    render_clear_color(encoder, 0.0f, 0.0f, 0.0f, 1.0f);
-
-    pipeline_descriptor_t descriptor = {0};
-    descriptor.vertex_shader = io_read_file("public/shader/base.vert");
-    descriptor.fragment_shader = io_read_file("public/shader/base.frag");
-
     logger_init();
 
     script_context_t context = script_context_create();
@@ -60,7 +50,6 @@ int main(int argc, char** argv)
     while (!glfwWindowShouldClose(window))
     {
         script_frame_tick(context);
-        render_clear(encoder);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

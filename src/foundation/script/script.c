@@ -138,7 +138,7 @@ script_context_t script_context_create()
 
 JSValue script_eval(script_context_t context, ustring_t source)
 {
-    return JS_Eval(context.context, source.data, source.length, "<eval>", JS_EVAL_TYPE_GLOBAL);
+    return JS_Eval(context.context, source.data, source.length, "<eval>", JS_EVAL_FLAG_BACKTRACE_BARRIER);
 }
 
 void script_frame_tick(script_context_t context)
