@@ -105,7 +105,7 @@ static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, J
     return JS_UNDEFINED;
 }
 
-script_context_t script_context_create()
+script_context_t script_context_create(void)
 {
     JSRuntime *runtime = JS_NewRuntime();
     JSContext *ctx = JS_NewContext(runtime);

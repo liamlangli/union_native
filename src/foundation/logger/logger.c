@@ -5,7 +5,7 @@
 #include <stdio.h>
 static FILE *dst;
 
-void logger_init()
+void logger_init(void)
 {
     dst = fopen("log.txt", "ab+");
 }

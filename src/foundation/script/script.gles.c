@@ -445,7 +445,6 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-#endif
 void script_module_gles_register(script_context_t context)
 {
     JSContext *ctx = context.context;
@@ -500,3 +499,5 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "drawElements", JS_NewCFunction(ctx, js_gl_draw_elements, "drawElements", 4));
     JS_FreeValue(ctx, global_obj);
 }
+
+#endif

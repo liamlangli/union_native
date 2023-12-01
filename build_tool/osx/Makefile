@@ -1,17 +1,25 @@
 .PHONY: all clean
 
-CC=clang
+CCFLAGS+=-Wno-newline-eof
+
+CC=gcc
 APP=build/app
-XCRUN=xcrun -sdk macosx
-ENTRY_POINT=src/main.c
+ENTRY_POINT=src/app/main_linux.c
 
-INC += -Isrc
+INC=-I/usr/local/include -Isrc
+LIBS=-L/usr/local/lib
 
-LIBS = `pkg-config --cflags --libs glfw3` -L/usr/local/lib -lm
-LIBS += -Lexternal/quickjs/lib/osx -lquickjs
-LIBS += -framework AppKit -framework Metal -framework QuartzCore
+# glad deps
+INC+=-Iexternal/glad/include 
+SOURCE_FILES+=external/glad/src/glad.c
 
-all: collect
+# quickjs deps
+INC+=-Iexternal/quickjs/include
+LIBS+=-Lexternal/quickjs/lib/osx -lquickjs -lm
+
+LIBS+=-lglfw
+
+all:
 	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all

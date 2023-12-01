@@ -2,6 +2,7 @@
 #include "foundation/script/script.h"
 #include "foundation/logger/logger.h"
 
+#include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
  
@@ -27,8 +28,10 @@ int main(int argc, char** argv)
     if (!glfwInit())
         exit(EXIT_FAILURE);
  
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
  
     window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
     if (!window)
@@ -38,6 +41,10 @@ int main(int argc, char** argv)
     }
     glfwSetKeyCallback(window, key_callback);
     glfwMakeContextCurrent(window);
+    gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress);
+    printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
+    printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+    glClearColor(.1, .2, .3, 1.);
 
     logger_init();
 
@@ -49,6 +56,7 @@ int main(int argc, char** argv)
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         script_frame_tick(context);
         glfwSwapBuffers(window);
         glfwPollEvents();

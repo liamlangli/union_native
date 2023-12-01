@@ -4,9 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/external/glfw/3.3.8/include",
-                "${workspaceFolder}/external/quickjs/include",
-                "${workspaceFolder}/external/glad/include"
+                "/usr/local/include",
+                "${workspaceFolder}/external/glad/include",
+                "${workspaceFolder}/external/quickjs/include"
             ],
             "defines": ["OS_LINUX"],
             "compilerPath": "/usr/bin/gcc",

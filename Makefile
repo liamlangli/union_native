@@ -9,22 +9,21 @@ endif
 -include build/Makefile_source
 
 ifeq ($(OS),Windows)
-	include build_tool/win/Makefile
 	CCFLAGS = -pedantic -std=c11 -g -O0 -DOS_WINDOWS
 	PLATFORM=OS_WINDOWS
+	include build_tool/win/Makefile
 else ifeq ($(OS),Linux)
-	include build_tool/linux/Makefile
 	CCFLAGS = -pedantic -std=c11 -g -O0 -DOS_LINUX
 	PLATFORM=OS_LINUX
+	include build_tool/linux/Makefile
 else ifeq ($(OS),Darwin)
-	include build_tool/osx/Makefile
 	CCFLAGS = -pedantic -std=c11 -g -O0 -DOS_OSX
 	PLATFORM=OS_OSX
+	include build_tool/osx/Makefile
 else
 	$(error OS not supported)
 endif
 
-INC += -Iexternal/quickjs/include
 CCFLAGS += -DSCRIPT_BACKEND_JS
 
 collect:
