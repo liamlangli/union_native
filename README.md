@@ -3,9 +3,7 @@ union_native
 
 > Cross-Platform script driven application framework.
 
-# Intro
-
-# Core Components
+## Core Components
 - Native window management.
 - Render system.
     - gles3.2
@@ -16,14 +14,14 @@ union_native
     - Basic primitive drawing layer.
     - User interface rendering layer.
 
-# Build
+## Build
 - Collect source files.   
     `make collect`
 - Build & Run.   
     `make run`
     
 
-# Dependencies
+## Dependencies
 - Linux
     ```base
     sudo apt install libglfw3-dev

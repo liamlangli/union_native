@@ -110,14 +110,15 @@ script_context_t script_context_create()
     JSRuntime *runtime = JS_NewRuntime();
     JSContext *ctx = JS_NewContext(runtime);
     JSValue global = JS_GetGlobalObject(ctx);
+    JS_SetPropertyStr(ctx, global, "requestAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
 
     JSValue document = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, document, "getElementById", JS_NewCFunction(ctx, get_element_by_id, "getElementById", 1));
     JS_SetPropertyStr(ctx, global, "document", document);
+    JS_SetPropertyStr(ctx, document, "getElementById", JS_NewCFunction(ctx, get_element_by_id, "getElementById", 1));
 
     JSValue window = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, global, "window", window);
     JS_SetPropertyStr(ctx, window, "addEventListener", JS_NewCFunction(ctx, js_window_add_event_listener, "addEventListener", 2));
-    JS_SetPropertyStr(ctx, global, "print", JS_NewCFunction(ctx, js_print, "print", 1));
 
     JSValue console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, global, "console", console);
@@ -125,7 +126,10 @@ script_context_t script_context_create()
     JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_console_warn, "warn", 1));
     JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_console_error, "error", 1));
 
-        JS_FreeValue(ctx, global);
+    JSValue self = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, global, "self", self);
+
+    JS_FreeValue(ctx, global);
     script_context_t context = { .context = ctx, .runtime = runtime };
     script_module_gles_register(context);
 

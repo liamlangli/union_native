@@ -21,7 +21,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
  
-int main(void)
+int main(int argc, char** argv)
 {
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
@@ -52,7 +52,7 @@ int main(void)
     logger_init();
 
     script_context_t context = script_context_create();
-    ustring_t source = io_read_file("public/example/triangle.js");
+    ustring_t source = io_read_file(argv[1]);
     logger_write_to_file(source.data);
     script_eval(context, source);
 
