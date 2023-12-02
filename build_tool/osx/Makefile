@@ -23,7 +23,7 @@ all:
 	$(CC) $(CCFLAGS) $(INC) -o $(APP) $(ENTRY_POINT) $(SOURCE_FILES) $(LIBS)
 
 run: all
-	$(APP)
+	$(APP) example/public/index.js
 
 clear:
 	rm -rf build

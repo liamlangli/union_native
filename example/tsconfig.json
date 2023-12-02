@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "es2020",
+        "strict": true,
+        "outDir": "public",
+        "moduleResolution": "Node",
+        "declaration": true,
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "lib": [
+            "DOM",
+            "ESNext",
+            "webworker"
+        ],
+    },
+    "include": ["src/*.ts", "src/**/*.ts"],
+    "exclude": ["node_modules"]
+}

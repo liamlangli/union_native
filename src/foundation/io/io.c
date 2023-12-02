@@ -1,11 +1,11 @@
 #include "io.h"
 #include <stdlib.h>
 
-ustring_t io_read_file(const char* path)
+ustring_t io_read_file(ustring_t path)
 {
-    FILE* file = fopen(path, "rb");
+    FILE* file = fopen(path.data, "rb");
     if (!file) {
-        return string_str("");
+        return ustring_str("");
     }
 
     fseek(file, 0, SEEK_END);
@@ -18,5 +18,5 @@ ustring_t io_read_file(const char* path)
 
     fclose(file);
 
-    return string_str(buffer);
+    return ustring_str(buffer);
 }

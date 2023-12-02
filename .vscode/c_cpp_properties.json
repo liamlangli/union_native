@@ -5,14 +5,26 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/local/include",
-                "${workspaceFolder}/third_party/glad/include",
-                "${workspaceFolder}/third_party/quickjs/include"
+                "${workspaceFolder}/third_party/glad/include"
             ],
             "defines": ["OS_LINUX"],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
+            "cStandard": "c11",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/include",
+                "${workspaceFolder}/third_party/glad/include"
+            ],
+            "defines": ["OS_OSX"],
+            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "macos-clang-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

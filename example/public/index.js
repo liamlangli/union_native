@@ -2909,7 +2909,7 @@
     }
     set_clear_color(color) {
     }
-    clear(action2) {
+    clear(action) {
     }
     set_pipeline(pipeline2) {
     }
@@ -2984,13 +2984,13 @@
     }
     set_camera(camera2) {
     }
-    set_action(action2) {
+    set_action(action) {
     }
     set_pass(pass, description) {
     }
     set_clear_color(color) {
     }
-    clear(action2) {
+    clear(action) {
     }
     set_pipeline(pipeline2) {
     }
@@ -3169,8 +3169,8 @@
       const worker = new Worker(backend, { name: "RenderThread" });
       this.render_thread = new WebWorker(worker);
     }
-    create_device(canvas2, options) {
-      const offscreen_canvas = canvas2.transferControlToOffscreen();
+    create_device(canvas, options) {
+      const offscreen_canvas = canvas.transferControlToOffscreen();
       const resource_id = this.get_resource_id();
       const command = { resource_id, type: RenderCommandType.CreateDevice, canvas: offscreen_canvas, options };
       this.render_thread.send(command, [offscreen_canvas]);
@@ -3284,15 +3284,15 @@
       throw "create_block_global has not been called";
     if (!block)
       return;
-    const encoder = gfx_device_get().encoder;
-    const gl = encoder.gl;
+    const encoder2 = gfx_device_get().encoder;
+    const gl = encoder2.gl;
     const block_data = block_context.blocks.get(block.type);
     gl.bindBuffer(gl.UNIFORM_BUFFER, block_data.buffer);
     gl.bufferSubData(gl.UNIFORM_BUFFER, block.range.byte_offset, block.view.u8_view, 0, block.view.u8_view.byteLength);
   }
   function block_bind(pipeline2, block) {
-    const encoder = gfx_device_get().encoder;
-    const gl = encoder.gl;
+    const encoder2 = gfx_device_get().encoder;
+    const gl = encoder2.gl;
     const block_type = block.type;
     const block_data = block_context.blocks.get(block_type);
     const struct_uniform = pipeline2.uniform_block[block.name];
@@ -3625,8 +3625,8 @@
   function pipeline_bind_uniform(pipeline2, descriptors) {
     const struct_uniform_map = /* @__PURE__ */ new Map();
     const { uniform_block, uniforms, program } = pipeline2;
-    const encoder = gfx_device_get().encoder;
-    const gl = encoder.gl;
+    const encoder2 = gfx_device_get().encoder;
+    const gl = encoder2.gl;
     if (uniforms) {
       for (let i = 0; i < descriptors.length; ++i) {
         const uniform_desc = descriptors[i];
@@ -3725,8 +3725,8 @@
     }
     const frame_block = uniform_block[RenderBlockName.Frame];
     if (frame_block) {
-      const encoder2 = gfx_device_get().encoder;
-      const ubo_alignment = encoder2.UNIFORM_BUFFER_ALIGNMENT;
+      const encoder3 = gfx_device_get().encoder;
+      const ubo_alignment = encoder3.UNIFORM_BUFFER_ALIGNMENT;
       const size = Math.ceil(frame_block.struct_size / ubo_alignment) * ubo_alignment;
       pipeline2.frame_block = create_block(RenderBlockType.Frame, size, RenderBlockName.Frame);
     }
@@ -3923,10 +3923,12 @@ ${shaderInfo}`);
       gl_options.antialias = options.antialias === true;
       gl_options.powerPreference = options.powerPreference ?? "high-performance";
       gl_options.xrCompatible = options.xr_enabled === true;
-      const canvas2 = options.canvas ?? document.getElementById("view");
-      this.canvas = canvas2;
+      const canvas = options.canvas ?? document.getElementsByTagName("canvas")[0];
+      if (!canvas)
+        throw new Error("canvas not found.");
+      this.canvas = canvas;
       this.multi_thread_rendering = options.multi_thread_rendering === true;
-      let gl = canvas2.getContext("webgl2", gl_options);
+      let gl = canvas.getContext("webgl2", gl_options);
       if (gl === null)
         throw `webgl2 wasn't supported.`;
       this.gl = gl;
@@ -3940,7 +3942,6 @@ ${shaderInfo}`);
       this.UNIFORM_BUFFER_SIZE = gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE);
       if (gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 1)
         throw `vertex texture not supported.`;
-      gl.lineWidth(3);
       if (options.multi_thread_rendering && "OffscreenCanvas" in window && "SharedArrayBuffer" in window) {
         const backend = options.backend ?? GFXBackend.WebGL;
         this.client = new GFXDeviceClient(backend);
@@ -4001,21 +4002,21 @@ ${shaderInfo}`);
     set_clear_color(color) {
       this.clear_action.clear_color.copy(color);
     }
-    clear(action2) {
-      if (!action2)
-        action2 = this.clear_action;
-      if (action2.type === GPUActionType.Ignore)
+    clear(action) {
+      if (!action)
+        action = this.clear_action;
+      if (action.type === GPUActionType.Ignore)
         return;
-      if ((action2.type & GPUActionType.ClearColor) !== 0) {
-        this.gl.clearColor(action2.clear_color.r, action2.clear_color.g, action2.clear_color.b, action2.clear_color.a);
+      if ((action.type & GPUActionType.ClearColor) !== 0) {
+        this.gl.clearColor(action.clear_color.r, action.clear_color.g, action.clear_color.b, action.clear_color.a);
       }
-      this.gl.clearDepth(action2.clear_depth);
+      this.gl.clearDepth(action.clear_depth);
       let mask = 0;
-      if ((action2.type & GPUActionType.ClearColor) !== 0)
+      if ((action.type & GPUActionType.ClearColor) !== 0)
         mask |= this.gl.COLOR_BUFFER_BIT;
-      if ((action2.type & GPUActionType.ClearDepth) !== 0)
+      if ((action.type & GPUActionType.ClearDepth) !== 0)
         mask |= this.gl.DEPTH_BUFFER_BIT;
-      if ((action2.type & GPUActionType.ClearStencil) !== 0)
+      if ((action.type & GPUActionType.ClearStencil) !== 0)
         mask |= this.gl.STENCIL_BUFFER_BIT;
       this.gl.clear(mask);
     }
@@ -4316,8 +4317,8 @@ ${shaderInfo}`);
     const cached = gpu_meshes.get(mesh);
     if (cached)
       return cached;
-    const encoder = gfx_device_get().encoder;
-    const gl = encoder.gl;
+    const encoder2 = gfx_device_get().encoder;
+    const gl = encoder2.gl;
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     const { vertex_data, sub_meshes } = mesh;
@@ -4841,104 +4842,57 @@ ${shaderInfo}`);
   })(Platform || (Platform = {}));
 
   // src/pipeline.ts
-  function builtin_pipeline(device2) {
-    let default_mesh_shader = `
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 uv;
-layout(location = 2) in vec3 normal;
+  function create_default_pipeline() {
+    const vertex_shader = `#version 300 es
+    precision highp float;
+    precision highp int;
+    layout(location = 0) in vec3 position;
+    layout(location = 1) in vec2 uv;
 
-uniform mat4 world_matrix;
+    out vec2 v_uv;
 
-layout(std140) uniform frame_block {
-    mat4 view_matrix;
-    mat4 projection_matrix;
-};
+    void main() {
+        v_uv = uv;
+        gl_Position = vec4(position, 1.0);
+    }
+    `;
+    const fragment_shader = `#version 300 es
+    precision highp float;
+    precision highp int;
+    in vec2 v_uv;
+    out vec4 frag_data;
 
-out vec2 v_uv;
-out vec3 v_position;
-out vec3 v_world_normal;
-
-void main()
-{
-    v_uv = uv;
-    v_position = position;
-    v_world_normal = normal;
-    gl_Position = projection_matrix * view_matrix * world_matrix * vec4(position, 1.0);
-}
-#define SPLITTER
-in vec2 v_uv;
-in vec3 v_world_normal;
-
-layout(std140) uniform frame_block {
-    mat4 view_matrix;
-    mat4 projection_matrix;
-};
-
-uniform vec4 color;
-uniform sampler2D color_tex;
-
-out vec4 frag_data;
-
-void main()
-{
-    float lambert = dot(v_world_normal, normalize(vec3(0.2, 0.4, 0.3)));
-    vec4 map_color = texture(color_tex, v_uv);
-    frag_data = vec4((lambert) * color.rgb, 1.0) * map_color;
-}
-`;
+    void main() {
+        frag_data = vec4(v_uv, 0.0, 1.0);
+    }
+    `;
     return create_pipeline({
       name: "default pipeline",
-      combined_shader: default_mesh_shader,
-      uniforms: [
-        { name: "world_matrix", type: UniformType.Mat4, default_value: new Mat4() },
-        { name: "frame_block.view_matrix", type: UniformType.Mat4 },
-        { name: "frame_block.projection_matrix", type: UniformType.Mat4 },
-        { name: "color", type: UniformType.ColorRGBA, visible: true, default_value: new ColorRGBA(1, 1, 1, 1) },
-        { name: "time", type: UniformType.Float },
-        { name: "color_tex", type: UniformType.Texture2D, visible: true },
-        { name: "normal_tex", type: UniformType.Texture2D, visible: true },
-        { name: "pbr_tex", type: UniformType.Texture2D, visible: true }
-      ],
-      cull_mode: CullMode.Back
+      vertex_shader,
+      fragment_shader,
+      depth_write: true,
+      depth_compare_func: DepthCompareFunc.Always
     });
   }
 
   // src/index.ts
-  var canvas = document.getElementById("view");
-  canvas.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, false);
-  var device = new GFXDevice({
-    canvas,
-    antialias: false,
-    display_ratio: 2
-  });
+  var device = new GFXDevice();
+  var encoder = device.encoder;
   var engine = new Engine();
-  engine.start();
-  var cube = create_box_mesh();
-  var pipeline = builtin_pipeline(device);
   var camera = new Camera();
   camera.location.set(4, 4, 4);
-  camera.perspective(60, window.innerWidth / window.innerHeight, 1, 1e3);
+  camera.look_at(Float3.ZERO);
+  camera.perspective(45, 1, 1, 1e3);
   var control = new SphericalControl(camera);
-  var action = {
-    clear_color: new ColorRGBA().set_hex_string("f1f3f5"),
-    clear_depth: 1,
-    type: GPUActionType.ClearAll
-  };
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.update_projection_matrix();
-  }, false);
+  var pipeline = create_default_pipeline();
+  var cube = create_box_mesh();
   function frame() {
-    const encoder = device.encoder;
-    encoder.clear(action);
     control.update();
     encoder.set_camera(camera);
     encoder.set_pipeline(pipeline);
     encoder.draw_mesh(create_gpu_mesh(cube));
   }
   EventHub.on(EngineEvent.Frame, frame);
+  engine.start();
 })();
 //# sourceMappingURL=index.js.map

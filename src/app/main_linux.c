@@ -49,8 +49,9 @@ int main(int argc, char** argv)
     logger_init();
 
     script_context_t context = script_context_create();
-    ustring_t source = io_read_file(argv[1]);
-    script_eval(context, source);
+    ustring_t script_path = ustring_str(argv[1]);
+    ustring_t source = io_read_file(script_path);
+    script_eval(context, source, script_path);
 
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))

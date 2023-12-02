@@ -1,8 +1,20 @@
-#include "script.gles.h"
+#include "gles.h"
 
 #if defined(RENDER_BACKEND_GLES)
 #include <glad/glad.h>
 #include <stdlib.h>
+
+static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    return JS_NewObject(ctx);
+}
+
+static JSValue js_gl_get_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    u32 pname;
+    JS_ToUint32(ctx, &pname, argv[0]);
+    GLint param;
+    glGetIntegerv(pname, &param);
+    return JS_NewInt32(ctx, param);
+}
 
 static JSValue js_gl_clear(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
@@ -118,7 +130,7 @@ static JSValue js_gl_get_shader_info_log(JSContext *ctx, JSValueConst this_val, 
 {
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
-    GLint length;
+    GLint length = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
     char *info_log = (char*)malloc(length);
     glGetShaderInfoLog(shader, length, NULL, info_log);
@@ -194,7 +206,7 @@ static JSValue js_gl_get_attrib_location(JSContext *ctx, JSValueConst this_val, 
 
 static JSValue js_gl_vertex_attrib_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint index, size, type, normalized, stride, offset;
+    GLuint index, size, type, normalized, stride;
     JS_ToUint32(ctx, &index, argv[0]);
     JS_ToUint32(ctx, &size, argv[1]);
     JS_ToUint32(ctx, &type, argv[2]);
@@ -206,7 +218,7 @@ static JSValue js_gl_vertex_attrib_pointer(JSContext *ctx, JSValueConst this_val
 
 static JSValue js_gl_vertex_attribi_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint index, size, type, stride, offset;
+    GLuint index, size, type, stride;
     JS_ToUint32(ctx, &index, argv[0]);
     JS_ToUint32(ctx, &size, argv[1]);
     JS_ToUint32(ctx, &type, argv[2]);
@@ -402,11 +414,39 @@ static JSValue js_gl_blend_equation(JSContext *ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_blend_func_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint srcRGB, dstRGB, srcAlpha, dstAlpha;
+    JS_ToUint32(ctx, &srcRGB, argv[0]);
+    JS_ToUint32(ctx, &dstRGB, argv[1]);
+    JS_ToUint32(ctx, &srcAlpha, argv[2]);
+    JS_ToUint32(ctx, &dstAlpha, argv[3]);
+    glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_blend_equation_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint modeRGB, modeAlpha;
+    JS_ToUint32(ctx, &modeRGB, argv[0]);
+    JS_ToUint32(ctx, &modeAlpha, argv[1]);
+    glBlendEquationSeparate(modeRGB, modeAlpha);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_depth_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint func;
     JS_ToUint32(ctx, &func, argv[0]);
     glDepthFunc(func);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_depth_mask(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint flag;
+    JS_ToUint32(ctx, &flag, argv[0]);
+    glDepthMask(flag);
     return JS_UNDEFINED;
 }
 
@@ -437,7 +477,7 @@ static JSValue js_gl_polygon_offset(JSContext *ctx, JSValueConst this_val, int a
 
 static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint mode, count, type, offset;
+    GLuint mode, count, type;
     JS_ToUint32(ctx, &mode, argv[0]);
     JS_ToUint32(ctx, &count, argv[1]);
     JS_ToUint32(ctx, &type, argv[2]);
@@ -452,6 +492,10 @@ void script_module_gles_register(script_context_t context)
     JSValue gl = JS_NewObject(ctx);
 
     JS_SetPropertyStr(ctx, global_obj, "gl", gl);
+
+    JS_SetPropertyStr(ctx, gl, "getExtension", JS_NewCFunction(ctx, js_gl_get_extension, "getExtension", 1));
+    JS_SetPropertyStr(ctx, gl, "getParameter", JS_NewCFunction(ctx, js_gl_get_parameter, "getParameter", 1));
+
     JS_SetPropertyStr(ctx, gl, "clear", JS_NewCFunction(ctx, js_gl_clear, "clear", 0));
     JS_SetPropertyStr(ctx, gl, "viewport", JS_NewCFunction(ctx, js_gl_viewport, "viewport", 4));
     JS_SetPropertyStr(ctx, gl, "clearColor", JS_NewCFunction(ctx, js_gl_clear_color, "clearColor", 4));
@@ -492,11 +536,109 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "disable", JS_NewCFunction(ctx, js_gl_disable, "disable", 1));
     JS_SetPropertyStr(ctx, gl, "blendFunc", JS_NewCFunction(ctx, js_gl_blend_func, "blendFunc", 2));
     JS_SetPropertyStr(ctx, gl, "blendEquation", JS_NewCFunction(ctx, js_gl_blend_equation, "blendEquation", 1));
+    JS_SetPropertyStr(ctx, gl, "blendFuncSeparate", JS_NewCFunction(ctx, js_gl_blend_func_separate, "blendFuncSeparate", 4));
+    JS_SetPropertyStr(ctx, gl, "blendEquationSeparate", JS_NewCFunction(ctx, js_gl_blend_equation_separate, "blendEquationSeparate", 2));
     JS_SetPropertyStr(ctx, gl, "depthFunc", JS_NewCFunction(ctx, js_gl_depth_func, "depthFunc", 1));
+    JS_SetPropertyStr(ctx, gl, "depthMask", JS_NewCFunction(ctx, js_gl_depth_mask, "depthMask", 1));
     JS_SetPropertyStr(ctx, gl, "cullFace", JS_NewCFunction(ctx, js_gl_cull_face, "cullFace", 1));
     JS_SetPropertyStr(ctx, gl, "frontFace", JS_NewCFunction(ctx, js_gl_front_face, "frontFace", 1));
     JS_SetPropertyStr(ctx, gl, "polygonOffset", JS_NewCFunction(ctx, js_gl_polygon_offset, "polygonOffset", 2));
     JS_SetPropertyStr(ctx, gl, "drawElements", JS_NewCFunction(ctx, js_gl_draw_elements, "drawElements", 4));
+
+    // export webgl2 constants
+    JS_SetPropertyStr(ctx, gl, "VERTEX_SHADER", JS_NewInt32(ctx, GL_VERTEX_SHADER));
+    JS_SetPropertyStr(ctx, gl, "FRAGMENT_SHADER", JS_NewInt32(ctx, GL_FRAGMENT_SHADER));
+    JS_SetPropertyStr(ctx, gl, "ARRAY_BUFFER", JS_NewInt32(ctx, GL_ARRAY_BUFFER));
+    JS_SetPropertyStr(ctx, gl, "ELEMENT_ARRAY_BUFFER", JS_NewInt32(ctx, GL_ELEMENT_ARRAY_BUFFER));
+    JS_SetPropertyStr(ctx, gl, "STATIC_DRAW", JS_NewInt32(ctx, GL_STATIC_DRAW));
+    JS_SetPropertyStr(ctx, gl, "DYNAMIC_DRAW", JS_NewInt32(ctx, GL_DYNAMIC_DRAW));
+    JS_SetPropertyStr(ctx, gl, "STREAM_DRAW", JS_NewInt32(ctx, GL_STREAM_DRAW));
+
+    JS_SetPropertyStr(ctx, gl, "FLOAT", JS_NewInt32(ctx, GL_FLOAT));
+    JS_SetPropertyStr(ctx, gl, "UNSIGNED_BYTE", JS_NewInt32(ctx, GL_UNSIGNED_BYTE));
+    JS_SetPropertyStr(ctx, gl, "UNSIGNED_SHORT", JS_NewInt32(ctx, GL_UNSIGNED_SHORT));
+    JS_SetPropertyStr(ctx, gl, "UNSIGNED_INT", JS_NewInt32(ctx, GL_UNSIGNED_INT));
+
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_2D", JS_NewInt32(ctx, GL_TEXTURE_2D));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_CUBE_MAP", JS_NewInt32(ctx, GL_TEXTURE_CUBE_MAP));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_CUBE_MAP_POSITIVE_X", JS_NewInt32(ctx, GL_TEXTURE_CUBE_MAP_POSITIVE_X));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_2D_ARRAY", JS_NewInt32(ctx, GL_TEXTURE_2D_ARRAY));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_3D", JS_NewInt32(ctx, GL_TEXTURE_3D));
+
+    JS_SetPropertyStr(ctx, gl, "RGBA", JS_NewInt32(ctx, GL_RGBA));
+    JS_SetPropertyStr(ctx, gl, "RGB", JS_NewInt32(ctx, GL_RGB));
+    JS_SetPropertyStr(ctx, gl, "RGBA8", JS_NewInt32(ctx, GL_RGBA8));
+    JS_SetPropertyStr(ctx, gl, "RGB8", JS_NewInt32(ctx, GL_RGB8));
+    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT16", JS_NewInt32(ctx, GL_DEPTH_COMPONENT16));
+    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT24", JS_NewInt32(ctx, GL_DEPTH_COMPONENT24));
+    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT32F", JS_NewInt32(ctx, GL_DEPTH_COMPONENT32F));
+    JS_SetPropertyStr(ctx, gl, "DEPTH24_STENCIL8", JS_NewInt32(ctx, GL_DEPTH24_STENCIL8));
+    JS_SetPropertyStr(ctx, gl, "DEPTH32F_STENCIL8", JS_NewInt32(ctx, GL_DEPTH32F_STENCIL8));
+    
+    JS_SetPropertyStr(ctx, gl, "FRAMEBUFFER", JS_NewInt32(ctx, GL_FRAMEBUFFER));
+    JS_SetPropertyStr(ctx, gl, "RENDERBUFFER", JS_NewInt32(ctx, GL_RENDERBUFFER));
+    JS_SetPropertyStr(ctx, gl, "COLOR_ATTACHMENT0", JS_NewInt32(ctx, GL_COLOR_ATTACHMENT0));
+    JS_SetPropertyStr(ctx, gl, "DEPTH_ATTACHMENT", JS_NewInt32(ctx, GL_DEPTH_ATTACHMENT));
+    JS_SetPropertyStr(ctx, gl, "STENCIL_ATTACHMENT", JS_NewInt32(ctx, GL_STENCIL_ATTACHMENT));
+    JS_SetPropertyStr(ctx, gl, "DEPTH_STENCIL_ATTACHMENT", JS_NewInt32(ctx, GL_DEPTH_STENCIL_ATTACHMENT));
+    JS_SetPropertyStr(ctx, gl, "FRAMEBUFFER_COMPLETE", JS_NewInt32(ctx, GL_FRAMEBUFFER_COMPLETE));
+
+    JS_SetPropertyStr(ctx, gl, "NEAREST", JS_NewInt32(ctx, GL_NEAREST));
+    JS_SetPropertyStr(ctx, gl, "LINEAR", JS_NewInt32(ctx, GL_LINEAR));
+    JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_NEAREST", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_NEAREST));
+    JS_SetPropertyStr(ctx, gl, "LINEAR_MIPMAP_NEAREST", JS_NewInt32(ctx, GL_LINEAR_MIPMAP_NEAREST));
+    JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_LINEAR));
+    JS_SetPropertyStr(ctx, gl, "LINEAR_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_LINEAR_MIPMAP_LINEAR));
+
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_S", JS_NewInt32(ctx, GL_TEXTURE_WRAP_S));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_T", JS_NewInt32(ctx, GL_TEXTURE_WRAP_T));  
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_R", JS_NewInt32(ctx, GL_TEXTURE_WRAP_R));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_MIN_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MIN_FILTER));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_MAG_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MAG_FILTER));
+
+    JS_SetPropertyStr(ctx, gl, "REPEAT", JS_NewInt32(ctx, GL_REPEAT));
+    JS_SetPropertyStr(ctx, gl, "CLAMP_TO_EDGE", JS_NewInt32(ctx, GL_CLAMP_TO_EDGE));
+    JS_SetPropertyStr(ctx, gl, "MIRRORED_REPEAT", JS_NewInt32(ctx, GL_MIRRORED_REPEAT));
+
+    JS_SetPropertyStr(ctx, gl, "DEPTH_TEST", JS_NewInt32(ctx, GL_DEPTH_TEST));
+    JS_SetPropertyStr(ctx, gl, "BLEND", JS_NewInt32(ctx, GL_BLEND));
+    JS_SetPropertyStr(ctx, gl, "CULL_FACE", JS_NewInt32(ctx, GL_CULL_FACE));
+    JS_SetPropertyStr(ctx, gl, "FRONT", JS_NewInt32(ctx, GL_FRONT));
+    JS_SetPropertyStr(ctx, gl, "BACK", JS_NewInt32(ctx, GL_BACK));
+    JS_SetPropertyStr(ctx, gl, "FRONT_AND_BACK", JS_NewInt32(ctx, GL_FRONT_AND_BACK));
+
+    JS_SetPropertyStr(ctx, gl, "FUNC_ADD", JS_NewInt32(ctx, GL_FUNC_ADD));
+    JS_SetPropertyStr(ctx, gl, "FUNC_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_SUBTRACT));
+    JS_SetPropertyStr(ctx, gl, "FUNC_REVERSE_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_REVERSE_SUBTRACT));
+
+    JS_SetPropertyStr(ctx, gl, "ZERO", JS_NewInt32(ctx, GL_ZERO));
+    JS_SetPropertyStr(ctx, gl, "ONE", JS_NewInt32(ctx, GL_ONE));
+    JS_SetPropertyStr(ctx, gl, "SRC_COLOR", JS_NewInt32(ctx, GL_SRC_COLOR));
+    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_SRC_COLOR", JS_NewInt32(ctx, GL_ONE_MINUS_SRC_COLOR));
+    JS_SetPropertyStr(ctx, gl, "SRC_ALPHA", JS_NewInt32(ctx, GL_SRC_ALPHA));
+    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_SRC_ALPHA", JS_NewInt32(ctx, GL_ONE_MINUS_SRC_ALPHA));
+    JS_SetPropertyStr(ctx, gl, "DST_ALPHA", JS_NewInt32(ctx, GL_DST_ALPHA));
+    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_DST_ALPHA", JS_NewInt32(ctx, GL_ONE_MINUS_DST_ALPHA));
+    JS_SetPropertyStr(ctx, gl, "DST_COLOR", JS_NewInt32(ctx, GL_DST_COLOR));
+    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_DST_COLOR", JS_NewInt32(ctx, GL_ONE_MINUS_DST_COLOR));
+    JS_SetPropertyStr(ctx, gl, "SRC_ALPHA_SATURATE", JS_NewInt32(ctx, GL_SRC_ALPHA_SATURATE));
+
+    JS_SetPropertyStr(ctx, gl, "NEVER", JS_NewInt32(ctx, GL_NEVER));
+    JS_SetPropertyStr(ctx, gl, "LESS", JS_NewInt32(ctx, GL_LESS));
+    JS_SetPropertyStr(ctx, gl, "EQUAL", JS_NewInt32(ctx, GL_EQUAL));
+    JS_SetPropertyStr(ctx, gl, "LEQUAL", JS_NewInt32(ctx, GL_LEQUAL));
+    JS_SetPropertyStr(ctx, gl, "GREATER", JS_NewInt32(ctx, GL_GREATER));
+    JS_SetPropertyStr(ctx, gl, "NOTEQUAL", JS_NewInt32(ctx, GL_NOTEQUAL));
+    JS_SetPropertyStr(ctx, gl, "GEQUAL", JS_NewInt32(ctx, GL_GEQUAL));
+    JS_SetPropertyStr(ctx, gl, "ALWAYS", JS_NewInt32(ctx, GL_ALWAYS));
+
+    JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_SIZE", JS_NewInt32(ctx, GL_MAX_TEXTURE_SIZE));
+    JS_SetPropertyStr(ctx, gl, "MAX_VERTEX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
+    JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_TEXTURE_IMAGE_UNITS));
+    JS_SetPropertyStr(ctx, gl, "MAX_RENDERBUFFER_SIZE", JS_NewInt32(ctx, GL_MAX_RENDERBUFFER_SIZE));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER_ALIGNMENT", JS_NewInt32(ctx, GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BUFFER_SIZE));
+
     JS_FreeValue(ctx, global_obj);
 }
 

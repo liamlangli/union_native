@@ -9,6 +9,6 @@ typedef struct ustring_t {
     u32 null_terminated;
 } ustring_t;
 
-#define string_str(s) ((ustring_t) {.data = s, .length = s ? (u32)strlen(s) : 0, .null_terminated = 1})
-#define string_STR(s) ((ustring_t) {.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1})
-#define string_range(s, e) ((ustring_t) {.data = (s), length = (u32)((e) - (s)) })
+#define ustring_str(s) ((ustring_t) {.data = s, .length = s ? (u32)strlen(s) : 0, .null_terminated = 1})
+#define ustring_STR(s) ((ustring_t) {.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1})
+#define ustring_range(s, e) ((ustring_t) {.data = (s), length = (u32)((e) - (s)) })

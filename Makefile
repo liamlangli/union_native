@@ -28,6 +28,3 @@ CCFLAGS += -DSCRIPT_BACKEND_JS
 
 collect:
 	python build_tool/collect_source.py $(PLATFORM)
-
-convert:
-	python build_tool/convert_shader.py $(PLATFORM)
