@@ -1,4 +1,4 @@
-import { DepthCompareFunc, Pipeline, create_pipeline } from "@union_native/core";
+import { DepthCompareFunc, Mat4, Pipeline, UniformType, create_pipeline } from "@union_native/core";
 
 export function create_default_pipeline(): Pipeline {
     const vertex_shader = `#version 300 es
@@ -7,11 +7,18 @@ export function create_default_pipeline(): Pipeline {
     layout(location = 0) in vec3 position;
     layout(location = 1) in vec2 uv;
 
+    uniform mat4 world_matrix;
+
+    layout(std140) uniform frame_block {
+        mat4 view_matrix;
+        mat4 projection_matrix;
+    };
+
     out vec2 v_uv;
 
     void main() {
         v_uv = uv;
-        gl_Position = vec4(position, 1.0);
+        gl_Position = projection_matrix * view_matrix * world_matrix * vec4(position, 1.0);
     }
     `;
 
@@ -30,6 +37,12 @@ export function create_default_pipeline(): Pipeline {
         name: "default pipeline",
         vertex_shader,
         fragment_shader,
+        uniforms: [
+            { name: "world_matrix", type: UniformType.Mat4, default_value: new Mat4() },
+            { name: "frame_block.view_matrix", type: UniformType.Mat4 },
+            { name: "frame_block.projection_matrix", type: UniformType.Mat4 }
+        ],
+        blend: { enabled: false},
         depth_write: true,
         depth_compare_func: DepthCompareFunc.Always
     })!;

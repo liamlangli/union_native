@@ -6,8 +6,9 @@ let ctx = await context({
         'src/index.ts'
     ],
     bundle: true,
-    sourcemap: true,
-    outdir: 'public',
+    sourcemap: "inline",
+    sourcesContent: true,
+    outdir: "public",
     external: ['acorn']
 });
 

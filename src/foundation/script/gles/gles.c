@@ -83,6 +83,41 @@ static JSValue js_gl_buffer_data(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_buffer_sub_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint target, offset;
+    JS_ToUint32(ctx, &target, argv[0]);
+    JS_ToUint32(ctx, &offset, argv[1]);
+    JSValue data = argv[2];
+
+    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    size_t length;
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+    glBufferSubData(target, offset, length, data_buffer);
+
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_bind_buffer_range(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint target, index, buffer, offset, length;
+    JS_ToUint32(ctx, &target, argv[0]);
+    JS_ToUint32(ctx, &index, argv[1]);
+    JS_ToUint32(ctx, &buffer, argv[2]);
+    JS_ToUint32(ctx, &offset, argv[3]);
+    JS_ToUint32(ctx, &length, argv[4]);
+    glBindBufferRange(target, index, buffer, offset, length);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_delete_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint buffer;
+    JS_ToUint32(ctx, &buffer, argv[0]);
+    glDeleteBuffers(1, &buffer);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_create_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint shader;
@@ -163,6 +198,183 @@ static JSValue js_gl_link_program(JSContext *ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_delete_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program;
+    JS_ToUint32(ctx, &program, argv[0]);
+    glDeleteProgram(program);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_get_uniform_block_index(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program;
+    const char *uniformBlockName;
+    JS_ToUint32(ctx, &program, argv[0]);
+    uniformBlockName = JS_ToCString(ctx, argv[1]);
+    GLuint index = glGetUniformBlockIndex(program, uniformBlockName);
+    JS_FreeCString(ctx, uniformBlockName);
+    return JS_NewInt32(ctx, index);
+}
+
+static JSValue js_gl_get_active_uniform_block_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program, uniformBlockIndex, pname;
+    JS_ToUint32(ctx, &program, argv[0]);
+    JS_ToUint32(ctx, &uniformBlockIndex, argv[1]);
+    JS_ToUint32(ctx, &pname, argv[2]);
+    GLint param;
+    glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, &param);
+    return JS_NewInt32(ctx, param);
+}
+
+static JSValue js_gl_get_uniform_indices(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program;
+    JSValue uniformNames = argv[1];
+    JS_ToUint32(ctx, &program, argv[0]);
+    GLuint uniformCount;
+    JS_ToUint32(ctx, &uniformCount, argv[2]);
+    GLuint *uniformIndices = (GLuint*)malloc(sizeof(GLuint) * uniformCount);
+    for (int i = 0; i < uniformCount; i++) {
+        JSValue name = JS_GetPropertyUint32(ctx, uniformNames, i);
+        const char *uniformName = JS_ToCString(ctx, name);
+        uniformIndices[i] = glGetUniformBlockIndex(program, uniformName);
+        JS_FreeCString(ctx, uniformName);
+    }
+    JSValue ret = JS_NewArray(ctx);
+    for (int i = 0; i < uniformCount; i++) {
+        JS_SetPropertyUint32(ctx, ret, i, JS_NewInt32(ctx, uniformIndices[i]));
+    }
+    free(uniformIndices);
+    return ret;
+}
+
+static JSValue js_gl_get_active_uniforms(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program;
+    JSValue uniformIndices = argv[1];
+    JS_ToUint32(ctx, &program, argv[0]);
+    GLuint uniformCount;
+    JS_ToUint32(ctx, &uniformCount, argv[2]);
+    GLuint *uniforms = (GLuint*)malloc(sizeof(GLuint) * uniformCount);
+    for (int i = 0; i < uniformCount; i++) {
+        JSValue index = JS_GetPropertyUint32(ctx, uniformIndices, i);
+        GLuint uniformIndex;
+        JS_ToUint32(ctx, &uniformIndex, index);
+        uniforms[i] = uniformIndex;
+    }
+    GLuint pname;
+    JS_ToUint32(ctx, &pname, argv[3]);
+    GLint *params = (GLint*)malloc(sizeof(GLint) * uniformCount);
+    glGetActiveUniformsiv(program, uniformCount, uniforms, pname, params);
+    JSValue ret = JS_NewArray(ctx);
+    for (int i = 0; i < uniformCount; i++) {
+        JS_SetPropertyUint32(ctx, ret, i, JS_NewInt32(ctx, params[i]));
+    }
+    free(uniforms);
+    free(params);
+    return ret;
+}
+
+static JSValue js_gl_uniform1f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    f64 v0;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToFloat64(ctx, &v0, argv[1]);
+    glUniform1f(location, v0);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform2f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    f64 v0, v1;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToFloat64(ctx, &v0, argv[1]);
+    JS_ToFloat64(ctx, &v1, argv[2]);
+    glUniform2f(location, v0, v1);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform3f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    f64 v0, v1, v2;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToFloat64(ctx, &v0, argv[1]);
+    JS_ToFloat64(ctx, &v1, argv[2]);
+    JS_ToFloat64(ctx, &v2, argv[3]);
+    glUniform3f(location, v0, v1, v2);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform4f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    f64 v0, v1, v2, v3;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToFloat64(ctx, &v0, argv[1]);
+    JS_ToFloat64(ctx, &v1, argv[2]);
+    JS_ToFloat64(ctx, &v2, argv[3]);
+    JS_ToFloat64(ctx, &v3, argv[4]);
+    glUniform4f(location, v0, v1, v2, v3);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform_1i(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    GLint v0;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToInt32(ctx, &v0, argv[1]);
+    glUniform1i(location, v0);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform_1u(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    GLuint v0;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToUint32(ctx, &v0, argv[1]);
+    glUniform1ui(location, v0);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform_matrix_4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location, count;
+    GLboolean transpose;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToUint32(ctx, &count, argv[1]);
+    JSValue data = argv[3];
+
+    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    size_t length;
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+    glUniformMatrix4fv(location, count, GL_FALSE, (const GLfloat*)data_buffer);
+
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform_matrix_3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location, count;
+    GLboolean transpose;
+    JS_ToUint32(ctx, &location, argv[0]);
+    JS_ToUint32(ctx, &count, argv[1]);
+    JSValue data = argv[3];
+
+    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    size_t length;
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+    glUniformMatrix3fv(location, count, GL_FALSE, (const GLfloat*)data_buffer);
+
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_get_program_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint program, pname;
@@ -191,6 +403,26 @@ static JSValue js_gl_use_program(JSContext *ctx, JSValueConst this_val, int argc
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     glUseProgram(program);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_get_unifom_location(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program;
+    JS_ToUint32(ctx, &program, argv[0]);
+    const char *name = JS_ToCString(ctx, argv[1]);
+    GLint location = glGetUniformLocation(program, name);
+    JS_FreeCString(ctx, name);
+    return JS_NewInt32(ctx, location);
+}
+
+static JSValue js_gl_uniform_block_binding(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint program, uniformBlockIndex, uniformBlockBinding;
+    JS_ToUint32(ctx, &program, argv[0]);
+    JS_ToUint32(ctx, &uniformBlockIndex, argv[1]);
+    JS_ToUint32(ctx, &uniformBlockBinding, argv[2]);
+    glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
     return JS_UNDEFINED;
 }
 
@@ -292,6 +524,14 @@ static JSValue js_gl_tex_parameteri(JSContext *ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_delete_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint texture;
+    JS_ToUint32(ctx, &texture, argv[0]);
+    glDeleteTextures(1, &texture);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_create_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint framebuffer;
@@ -326,6 +566,14 @@ static JSValue js_gl_check_framebuffer_status(JSContext *ctx, JSValueConst this_
     JS_ToUint32(ctx, &target, argv[0]);
     GLenum status = glCheckFramebufferStatus(target);
     return JS_NewInt32(ctx, status);
+}
+
+static JSValue js_gl_delete_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint framebuffer;
+    JS_ToUint32(ctx, &framebuffer, argv[0]);
+    glDeleteFramebuffers(1, &framebuffer);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_gl_create_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
@@ -502,7 +750,11 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "clearDepth", JS_NewCFunction(ctx, js_gl_clear_depth, "clearDepth", 1));
     JS_SetPropertyStr(ctx, gl, "createBuffer", JS_NewCFunction(ctx, js_gl_create_buffer, "createBuffer", 1));
     JS_SetPropertyStr(ctx, gl, "bindBuffer", JS_NewCFunction(ctx, js_gl_bind_buffer, "bindBuffer", 2));
+    JS_SetPropertyStr(ctx, gl, "bindBufferRange", JS_NewCFunction(ctx, js_gl_bind_buffer_range, "bindBufferRange", 5));
     JS_SetPropertyStr(ctx, gl, "bufferData", JS_NewCFunction(ctx, js_gl_buffer_data, "bufferData", 3));
+    JS_SetPropertyStr(ctx, gl, "bufferSubData", JS_NewCFunction(ctx, js_gl_buffer_sub_data, "bufferSubData", 3));
+    JS_SetPropertyStr(ctx, gl, "deleteBuffer", JS_NewCFunction(ctx, js_gl_delete_buffer, "deleteBuffer", 1));
+
     JS_SetPropertyStr(ctx, gl, "createShader", JS_NewCFunction(ctx, js_gl_create_shader, "createShader", 1));
     JS_SetPropertyStr(ctx, gl, "shaderSource", JS_NewCFunction(ctx, js_gl_shader_source, "shaderSource", 2));
     JS_SetPropertyStr(ctx, gl, "compileShader", JS_NewCFunction(ctx, js_gl_compile_shader, "compileShader", 1));
@@ -511,9 +763,16 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "createProgram", JS_NewCFunction(ctx, js_gl_create_program, "createProgram", 0));
     JS_SetPropertyStr(ctx, gl, "attachShader", JS_NewCFunction(ctx, js_gl_attach_shader, "attachShader", 2));
     JS_SetPropertyStr(ctx, gl, "linkProgram", JS_NewCFunction(ctx, js_gl_link_program, "linkProgram", 1));
+    JS_SetPropertyStr(ctx, gl, "deleteProgram", JS_NewCFunction(ctx, js_gl_delete_program, "deleteProgram", 1));
     JS_SetPropertyStr(ctx, gl, "getProgramParameter", JS_NewCFunction(ctx, js_gl_get_program_parameter, "getProgramParameter", 2));
     JS_SetPropertyStr(ctx, gl, "getProgramInfoLog", JS_NewCFunction(ctx, js_gl_get_program_info_log, "getProgramInfoLog", 1));
     JS_SetPropertyStr(ctx, gl, "useProgram", JS_NewCFunction(ctx, js_gl_use_program, "useProgram", 1));
+    JS_SetPropertyStr(ctx, gl, "getUniformLocation", JS_NewCFunction(ctx, js_gl_get_unifom_location, "getUniformLocation", 2));
+    JS_SetPropertyStr(ctx, gl, "getUniformBlockIndex", JS_NewCFunction(ctx, js_gl_get_uniform_block_index, "getUniformBlockIndex", 4));
+    JS_SetPropertyStr(ctx, gl, "getActiveUniformBlockParameter", JS_NewCFunction(ctx, js_gl_get_active_uniform_block_parameter, "getActiveUniformBlockParameter", 3));
+    JS_SetPropertyStr(ctx, gl, "getUniformIndices", JS_NewCFunction(ctx, js_gl_get_uniform_indices, "getUniformIndices", 3));
+    JS_SetPropertyStr(ctx, gl, "getActiveUniforms", JS_NewCFunction(ctx, js_gl_get_active_uniforms, "getActiveUniforms", 4));
+
     JS_SetPropertyStr(ctx, gl, "getAttribLocation", JS_NewCFunction(ctx, js_gl_get_attrib_location, "getAttribLocation", 2));
     JS_SetPropertyStr(ctx, gl, "vertexAttribPointer", JS_NewCFunction(ctx, js_gl_vertex_attrib_pointer, "vertexAttribPointer", 6));
     JS_SetPropertyStr(ctx, gl, "enableVertexAttribArray", JS_NewCFunction(ctx, js_gl_enable_vertex_attrib_array, "enableVertexAttribArray", 1));
@@ -522,10 +781,14 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "bindTexture", JS_NewCFunction(ctx, js_gl_bind_texture, "bindTexture", 2));
     JS_SetPropertyStr(ctx, gl, "texImage2D", JS_NewCFunction(ctx, js_gl_tex_image2d, "texImage2D", 9));
     JS_SetPropertyStr(ctx, gl, "texParameteri", JS_NewCFunction(ctx, js_gl_tex_parameteri, "texParameteri", 3));
+    JS_SetPropertyStr(ctx, gl, "deleteTexture", JS_NewCFunction(ctx, js_gl_delete_texture, "deleteTexture", 1));
+
     JS_SetPropertyStr(ctx, gl, "createFramebuffer", JS_NewCFunction(ctx, js_gl_create_framebuffer, "createFramebuffer", 0));
     JS_SetPropertyStr(ctx, gl, "bindFramebuffer", JS_NewCFunction(ctx, js_gl_bind_framebuffer, "bindFramebuffer", 2));
     JS_SetPropertyStr(ctx, gl, "framebufferTexture2D", JS_NewCFunction(ctx, js_gl_framebuffer_texture2d, "framebufferTexture2D", 5));
     JS_SetPropertyStr(ctx, gl, "checkFramebufferStatus", JS_NewCFunction(ctx, js_gl_check_framebuffer_status, "checkFramebufferStatus", 1));
+    JS_SetPropertyStr(ctx, gl, "deleteFramebuffer", JS_NewCFunction(ctx, js_gl_delete_framebuffer, "deleteFramebuffer", 1));
+
     JS_SetPropertyStr(ctx, gl, "createRenderbuffer", JS_NewCFunction(ctx, js_gl_create_renderbuffer, "createRenderbuffer", 0));
     JS_SetPropertyStr(ctx, gl, "bindRenderbuffer", JS_NewCFunction(ctx, js_gl_bind_renderbuffer, "bindRenderbuffer", 2));
     JS_SetPropertyStr(ctx, gl, "renderbufferStorage", JS_NewCFunction(ctx, js_gl_renderbuffer_storage, "renderbufferStorage", 4));
@@ -544,6 +807,16 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "frontFace", JS_NewCFunction(ctx, js_gl_front_face, "frontFace", 1));
     JS_SetPropertyStr(ctx, gl, "polygonOffset", JS_NewCFunction(ctx, js_gl_polygon_offset, "polygonOffset", 2));
     JS_SetPropertyStr(ctx, gl, "drawElements", JS_NewCFunction(ctx, js_gl_draw_elements, "drawElements", 4));
+
+    JS_SetPropertyStr(ctx, gl, "uniform1f", JS_NewCFunction(ctx, js_gl_uniform1f, "uniform1f", 2));
+    JS_SetPropertyStr(ctx, gl, "uniform2f", JS_NewCFunction(ctx, js_gl_uniform2f, "uniform2f", 3));
+    JS_SetPropertyStr(ctx, gl, "uniform3f", JS_NewCFunction(ctx, js_gl_uniform3f, "uniform3f", 4));
+    JS_SetPropertyStr(ctx, gl, "uniform4f", JS_NewCFunction(ctx, js_gl_uniform4f, "uniform4f", 5));
+    JS_SetPropertyStr(ctx, gl, "uniform1i", JS_NewCFunction(ctx, js_gl_uniform_1i, "uniform1i", 2));
+    JS_SetPropertyStr(ctx, gl, "uniform1u", JS_NewCFunction(ctx, js_gl_uniform_1u, "uniform1u", 2));
+    JS_SetPropertyStr(ctx, gl, "uniformMatrix4fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_4fv, "uniformMatrix4fv", 4));
+    JS_SetPropertyStr(ctx, gl, "uniformMatrix3fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_3fv, "uniformMatrix3fv", 4));
+    JS_SetPropertyStr(ctx, gl, "uniformBlockBinding", JS_NewCFunction(ctx, js_gl_uniform_block_binding, "uniformBlockBinding", 3));
 
     // export webgl2 constants
     JS_SetPropertyStr(ctx, gl, "VERTEX_SHADER", JS_NewInt32(ctx, GL_VERTEX_SHADER));
