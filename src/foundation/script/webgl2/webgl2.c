@@ -318,39 +318,43 @@ static JSValue js_gl_uniform1f(JSContext *ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform2f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+static JSValue js_gl_uniform1fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint location;
-    f64 v0, v1;
+    size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    JS_ToFloat64(ctx, &v0, argv[1]);
-    JS_ToFloat64(ctx, &v1, argv[2]);
-    glUniform2f(location, v0, v1);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniform1fv(location, length >> 2, (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform3f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+static JSValue js_gl_uniform2fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint location;
-    f64 v0, v1, v2;
+    size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    JS_ToFloat64(ctx, &v0, argv[1]);
-    JS_ToFloat64(ctx, &v1, argv[2]);
-    JS_ToFloat64(ctx, &v2, argv[3]);
-    glUniform3f(location, v0, v1, v2);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniform2fv(location, (length >> 3), (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform4f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+static JSValue js_gl_uniform3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     GLuint location;
-    f64 v0, v1, v2, v3;
+    size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    JS_ToFloat64(ctx, &v0, argv[1]);
-    JS_ToFloat64(ctx, &v1, argv[2]);
-    JS_ToFloat64(ctx, &v2, argv[3]);
-    JS_ToFloat64(ctx, &v3, argv[4]);
-    glUniform4f(location, v0, v1, v2, v3);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniform3fv(location, (length >> 2) / 3, (GLfloat*)data_buffer);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_uniform4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    GLuint location;
+    size_t length;
+    JS_ToUint32(ctx, &location, argv[0]);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniform4fv(location, length >> 4, (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -376,33 +380,21 @@ static JSValue js_gl_uniform_1u(JSContext *ctx, JSValueConst this_val, int argc,
 
 static JSValue js_gl_uniform_matrix_4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint location, count;
-    GLboolean transpose;
-    JS_ToUint32(ctx, &location, argv[0]);
-    JS_ToUint32(ctx, &count, argv[1]);
-    JSValue data = argv[3];
-
-    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    GLuint location;
     size_t length;
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
-    glUniformMatrix4fv(location, count, GL_FALSE, (const GLfloat*)data_buffer);
-
+    JS_ToUint32(ctx, &location, argv[0]);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniformMatrix4fv(location, length >> 6, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
 static JSValue js_gl_uniform_matrix_3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint location, count;
-    GLboolean transpose;
-    JS_ToUint32(ctx, &location, argv[0]);
-    JS_ToUint32(ctx, &count, argv[1]);
-    JSValue data = argv[3];
-
-    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    GLuint location;
     size_t length;
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
-    glUniformMatrix3fv(location, count, GL_FALSE, (const GLfloat*)data_buffer);
-
+    JS_ToUint32(ctx, &location, argv[0]);
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    glUniformMatrix3fv(location, (length >> 2) / 9, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -840,13 +832,14 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "drawElements", JS_NewCFunction(ctx, js_gl_draw_elements, "drawElements", 4));
 
     JS_SetPropertyStr(ctx, gl, "uniform1f", JS_NewCFunction(ctx, js_gl_uniform1f, "uniform1f", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform2f", JS_NewCFunction(ctx, js_gl_uniform2f, "uniform2f", 3));
-    JS_SetPropertyStr(ctx, gl, "uniform3f", JS_NewCFunction(ctx, js_gl_uniform3f, "uniform3f", 4));
-    JS_SetPropertyStr(ctx, gl, "uniform4f", JS_NewCFunction(ctx, js_gl_uniform4f, "uniform4f", 5));
+    JS_SetPropertyStr(ctx, gl, "uniform1fv", JS_NewCFunction(ctx, js_gl_uniform1fv, "uniform1fv", 2));
+    JS_SetPropertyStr(ctx, gl, "uniform2fv", JS_NewCFunction(ctx, js_gl_uniform2fv, "uniform2fv", 2));
+    JS_SetPropertyStr(ctx, gl, "uniform3fv", JS_NewCFunction(ctx, js_gl_uniform3fv, "uniform3fv", 2));
+    JS_SetPropertyStr(ctx, gl, "uniform4fv", JS_NewCFunction(ctx, js_gl_uniform4fv, "uniform4fv", 2));
     JS_SetPropertyStr(ctx, gl, "uniform1i", JS_NewCFunction(ctx, js_gl_uniform_1i, "uniform1i", 2));
     JS_SetPropertyStr(ctx, gl, "uniform1u", JS_NewCFunction(ctx, js_gl_uniform_1u, "uniform1u", 2));
-    JS_SetPropertyStr(ctx, gl, "uniformMatrix4fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_4fv, "uniformMatrix4fv", 4));
-    JS_SetPropertyStr(ctx, gl, "uniformMatrix3fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_3fv, "uniformMatrix3fv", 4));
+    JS_SetPropertyStr(ctx, gl, "uniformMatrix4fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_4fv, "uniformMatrix4fv", 3));
+    JS_SetPropertyStr(ctx, gl, "uniformMatrix3fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_3fv, "uniformMatrix3fv", 3));
     JS_SetPropertyStr(ctx, gl, "uniformBlockBinding", JS_NewCFunction(ctx, js_gl_uniform_block_binding, "uniformBlockBinding", 3));
 
     // export webgl2 constants
@@ -889,6 +882,8 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "DEPTH_STENCIL_ATTACHMENT", JS_NewInt32(ctx, GL_DEPTH_STENCIL_ATTACHMENT));
     JS_SetPropertyStr(ctx, gl, "FRAMEBUFFER_COMPLETE", JS_NewInt32(ctx, GL_FRAMEBUFFER_COMPLETE));
 
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_MIN_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MIN_FILTER));
+    JS_SetPropertyStr(ctx, gl, "TEXTURE_MAG_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MAG_FILTER));
     JS_SetPropertyStr(ctx, gl, "NEAREST", JS_NewInt32(ctx, GL_NEAREST));
     JS_SetPropertyStr(ctx, gl, "LINEAR", JS_NewInt32(ctx, GL_LINEAR));
     JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_NEAREST", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_NEAREST));
@@ -896,11 +891,10 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_LINEAR));
     JS_SetPropertyStr(ctx, gl, "LINEAR_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_LINEAR_MIPMAP_LINEAR));
 
+    // texture wrap
     JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_S", JS_NewInt32(ctx, GL_TEXTURE_WRAP_S));
     JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_T", JS_NewInt32(ctx, GL_TEXTURE_WRAP_T));  
     JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_R", JS_NewInt32(ctx, GL_TEXTURE_WRAP_R));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_MIN_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MIN_FILTER));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_MAG_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MAG_FILTER));
 
     JS_SetPropertyStr(ctx, gl, "REPEAT", JS_NewInt32(ctx, GL_REPEAT));
     JS_SetPropertyStr(ctx, gl, "CLAMP_TO_EDGE", JS_NewInt32(ctx, GL_CLAMP_TO_EDGE));
@@ -913,10 +907,12 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "BACK", JS_NewInt32(ctx, GL_BACK));
     JS_SetPropertyStr(ctx, gl, "FRONT_AND_BACK", JS_NewInt32(ctx, GL_FRONT_AND_BACK));
 
+    // blend equations
     JS_SetPropertyStr(ctx, gl, "FUNC_ADD", JS_NewInt32(ctx, GL_FUNC_ADD));
     JS_SetPropertyStr(ctx, gl, "FUNC_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_SUBTRACT));
     JS_SetPropertyStr(ctx, gl, "FUNC_REVERSE_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_REVERSE_SUBTRACT));
 
+    // blend factors
     JS_SetPropertyStr(ctx, gl, "ZERO", JS_NewInt32(ctx, GL_ZERO));
     JS_SetPropertyStr(ctx, gl, "ONE", JS_NewInt32(ctx, GL_ONE));
     JS_SetPropertyStr(ctx, gl, "SRC_COLOR", JS_NewInt32(ctx, GL_SRC_COLOR));
@@ -929,6 +925,7 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "ONE_MINUS_DST_COLOR", JS_NewInt32(ctx, GL_ONE_MINUS_DST_COLOR));
     JS_SetPropertyStr(ctx, gl, "SRC_ALPHA_SATURATE", JS_NewInt32(ctx, GL_SRC_ALPHA_SATURATE));
 
+    // depth function
     JS_SetPropertyStr(ctx, gl, "NEVER", JS_NewInt32(ctx, GL_NEVER));
     JS_SetPropertyStr(ctx, gl, "LESS", JS_NewInt32(ctx, GL_LESS));
     JS_SetPropertyStr(ctx, gl, "EQUAL", JS_NewInt32(ctx, GL_EQUAL));
@@ -938,6 +935,7 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "GEQUAL", JS_NewInt32(ctx, GL_GEQUAL));
     JS_SetPropertyStr(ctx, gl, "ALWAYS", JS_NewInt32(ctx, GL_ALWAYS));
 
+    // parameters
     JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_SIZE", JS_NewInt32(ctx, GL_MAX_TEXTURE_SIZE));
     JS_SetPropertyStr(ctx, gl, "MAX_VERTEX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
     JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_TEXTURE_IMAGE_UNITS));
@@ -946,22 +944,23 @@ void script_module_webgl2_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BUFFER_SIZE));
     JS_SetPropertyStr(ctx, gl, "MAX_UNIFORM_BLOCK_SIZE", JS_NewInt32(ctx, GL_MAX_UNIFORM_BLOCK_SIZE));
 
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_BINDING", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_BINDING));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_DATA_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_DATA_SIZE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORMS", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER));
-
+    // getActiveUniforms pname
     JS_SetPropertyStr(ctx, gl, "UNIFORM_TYPE", JS_NewInt32(ctx, GL_UNIFORM_TYPE));
     JS_SetPropertyStr(ctx, gl, "UNIFORM_SIZE", JS_NewInt32(ctx, GL_UNIFORM_SIZE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_INDEX", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_INDEX));
     JS_SetPropertyStr(ctx, gl, "UNIFORM_OFFSET", JS_NewInt32(ctx, GL_UNIFORM_OFFSET));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_INDEX", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_INDEX));
     JS_SetPropertyStr(ctx, gl, "UNIFORM_ARRAY_STRIDE", JS_NewInt32(ctx, GL_UNIFORM_ARRAY_STRIDE));
     JS_SetPropertyStr(ctx, gl, "UNIFORM_MATRIX_STRIDE", JS_NewInt32(ctx, GL_UNIFORM_MATRIX_STRIDE));
     JS_SetPropertyStr(ctx, gl, "UNIFORM_IS_ROW_MAJOR", JS_NewInt32(ctx, GL_UNIFORM_IS_ROW_MAJOR));
 
-
+    // getActiveUniformBlock pname
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_BINDING", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_BINDING));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_DATA_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_DATA_SIZE));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_NAME_LENGTH", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_NAME_LENGTH));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORMS", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER));
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER));
     JS_FreeValue(ctx, global_obj);
 }
 

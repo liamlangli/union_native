@@ -58,6 +58,7 @@ int main(int argc, char** argv)
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
+        glViewport(0, 0, 1080, 720);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         script_frame_tick(context);
         glfwSwapBuffers(window);

@@ -1,5 +1,6 @@
-import { Camera, ColorRGBA, Engine, EngineEvent, EventHub, GFXDevice, GPUAction, GPUActionType, SphericalControl, ZERO, create_box_mesh, create_gpu_mesh } from "@union_native/core";
+import { Camera, ColorRGBA, create_box_mesh, create_gpu_mesh, Engine, EngineEvent, EventHub, GFXDevice, GPUAction, GPUActionType, Mat4, MaterialBlock, SphericalControl, ZERO } from "@union_native/core";
 import { create_default_pipeline } from "./pipeline";
+
 
 const device = new GFXDevice();
 const encoder = device.encoder;
@@ -11,9 +12,11 @@ camera.look_at(ZERO);
 camera.perspective(45, window.innerWidth / window.innerHeight, 1, 1000);
 const control = new SphericalControl(camera);
 const pipeline = create_default_pipeline();
+const material = new MaterialBlock();
+material.set_mat4("world_matrix", new Mat4());
 
 const action = {
-    clear_color: new ColorRGBA(0.1, 0.1, 0.3, 1),
+    clear_color: new ColorRGBA(0.1, 0.2, 0.3, 1),
     clear_depth: 1,
     type: GPUActionType.ClearAll
 } as GPUAction;
@@ -24,6 +27,7 @@ function frame() {
     encoder.clear(action);
     encoder.set_pipeline(pipeline);
     encoder.set_camera(camera);
+    encoder.set_material_block(material);
     encoder.draw_mesh(create_gpu_mesh(cube));
     encoder.commit();
 }
