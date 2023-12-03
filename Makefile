@@ -6,6 +6,8 @@ else
 	OS=$(shell uname -s)
 endif
 
+OUTPUT_DIR=build
+
 -include build/Makefile_source
 
 ifeq ($(OS),Windows)

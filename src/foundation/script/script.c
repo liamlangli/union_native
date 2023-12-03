@@ -1,5 +1,5 @@
 #include "script.h"
-#include "foundation/script/gles/gles.h"
+#include "foundation/script/webgl2/webgl2.h"
 #include <GLFW/glfw3.h>
 
 #define MAX_FRAME_CALLBACKS 16
@@ -54,19 +54,15 @@ JSValue js_get_elements_by_tag_name(JSContext *context, JSValueConst this_val, i
     return arr;
 }
 
-static JSValue _frame_callbacks[MAX_FRAME_CALLBACKS];
+static JSValue _frame_callback;
 JSValue js_request_animation_frame(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     if (argc >= 1) 
     {
         JSValue callback = argv[0];
-        for (int i = 0; i < MAX_FRAME_CALLBACKS; i++) 
+        if (JS_IsFunction(context, callback)) 
         {
-            if (JS_IsUndefined(_frame_callbacks[i])) 
-            {
-                _frame_callbacks[i] = callback;
-                break;
-            }
+            _frame_callback = callback;
         }
     }
 
@@ -147,7 +143,7 @@ script_context_t script_context_create(void)
 
     JS_FreeValue(ctx, global);
     script_context_t context = { .context = ctx, .runtime = runtime };
-    script_module_gles_register(context);
+    script_module_webgl2_register(context);
 
     return context;
 }
@@ -173,12 +169,9 @@ int script_eval(script_context_t context, ustring_t source, ustring_t filename)
 
 void script_frame_tick(script_context_t context)
 {
-    for (int i = 0; i < MAX_FRAME_CALLBACKS; i++) 
+    if (JS_IsFunction(context.context, _frame_callback)) 
     {
-        if (!JS_IsUndefined(_frame_callbacks[i])) 
-        {
-            JS_Call(context.context, _frame_callbacks[i], JS_UNDEFINED, 0, NULL);
-        }
+        JS_Call(context.context, _frame_callback, JS_UNDEFINED, 0, NULL);
     }
 }
 

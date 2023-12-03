@@ -9,7 +9,7 @@ export function create_default_pipeline(): Pipeline {
 
     uniform mat4 world_matrix;
 
-    layout(std140) uniform frame_block {
+    uniform frame_block {
         mat4 view_matrix;
         mat4 projection_matrix;
     };

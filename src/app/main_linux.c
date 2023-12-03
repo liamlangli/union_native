@@ -2,7 +2,7 @@
 #include "foundation/script/script.h"
 #include "foundation/logger/logger.h"
 
-#include <glad/glad.h>
+#include <GLES3/gl3.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
  
@@ -27,11 +27,13 @@ int main(int argc, char** argv)
  
     if (!glfwInit())
         exit(EXIT_FAILURE);
- 
+
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_SAMPLES, 1);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
  
     window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
     if (!window)
@@ -41,7 +43,7 @@ int main(int argc, char** argv)
     }
     glfwSetKeyCallback(window, key_callback);
     glfwMakeContextCurrent(window);
-    gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress);
+
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
     glClearColor(.0, .0, .0, 1.);
@@ -61,7 +63,6 @@ int main(int argc, char** argv)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    
     script_context_destroy(context);
  
     glfwDestroyWindow(window);
