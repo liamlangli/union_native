@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "node build.js"
+    "dev": "node dev.js",
+    "build": "node build.js"
   },
   "devDependencies": {
     "esbuild": "^0.19.8",

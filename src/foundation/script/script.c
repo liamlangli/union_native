@@ -129,6 +129,8 @@ script_context_t script_context_create(void)
     JSValue window = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, global, "window", window);
     JS_SetPropertyStr(ctx, window, "addEventListener", JS_NewCFunction(ctx, js_add_event_listener, "addEventListener", 2));
+    JS_SetPropertyStr(ctx, window, "innerWidth", JS_NewInt32(ctx, 1080));
+    JS_SetPropertyStr(ctx, window, "innerHeight", JS_NewInt32(ctx, 720));
 
     JSValue performance = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, global, "performance", performance);

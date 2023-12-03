@@ -72,28 +72,38 @@ static JSValue js_gl_buffer_data(JSContext *ctx, JSValueConst this_val, int argc
 {
     GLuint target, usage;
     JS_ToUint32(ctx, &target, argv[0]);
-    JS_ToUint32(ctx, &usage, argv[1]);
-    JSValue data = argv[2];
+    JS_ToUint32(ctx, &usage, argv[2]);
+    JSValue data = argv[1];
 
-    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
-    size_t length;
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
-    glBufferData(target, length, data_buffer, usage);
-
+    if (JS_IsNumber(data)) {
+        GLuint size;
+        JS_ToUint32(ctx, &size, data);
+        glBufferData(target, size, NULL, usage);
+    } else {
+        JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+        size_t length;
+        u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+        glBufferData(target, length, data_buffer, usage);
+    }
     return JS_UNDEFINED;
 }
 
 static JSValue js_gl_buffer_sub_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
-    GLuint target, offset;
+    GLuint target, dst_offset, src_offset, length;
     JS_ToUint32(ctx, &target, argv[0]);
-    JS_ToUint32(ctx, &offset, argv[1]);
+    JS_ToUint32(ctx, &dst_offset, argv[1]);
     JSValue data = argv[2];
-
-    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
-    size_t length;
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
-    glBufferSubData(target, offset, length, data_buffer);
+    if (JS_IsNumber(data)) {
+        GLuint size;
+        JS_ToUint32(ctx, &size, data);
+        glBufferSubData(target, dst_offset, size, NULL);
+    } else {
+        JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+        size_t length;
+        u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+        glBufferSubData(target, dst_offset, length, data_buffer);
+    }
 
     return JS_UNDEFINED;
 }
@@ -752,7 +762,7 @@ void script_module_gles_register(script_context_t context)
     JS_SetPropertyStr(ctx, gl, "bindBuffer", JS_NewCFunction(ctx, js_gl_bind_buffer, "bindBuffer", 2));
     JS_SetPropertyStr(ctx, gl, "bindBufferRange", JS_NewCFunction(ctx, js_gl_bind_buffer_range, "bindBufferRange", 5));
     JS_SetPropertyStr(ctx, gl, "bufferData", JS_NewCFunction(ctx, js_gl_buffer_data, "bufferData", 3));
-    JS_SetPropertyStr(ctx, gl, "bufferSubData", JS_NewCFunction(ctx, js_gl_buffer_sub_data, "bufferSubData", 3));
+    JS_SetPropertyStr(ctx, gl, "bufferSubData", JS_NewCFunction(ctx, js_gl_buffer_sub_data, "bufferSubData", 5));
     JS_SetPropertyStr(ctx, gl, "deleteBuffer", JS_NewCFunction(ctx, js_gl_delete_buffer, "deleteBuffer", 1));
 
     JS_SetPropertyStr(ctx, gl, "createShader", JS_NewCFunction(ctx, js_gl_create_shader, "createShader", 1));
@@ -821,6 +831,8 @@ void script_module_gles_register(script_context_t context)
     // export webgl2 constants
     JS_SetPropertyStr(ctx, gl, "VERTEX_SHADER", JS_NewInt32(ctx, GL_VERTEX_SHADER));
     JS_SetPropertyStr(ctx, gl, "FRAGMENT_SHADER", JS_NewInt32(ctx, GL_FRAGMENT_SHADER));
+
+    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER", JS_NewInt32(ctx, GL_UNIFORM_BUFFER));
     JS_SetPropertyStr(ctx, gl, "ARRAY_BUFFER", JS_NewInt32(ctx, GL_ARRAY_BUFFER));
     JS_SetPropertyStr(ctx, gl, "ELEMENT_ARRAY_BUFFER", JS_NewInt32(ctx, GL_ELEMENT_ARRAY_BUFFER));
     JS_SetPropertyStr(ctx, gl, "STATIC_DRAW", JS_NewInt32(ctx, GL_STATIC_DRAW));
