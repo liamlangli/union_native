@@ -3759,11 +3759,9 @@ ${shaderInfo}`);
       for (let i = 0; i < pip_uniforms.length; ++i) {
         const pip_uniform = pip_uniforms[i];
         const name = pip_uniform.name;
-        console.log(name);
         if (!material2.has_property(name))
           continue;
         const uniform = material2.get_property(name);
-        console.log(uniform);
         if (this.recording)
           this.profiler.trace_start("upload uniform", `${name} ${uniform}`, uniform, 3 /* ConstantBuffer */);
         if (uniform !== void 0)

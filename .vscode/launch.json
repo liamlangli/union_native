@@ -7,9 +7,11 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/build/app",
-            "args": ["example/public/index.js"],
+            "name": "lldb launch un",
+            "program": "${workspaceFolder}/build/un",
+            "args": [
+                "example/public/index.js"
+            ],
             "cwd": "${workspaceFolder}"
         }
     ]

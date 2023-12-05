@@ -4,10 +4,11 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include",
-                "${workspaceFolder}/third_party/angle/include"
+                "/usr/local/include"
             ],
-            "defines": ["OS_LINUX"],
+            "defines": [
+                "OS_LINUX"
+            ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "gnu++17",
@@ -20,7 +21,9 @@
                 "/usr/local/include",
                 "${workspaceFolder}/third_party/angle/include"
             ],
-            "defines": ["OS_OSX"],
+            "defines": [
+                "OS_MACOS"
+            ],
             "compilerPath": "/usr/bin/clang",
             "intelliSenseMode": "macos-clang-x64",
             "cStandard": "c11",

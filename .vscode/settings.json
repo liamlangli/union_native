@@ -3,5 +3,10 @@
         "*.h": "c",
         "*.c": "c",
         "typeinfo": "c"
-    }
+    },
+    "cmake.debugConfig": {
+        "args": [
+            "${workspaceFolder}/example/public/index.js"
+        ],
+    },
 }

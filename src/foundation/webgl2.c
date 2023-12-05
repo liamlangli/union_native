@@ -191,6 +191,10 @@ static JSValue js_gl_get_shader_info_log(JSContext *ctx, JSValueConst this_val, 
     JS_ToUint32(ctx, &shader, argv[0]);
     GLint length = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    if (length == 0) {
+        return JS_NewAtomString(ctx, "");
+    }
+
     char *info_log = (char*)malloc(length);
     glGetShaderInfoLog(shader, length, NULL, info_log);
     JSValue ret = JS_NewString(ctx, info_log);

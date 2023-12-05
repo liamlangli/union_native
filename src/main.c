@@ -2,10 +2,9 @@
 #include "foundation/script.h"
 #include "foundation/logger.h"
 
-#include <GLES3/gl3.h>
-#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
- 
+#include <GLES3/gl3.h>
 #include <stdlib.h>
 #include <stdio.h>
  
@@ -22,18 +21,30 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
  
 int main(int argc, char** argv)
 {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: un /path/to/sample.js\n");
+        return 0;
+    }
+
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
  
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
+#if defined(OS_MACOS)
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#elif defined(OS_LINUX)
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_FALSE);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
     glfwWindowHint(GLFW_SAMPLES, 1);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
  
     window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
     if (!window)
