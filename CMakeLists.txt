@@ -4,7 +4,6 @@ project(union_native)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DV8_COMPRESS_POINTERS -DV8_31BIT_SMIS_ON_64BIT_ARCH")
 
 set(THIRD_PARTY ${CMAKE_SOURCE_DIR}/third_party)
 include_directories(src
@@ -25,7 +24,7 @@ if (APPLE)
 elseif (LINUX)
     link_directories(
         ${THIRD_PARTY}/angle/bin
-        ${THIRD_PARTY}/angle/lib/win
+        ${THIRD_PARTY}/angle/lib/linux
         /usr/local/lib
         /usr/local/lib/quickjs
     )
@@ -37,5 +36,5 @@ add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES})
 if (APPLE)
 target_link_libraries(${PROJECT_NAME})
 elseif (LINUX)
-target_link_libraries(${PROJECT_NAME} libquickjs.a m)
+target_link_libraries(${PROJECT_NAME} c++ chrome_zlib EGL GLESv2 quickjs glfw rt m dl)
 endif()
