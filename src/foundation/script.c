@@ -113,36 +113,75 @@ script_context_t script_context_create(void)
     return context;
 }
 
+static JSValue js_window_inner_width_get(JSContext *ctx, JSValueConst this_val)
+{
+    return JS_NewInt32(ctx, 1280);
+}
+
+static JSValue js_window_inner_height_get(JSContext *ctx, JSValueConst this_val)
+{
+    return JS_NewInt32(ctx, 720);
+}
+
+static JSValue js_window_inner_width_set(JSContext *ctx, JSValueConst this_val, JSValueConst val)
+{
+    return JS_UNDEFINED;
+}
+
+static JSValue js_window_inner_height_set(JSContext *ctx, JSValueConst this_val, JSValueConst val)
+{
+    return JS_UNDEFINED;
+}
+
+static const JSCFunctionListEntry js_window_proto_funcs[] = {
+    JS_CFUNC_DEF("addEventListener", 2, js_add_event_listener),
+    JS_PROP_INT64_DEF("opacity", 0, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("innerWidth", js_window_inner_width_get, js_window_inner_width_set),
+    JS_CGETSET_DEF("innerHeight", js_window_inner_height_get, js_window_inner_height_set),
+};
+
+static const JSCFunctionListEntry js_window_funcs[] = {
+    JS_OBJECT_DEF("window", js_window_proto_funcs, countof(js_window_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
+static const JSCFunctionListEntry js_document_proto_funcs[] = {
+    JS_CFUNC_DEF("getElementById", 1, js_get_element_by_id),
+    JS_CFUNC_DEF("getElementsByTagName", 1, js_get_elements_by_tag_name),
+    JS_CFUNC_DEF("addEventListener", 2, js_add_event_listener),
+};
+
+static const JSCFunctionListEntry js_document_funcs[] = {
+    JS_OBJECT_DEF("document", js_document_proto_funcs, countof(js_document_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
+static const JSCFunctionListEntry js_console_proto_funcs[] = {
+    JS_CFUNC_DEF("log", 1, js_console_log),
+    JS_CFUNC_DEF("warn", 1, js_console_warn),
+    JS_CFUNC_DEF("error", 1, js_console_error),
+};
+
+static const JSCFunctionListEntry js_console_funcs[] = {
+    JS_OBJECT_DEF("console", js_console_proto_funcs, countof(js_console_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
+static const JSCFunctionListEntry js_performance_proto_funcs[] = {
+    JS_CFUNC_DEF("now", 0, js_performance_now),
+};
+
+static const JSCFunctionListEntry js_performance_funcs[] = {
+    JS_OBJECT_DEF("performance", js_performance_proto_funcs, countof(js_performance_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
 void script_module_browser_register(script_context_t *context) {
     JSContext *ctx = context->context;
     JSValue global = JS_GetGlobalObject(ctx);
 
     JS_SetPropertyStr(ctx, global, "requestAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
-
-    JSValue document = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, global, "document", document);
-    JS_SetPropertyStr(ctx, document, "getElementById", JS_NewCFunction(ctx, js_get_element_by_id, "getElementById", 1));
-    JS_SetPropertyStr(ctx, document, "getElementsByTagName", JS_NewCFunction(ctx, js_get_elements_by_tag_name, "getElementsByTagName", 1));
-    JS_SetPropertyStr(ctx, document, "addEventListener", JS_NewCFunction(ctx, js_add_event_listener, "addEventListener", 1));
-
-    JSValue window = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, global, "window", window);
-    JS_SetPropertyStr(ctx, window, "addEventListener", JS_NewCFunction(ctx, js_add_event_listener, "addEventListener", 2));
-    JS_SetPropertyStr(ctx, window, "innerWidth", JS_NewInt32(ctx, context->frame_buffer_width));
-    JS_SetPropertyStr(ctx, window, "innerHeight", JS_NewInt32(ctx, context->frame_buffer_height));
-
-    JSValue performance = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, global, "performance", performance);
-    JS_SetPropertyStr(ctx, performance, "now", JS_NewCFunction(ctx, js_performance_now, "now", 0));
-
-    JSValue console = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, global, "console", console);
-    JS_SetPropertyStr(ctx, console, "log", JS_NewCFunction(ctx, js_console_log, "log", 1));
-    JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_console_warn, "warn", 1));
-    JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_console_error, "error", 1));
-
-    JSValue self = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, global, "self", self);
+    JS_SetPropertyFunctionList(ctx, global, js_document_funcs, countof(js_document_funcs));
+    JS_SetPropertyFunctionList(ctx, global, js_window_funcs, countof(js_window_funcs));
+    JS_SetPropertyFunctionList(ctx, global, js_performance_funcs, countof(js_performance_funcs));
+    JS_SetPropertyFunctionList(ctx, global, js_console_funcs, countof(js_console_funcs));
+    JS_SetPropertyStr(ctx, global, "self",  JS_NewObject(ctx));
 
     JS_FreeValue(ctx, global);
 }

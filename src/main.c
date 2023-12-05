@@ -66,6 +66,7 @@ int main(int argc, char** argv)
     glfwGetFramebufferSize(window, &context.frame_buffer_width, &context.frame_buffer_height);
     script_module_browser_register(&context);
     script_module_webgl2_register(&context);
+    context.window = window;
 
     ustring_t script_path = ustring_str(argv[1]);
     ustring_t source = io_read_file(script_path);

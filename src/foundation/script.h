@@ -6,11 +6,14 @@
 #include <quickjs/quickjs.h>
 #include <quickjs/quickjs-libc.h>
 
+#include <GLFW/glfw3.h>
+
 typedef struct script_context_t {
     JSRuntime* runtime;
     JSContext* context;
     int frame_buffer_width;
     int frame_buffer_height;
+    GLFWwindow* window;
 } script_context_t;
 
 script_context_t script_context_create(void);
