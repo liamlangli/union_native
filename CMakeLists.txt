@@ -19,8 +19,9 @@ if (APPLE)
 
     link_directories(
         ${THIRD_PARTY}/angle/bin
-        ${THIRD_PARTY}/angle/lib/win
+        ${THIRD_PARTY}/angle/lib/macos
         /usr/local/lib
+        /usr/local/lib/quickjs
     )
     add_definitions(-DOS_MACOS)
 elseif (LINUX)
@@ -38,7 +39,7 @@ endif()
 add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES})
 
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw rt m dl)
+    target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw m dl)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)
