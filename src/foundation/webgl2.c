@@ -40,6 +40,7 @@ static JSValue js_gl_viewport(JSContext *ctx, JSValueConst this_val, int argc, J
     JS_ToUint32(ctx, &width, argv[2]);
     JS_ToUint32(ctx, &height, argv[3]);
     glViewport(x, y, width, height);
+    printf("glViewport: %d, %d, %d, %d\n", x, y, width, height);
     return JS_UNDEFINED;
 }
 
@@ -760,9 +761,9 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-void script_module_webgl2_register(script_context_t context)
+void script_module_webgl2_register(script_context_t *context)
 {
-    JSContext *ctx = context.context;
+    JSContext *ctx = context->context;
     JSValue global_obj = JS_GetGlobalObject(ctx);
     JSValue gl = JS_NewObject(ctx);
 

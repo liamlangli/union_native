@@ -24,12 +24,14 @@ if (APPLE)
     )
     add_definitions(-DOS_MACOS)
 elseif (LINUX)
+    include_directories(
+        ${THIRD_PARTY}/glfw/include)
+
     link_directories(
         /usr/local/lib
         /usr/local/lib/quickjs
+        ${THIRD_PARTY}/glfw/lib/linux
     )
-    # include_directories(${THIRD_PARTY}/glad/include)
-    # list(APPEND FOUNDATION_SOURCES ${THIRD_PARTY}/glad/src/glad.c)
     add_definitions(-DOS_LINUX)
 endif()
 
@@ -41,7 +43,7 @@ if (APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 elseif (LINUX)
-    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw rt m dl)
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/linux $<TARGET_FILE_DIR:${PROJECT_NAME}>)

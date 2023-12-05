@@ -109,10 +109,13 @@ script_context_t script_context_create(void)
 {
     JSRuntime *runtime = JS_NewRuntime();
     JSContext *ctx = JS_NewContext(runtime);
-    JSValue global = JS_GetGlobalObject(ctx);
+    script_context_t context = { .context = ctx, .runtime = runtime };
+    return context;
+}
 
-    js_init_module_std(ctx, "std");
-    js_init_module_os(ctx, "os");
+void script_module_browser_register(script_context_t *context) {
+    JSContext *ctx = context->context;
+    JSValue global = JS_GetGlobalObject(ctx);
 
     JS_SetPropertyStr(ctx, global, "requestAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
 
@@ -125,8 +128,8 @@ script_context_t script_context_create(void)
     JSValue window = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, global, "window", window);
     JS_SetPropertyStr(ctx, window, "addEventListener", JS_NewCFunction(ctx, js_add_event_listener, "addEventListener", 2));
-    JS_SetPropertyStr(ctx, window, "innerWidth", JS_NewInt32(ctx, 1080));
-    JS_SetPropertyStr(ctx, window, "innerHeight", JS_NewInt32(ctx, 720));
+    JS_SetPropertyStr(ctx, window, "innerWidth", JS_NewInt32(ctx, context->frame_buffer_width));
+    JS_SetPropertyStr(ctx, window, "innerHeight", JS_NewInt32(ctx, context->frame_buffer_height));
 
     JSValue performance = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, global, "performance", performance);
@@ -142,10 +145,6 @@ script_context_t script_context_create(void)
     JS_SetPropertyStr(ctx, global, "self", self);
 
     JS_FreeValue(ctx, global);
-    script_context_t context = { .context = ctx, .runtime = runtime };
-    script_module_webgl2_register(context);
-
-    return context;
 }
 
 int script_eval(script_context_t context, ustring_t source, ustring_t filename)

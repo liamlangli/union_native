@@ -1,6 +1,7 @@
 #include "foundation/io.h"
 #include "foundation/script.h"
 #include "foundation/logger.h"
+#include "foundation/webgl2.h"
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
@@ -45,7 +46,8 @@ int main(int argc, char** argv)
 #endif
     glfwWindowHint(GLFW_SAMPLES, 1);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
- 
+    
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
     if (!window)
     {
@@ -57,21 +59,27 @@ int main(int argc, char** argv)
 
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-    glClearColor(.0, .0, .0, 1.);
 
     logger_init();
 
     script_context_t context = script_context_create();
+    int left, top, right, bottom;
+    glfwGetFramebufferSize(window, &context.frame_buffer_width, &context.frame_buffer_height);
+
+    script_module_browser_register(&context);
+    script_module_webgl2_register(&context);
+
     ustring_t script_path = ustring_str(argv[1]);
     ustring_t source = io_read_file(script_path);
     script_eval(context, source, script_path);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(2);
     while (!glfwWindowShouldClose(window))
     {
-        glViewport(0, 0, 1080, 720);
+        glClearColor(.0, .0, .0, 1.);
+        glViewport(0, 0, context.frame_buffer_width, context.frame_buffer_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        script_frame_tick(context);
+        // script_frame_tick(context);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
