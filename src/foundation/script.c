@@ -2,15 +2,15 @@
 #include "foundation/webgl2.h"
 #include <GLFW/glfw3.h>
 
-#define MAX_FRAME_CALLBACKS 16
+static script_context_t shared_context;
 
 JSValue js_add_event_listener(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     if (argc >= 2) 
     {
+        const char* name = JS_ToCString(context, this_val);
         const char* event = JS_ToCString(context, argv[0]);
-        const char* callback = JS_ToCString(context, argv[1]);
-        // fprintf(stdout, "addEventListener: %s, %s\n", event, callback);
+        fprintf(stdout, "addEventListener: %s, %s\n", name, event);
     }
 
     return JS_UNDEFINED;
@@ -71,28 +71,7 @@ JSValue js_request_animation_frame(JSContext *context, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-{
-    for (int i = 0; i < argc; ++i)
-    {
-        const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "%s\n", str);
-        JS_FreeCString(ctx, str);
-    }
-    return JS_UNDEFINED;
-}
-static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-{
-    for (int i = 0; i < argc; ++i)
-    {
-        const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "%s\n", str);
-        JS_FreeCString(ctx, str);
-    }
-    return JS_UNDEFINED;
-}
-static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-{
+static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i)
     {
         const char *str = JS_ToCString(ctx, argv[i]);
@@ -102,44 +81,67 @@ static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_performance_now(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-{
+static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+    for (int i = 0; i < argc; ++i)
+    {
+        const char *str = JS_ToCString(ctx, argv[i]);
+        fprintf(stdout, "%s\n", str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+    for (int i = 0; i < argc; ++i)
+    {
+        const char *str = JS_ToCString(ctx, argv[i]);
+        fprintf(stdout, "%s\n", str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_performance_now(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
     return JS_NewFloat64(ctx, glfwGetTime());
 }
 
-script_context_t script_context_create(void)
-{
-    JSRuntime *runtime = JS_NewRuntime();
-    JSContext *ctx = JS_NewContext(runtime);
-    script_context_t context = { .context = ctx, .runtime = runtime };
-    return context;
+script_context_t* script_context_share(void) {
+    static int _initialized = 0;
+    if (_initialized) {
+        return &shared_context;
+    }
+
+    shared_context.runtime = JS_NewRuntime();
+    shared_context.context = JS_NewContext(shared_context.runtime);
+    _initialized = 1;
+    return &shared_context;
 }
 
-static JSValue js_window_inner_width_get(JSContext *ctx, JSValueConst this_val)
-{
-    return JS_NewInt32(ctx, 1280);
+static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst this_val) {
+    return JS_NewInt32(ctx, shared_context.width);
 }
 
-static JSValue js_window_inner_height_get(JSContext *ctx, JSValueConst this_val)
-{
-    return JS_NewInt32(ctx, 720);
+static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst this_val) {
+    return JS_NewInt32(ctx, shared_context.height);
 }
 
-static JSValue js_window_inner_width_set(JSContext *ctx, JSValueConst this_val, JSValueConst val)
+static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst this_val, JSValueConst val)
 {
+    JS_ToInt32(ctx, &shared_context.width, val);
     return JS_UNDEFINED;
 }
 
-static JSValue js_window_inner_height_set(JSContext *ctx, JSValueConst this_val, JSValueConst val)
+static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst this_val, JSValueConst val)
 {
+    JS_ToInt32(ctx, &shared_context.height, val);
     return JS_UNDEFINED;
 }
 
 static const JSCFunctionListEntry js_window_proto_funcs[] = {
     JS_CFUNC_DEF("addEventListener", 2, js_add_event_listener),
     JS_PROP_INT64_DEF("opacity", 0, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
-    JS_CGETSET_DEF("innerWidth", js_window_inner_width_get, js_window_inner_width_set),
-    JS_CGETSET_DEF("innerHeight", js_window_inner_height_get, js_window_inner_height_set),
+    JS_CGETSET_DEF("innerWidth", js_get_window_inner_width, js_set_window_inner_width),
+    JS_CGETSET_DEF("innerHeight", js_get_window_inner_height, js_set_window_inner_height),
 };
 
 static const JSCFunctionListEntry js_window_funcs[] = {
@@ -188,13 +190,13 @@ void script_module_browser_register(script_context_t *context) {
     JS_FreeValue(ctx, global);
 }
 
-int script_eval(script_context_t context, ustring_t source, ustring_t filename)
+int script_eval(script_context_t *context, ustring_t source, ustring_t filename)
 {
     JSValue val;
     int ret;
 
-    JSContext *ctx = context.context;
-    val = JS_Eval(context.context, source.data, source.length, filename.data, 0);
+    JSContext *ctx = context->context;
+    val = JS_Eval(ctx, source.data, source.length, filename.data, 0);
 
     if (JS_IsException(val)) {
         js_std_dump_error(ctx);
@@ -207,17 +209,25 @@ int script_eval(script_context_t context, ustring_t source, ustring_t filename)
     return ret;
 }
 
-void script_frame_tick(script_context_t context)
+void script_window_resize(script_context_t *context, int width, int height)
 {
-    if (JS_IsFunction(context.context, _frame_callback)) 
+    shared_context.width = width;
+    shared_context.height = height;
+}
+
+void script_frame_tick(script_context_t *context)
+{
+    JSContext *ctx = context->context;
+    if (JS_IsFunction(ctx, _frame_callback)) 
     {
-        JS_Call(context.context, _frame_callback, JS_UNDEFINED, 0, NULL);
+        JS_Call(ctx, _frame_callback, JS_UNDEFINED, 0, NULL);
     }
 }
 
-void script_context_destroy(script_context_t context)
+void script_context_destroy(script_context_t *context)
 {
-    JS_FreeContext(context.context);
-    JS_RunGC(context.runtime);
-    JS_FreeRuntime(context.runtime);
+    JS_FreeContext(context->context);
+    JS_RunGC(context->runtime);
+    JS_FreeRuntime(context->runtime);
+    free(context);
 }

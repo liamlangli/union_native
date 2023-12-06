@@ -19,7 +19,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
- 
+
+static void size_callback(GLFWwindow* window, int width, int height)
+{
+    script_window_resize(script_context_share(), width, height);
+}
+
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    printf("scroll_callback: %f, %f\n", xoffset, yoffset);
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -46,6 +56,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
     if (!window)
@@ -53,6 +64,9 @@ int main(int argc, char** argv)
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetWindowSizeCallback(window, size_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwMakeContextCurrent(window);
 
@@ -61,27 +75,26 @@ int main(int argc, char** argv)
 
     logger_init();
 
-    script_context_t context = script_context_create();
-    int left, top, right, bottom;
-    glfwGetFramebufferSize(window, &context.frame_buffer_width, &context.frame_buffer_height);
-    script_module_browser_register(&context);
-    script_module_webgl2_register(&context);
-    context.window = window;
+    script_context_t *script_context = script_context_share();
+    int width, height, left, top, right, bottom;
+    glfwGetFramebufferSize(window, &width, &height);
+    script_module_browser_register(script_context);
+    script_module_webgl2_register(script_context);
+    glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
+    script_window_resize(script_context, width - left - right, height - top - bottom);
 
     ustring_t script_path = ustring_str(argv[1]);
     ustring_t source = io_read_file(script_path);
-    script_eval(context, source, script_path);
+    script_eval(script_context, source, script_path);
 
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
-        glViewport(0, 0, context.frame_buffer_width, context.frame_buffer_height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        script_frame_tick(context);
+        script_frame_tick(script_context);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    script_context_destroy(context);
+    script_context_destroy(script_context);
  
     glfwDestroyWindow(window);
     glfwTerminate();
