@@ -22,8 +22,10 @@ JSValue js_get_context(JSContext *context, JSValueConst this_val, int argc, JSVa
     {
         const char* id = JS_ToCString(context, argv[0]);
         fprintf(stdout, "get_context: %s\n", id);
-
-        return JS_GetPropertyStr(context, JS_GetGlobalObject(context), "gl");
+        JSValue global = JS_GetGlobalObject(context);
+        JSValue gl = JS_GetPropertyStr(context, global, "gl");
+        JS_FreeValue(context, global);
+        return gl;
     }
 
     return JS_UNDEFINED;

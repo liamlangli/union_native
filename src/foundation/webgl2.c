@@ -32,8 +32,7 @@ static JSValue js_gl_clear(JSContext *ctx, JSValueConst this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_viewport(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_viewport(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     u32 x, y, width, height;
     JS_ToUint32(ctx, &x, argv[0]);
     JS_ToUint32(ctx, &y, argv[1]);
@@ -764,209 +763,279 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
 void script_module_webgl2_register(script_context_t *context)
 {
     JSContext *ctx = context->context;
-    JSValue global_obj = JS_GetGlobalObject(ctx);
-    JSValue gl = JS_NewObject(ctx);
+    JSValue global = JS_GetGlobalObject(ctx);
+    static JSCFunctionListEntry gl_proto_funcs[] = {
+        JS_CFUNC_DEF("getExtension", 1, js_gl_get_extension),
+        JS_CFUNC_DEF("getParameter", 1, js_gl_get_parameter),
 
-    JS_SetPropertyStr(ctx, global_obj, "gl", gl);
+        JS_CFUNC_DEF("clear", 0, js_gl_clear),
+        JS_CFUNC_DEF("viewport", 4, js_gl_viewport),
+        JS_CFUNC_DEF("clearColor", 4, js_gl_clear_color),
+        JS_CFUNC_DEF("clearDepth", 1, js_gl_clear_depth),
+        JS_CFUNC_DEF("createBuffer", 0, js_gl_create_buffer),
+        JS_CFUNC_DEF("bindBuffer", 2, js_gl_bind_buffer),
+        JS_CFUNC_DEF("bindBufferRange", 5, js_gl_bind_buffer_range),
+        JS_CFUNC_DEF("bufferData", 3, js_gl_buffer_data),
+        JS_CFUNC_DEF("bufferSubData", 5, js_gl_buffer_sub_data),
+        JS_CFUNC_DEF("deleteBuffer", 1, js_gl_delete_buffer),
 
-    JS_SetPropertyStr(ctx, gl, "getExtension", JS_NewCFunction(ctx, js_gl_get_extension, "getExtension", 1));
-    JS_SetPropertyStr(ctx, gl, "getParameter", JS_NewCFunction(ctx, js_gl_get_parameter, "getParameter", 1));
+        JS_CFUNC_DEF("createShader", 1, js_gl_create_shader),
+        JS_CFUNC_DEF("shaderSource", 2, js_gl_shader_source),
+        JS_CFUNC_DEF("compileShader", 1, js_gl_compile_shader),
+        JS_CFUNC_DEF("getShaderParameter", 2, js_gl_get_shader_parameter),
+        JS_CFUNC_DEF("getShaderInfoLog", 1, js_gl_get_shader_info_log),
+        JS_CFUNC_DEF("createProgram", 0, js_gl_create_program),
+        JS_CFUNC_DEF("attachShader", 2, js_gl_attach_shader),
+        JS_CFUNC_DEF("linkProgram", 1, js_gl_link_program),
+        JS_CFUNC_DEF("deleteProgram", 1, js_gl_delete_program),
+        JS_CFUNC_DEF("getProgramParameter", 2, js_gl_get_program_parameter),
+        JS_CFUNC_DEF("getProgramInfoLog", 1, js_gl_get_program_info_log),
+        JS_CFUNC_DEF("useProgram", 1, js_gl_use_program),
+        JS_CFUNC_DEF("getUniformLocation", 2, js_gl_get_unifom_location),
+        JS_CFUNC_DEF("getUniformBlockIndex", 4, js_gl_get_uniform_block_index),
+        JS_CFUNC_DEF("getActiveUniformBlockParameter", 3, js_gl_get_active_uniform_block_parameter),
+        JS_CFUNC_DEF("getUniformIndices", 3, js_gl_get_uniform_indices),
+        JS_CFUNC_DEF("getActiveUniforms", 4, js_gl_get_active_uniforms),
 
-    JS_SetPropertyStr(ctx, gl, "clear", JS_NewCFunction(ctx, js_gl_clear, "clear", 0));
-    JS_SetPropertyStr(ctx, gl, "viewport", JS_NewCFunction(ctx, js_gl_viewport, "viewport", 4));
-    JS_SetPropertyStr(ctx, gl, "clearColor", JS_NewCFunction(ctx, js_gl_clear_color, "clearColor", 4));
-    JS_SetPropertyStr(ctx, gl, "clearDepth", JS_NewCFunction(ctx, js_gl_clear_depth, "clearDepth", 1));
-    JS_SetPropertyStr(ctx, gl, "createBuffer", JS_NewCFunction(ctx, js_gl_create_buffer, "createBuffer", 0));
-    JS_SetPropertyStr(ctx, gl, "bindBuffer", JS_NewCFunction(ctx, js_gl_bind_buffer, "bindBuffer", 2));
-    JS_SetPropertyStr(ctx, gl, "bindBufferRange", JS_NewCFunction(ctx, js_gl_bind_buffer_range, "bindBufferRange", 5));
-    JS_SetPropertyStr(ctx, gl, "bufferData", JS_NewCFunction(ctx, js_gl_buffer_data, "bufferData", 3));
-    JS_SetPropertyStr(ctx, gl, "bufferSubData", JS_NewCFunction(ctx, js_gl_buffer_sub_data, "bufferSubData", 5));
-    JS_SetPropertyStr(ctx, gl, "deleteBuffer", JS_NewCFunction(ctx, js_gl_delete_buffer, "deleteBuffer", 1));
+        JS_CFUNC_DEF("getAttribLocation", 2, js_gl_get_attrib_location),
+        JS_CFUNC_DEF("vertexAttribPointer", 6, js_gl_vertex_attrib_pointer),
+        JS_CFUNC_DEF("enableVertexAttribArray", 1, js_gl_enable_vertex_attrib_array),
+        JS_CFUNC_DEF("drawArrays", 3, js_gl_draw_arrays),
+        JS_CFUNC_DEF("createTexture", 0, js_gl_create_texture),
+        JS_CFUNC_DEF("bindTexture", 2, js_gl_bind_texture),
+        JS_CFUNC_DEF("texImage2D", 9, js_gl_tex_image2d),
+        JS_CFUNC_DEF("texParameteri", 3, js_gl_tex_parameteri),
+        JS_CFUNC_DEF("deleteTexture", 1, js_gl_delete_texture),
 
-    JS_SetPropertyStr(ctx, gl, "createShader", JS_NewCFunction(ctx, js_gl_create_shader, "createShader", 1));
-    JS_SetPropertyStr(ctx, gl, "shaderSource", JS_NewCFunction(ctx, js_gl_shader_source, "shaderSource", 2));
-    JS_SetPropertyStr(ctx, gl, "compileShader", JS_NewCFunction(ctx, js_gl_compile_shader, "compileShader", 1));
-    JS_SetPropertyStr(ctx, gl, "getShaderParameter", JS_NewCFunction(ctx, js_gl_get_shader_parameter, "getShaderParameter", 2));
-    JS_SetPropertyStr(ctx, gl, "getShaderInfoLog", JS_NewCFunction(ctx, js_gl_get_shader_info_log, "getShaderInfoLog", 1));
-    JS_SetPropertyStr(ctx, gl, "createProgram", JS_NewCFunction(ctx, js_gl_create_program, "createProgram", 0));
-    JS_SetPropertyStr(ctx, gl, "attachShader", JS_NewCFunction(ctx, js_gl_attach_shader, "attachShader", 2));
-    JS_SetPropertyStr(ctx, gl, "linkProgram", JS_NewCFunction(ctx, js_gl_link_program, "linkProgram", 1));
-    JS_SetPropertyStr(ctx, gl, "deleteProgram", JS_NewCFunction(ctx, js_gl_delete_program, "deleteProgram", 1));
-    JS_SetPropertyStr(ctx, gl, "getProgramParameter", JS_NewCFunction(ctx, js_gl_get_program_parameter, "getProgramParameter", 2));
-    JS_SetPropertyStr(ctx, gl, "getProgramInfoLog", JS_NewCFunction(ctx, js_gl_get_program_info_log, "getProgramInfoLog", 1));
-    JS_SetPropertyStr(ctx, gl, "useProgram", JS_NewCFunction(ctx, js_gl_use_program, "useProgram", 1));
-    JS_SetPropertyStr(ctx, gl, "getUniformLocation", JS_NewCFunction(ctx, js_gl_get_unifom_location, "getUniformLocation", 2));
-    JS_SetPropertyStr(ctx, gl, "getUniformBlockIndex", JS_NewCFunction(ctx, js_gl_get_uniform_block_index, "getUniformBlockIndex", 4));
-    JS_SetPropertyStr(ctx, gl, "getActiveUniformBlockParameter", JS_NewCFunction(ctx, js_gl_get_active_uniform_block_parameter, "getActiveUniformBlockParameter", 3));
-    JS_SetPropertyStr(ctx, gl, "getUniformIndices", JS_NewCFunction(ctx, js_gl_get_uniform_indices, "getUniformIndices", 3));
-    JS_SetPropertyStr(ctx, gl, "getActiveUniforms", JS_NewCFunction(ctx, js_gl_get_active_uniforms, "getActiveUniforms", 4));
+        JS_CFUNC_DEF("createFramebuffer", 0, js_gl_create_framebuffer),
+        JS_CFUNC_DEF("bindFramebuffer", 2, js_gl_bind_framebuffer),
+        JS_CFUNC_DEF("framebufferTexture2D", 5, js_gl_framebuffer_texture2d),
+        JS_CFUNC_DEF("checkFramebufferStatus", 1, js_gl_check_framebuffer_status),
+        JS_CFUNC_DEF("deleteFramebuffer", 1, js_gl_delete_framebuffer),
 
-    JS_SetPropertyStr(ctx, gl, "getAttribLocation", JS_NewCFunction(ctx, js_gl_get_attrib_location, "getAttribLocation", 2));
-    JS_SetPropertyStr(ctx, gl, "vertexAttribPointer", JS_NewCFunction(ctx, js_gl_vertex_attrib_pointer, "vertexAttribPointer", 6));
-    JS_SetPropertyStr(ctx, gl, "enableVertexAttribArray", JS_NewCFunction(ctx, js_gl_enable_vertex_attrib_array, "enableVertexAttribArray", 1));
-    JS_SetPropertyStr(ctx, gl, "drawArrays", JS_NewCFunction(ctx, js_gl_draw_arrays, "drawArrays", 3));
-    JS_SetPropertyStr(ctx, gl, "createTexture", JS_NewCFunction(ctx, js_gl_create_texture, "createTexture", 0));
-    JS_SetPropertyStr(ctx, gl, "bindTexture", JS_NewCFunction(ctx, js_gl_bind_texture, "bindTexture", 2));
-    JS_SetPropertyStr(ctx, gl, "texImage2D", JS_NewCFunction(ctx, js_gl_tex_image2d, "texImage2D", 9));
-    JS_SetPropertyStr(ctx, gl, "texParameteri", JS_NewCFunction(ctx, js_gl_tex_parameteri, "texParameteri", 3));
-    JS_SetPropertyStr(ctx, gl, "deleteTexture", JS_NewCFunction(ctx, js_gl_delete_texture, "deleteTexture", 1));
+        JS_CFUNC_DEF("createRenderbuffer", 0, js_gl_create_renderbuffer),
+        JS_CFUNC_DEF("bindRenderbuffer", 2, js_gl_bind_renderbuffer),
+        JS_CFUNC_DEF("renderbufferStorage", 4, js_gl_renderbuffer_storage),
+        JS_CFUNC_DEF("framebufferRenderbuffer", 4, js_gl_framebuffer_renderbuffer),
+        JS_CFUNC_DEF("createVertexArray", 0, js_gl_create_vertex_array),
+        JS_CFUNC_DEF("bindVertexArray", 1, js_gl_bind_vertex_array),
+        JS_CFUNC_DEF("enable", 1, js_gl_enable),
+        JS_CFUNC_DEF("disable", 1, js_gl_disable),
+        JS_CFUNC_DEF("blendFunc", 2, js_gl_blend_func),
+        JS_CFUNC_DEF("blendEquation", 1, js_gl_blend_equation),
+        JS_CFUNC_DEF("blendFuncSeparate", 4, js_gl_blend_func_separate),
+        JS_CFUNC_DEF("blendEquationSeparate", 2, js_gl_blend_equation_separate),
+        JS_CFUNC_DEF("depthFunc", 1, js_gl_depth_func),
+        JS_CFUNC_DEF("depthMask", 1, js_gl_depth_mask),
+        JS_CFUNC_DEF("cullFace", 1, js_gl_cull_face),
+        JS_CFUNC_DEF("frontFace", 1, js_gl_front_face),
+        JS_CFUNC_DEF("polygonOffset", 2, js_gl_polygon_offset),
+        JS_CFUNC_DEF("drawElements", 4, js_gl_draw_elements),
 
-    JS_SetPropertyStr(ctx, gl, "createFramebuffer", JS_NewCFunction(ctx, js_gl_create_framebuffer, "createFramebuffer", 0));
-    JS_SetPropertyStr(ctx, gl, "bindFramebuffer", JS_NewCFunction(ctx, js_gl_bind_framebuffer, "bindFramebuffer", 2));
-    JS_SetPropertyStr(ctx, gl, "framebufferTexture2D", JS_NewCFunction(ctx, js_gl_framebuffer_texture2d, "framebufferTexture2D", 5));
-    JS_SetPropertyStr(ctx, gl, "checkFramebufferStatus", JS_NewCFunction(ctx, js_gl_check_framebuffer_status, "checkFramebufferStatus", 1));
-    JS_SetPropertyStr(ctx, gl, "deleteFramebuffer", JS_NewCFunction(ctx, js_gl_delete_framebuffer, "deleteFramebuffer", 1));
+        JS_CFUNC_DEF("uniform1f", 2, js_gl_uniform1f),
+        JS_CFUNC_DEF("uniform1fv", 2, js_gl_uniform1fv),
+        JS_CFUNC_DEF("uniform2fv", 2, js_gl_uniform2fv),
+        JS_CFUNC_DEF("uniform3fv", 2, js_gl_uniform3fv),
+        JS_CFUNC_DEF("uniform4fv", 2, js_gl_uniform4fv),
+        JS_CFUNC_DEF("uniform1i", 2, js_gl_uniform_1i),
+        JS_CFUNC_DEF("uniform1u", 2, js_gl_uniform_1u),
+        JS_CFUNC_DEF("uniformMatrix4fv", 3, js_gl_uniform_matrix_4fv),
+        JS_CFUNC_DEF("uniformMatrix3fv", 3, js_gl_uniform_matrix_3fv),
+        JS_CFUNC_DEF("uniformBlockBinding", 3, js_gl_uniform_block_binding),
 
-    JS_SetPropertyStr(ctx, gl, "createRenderbuffer", JS_NewCFunction(ctx, js_gl_create_renderbuffer, "createRenderbuffer", 0));
-    JS_SetPropertyStr(ctx, gl, "bindRenderbuffer", JS_NewCFunction(ctx, js_gl_bind_renderbuffer, "bindRenderbuffer", 2));
-    JS_SetPropertyStr(ctx, gl, "renderbufferStorage", JS_NewCFunction(ctx, js_gl_renderbuffer_storage, "renderbufferStorage", 4));
-    JS_SetPropertyStr(ctx, gl, "framebufferRenderbuffer", JS_NewCFunction(ctx, js_gl_framebuffer_renderbuffer, "framebufferRenderbuffer", 4));
-    JS_SetPropertyStr(ctx, gl, "createVertexArray", JS_NewCFunction(ctx, js_gl_create_vertex_array, "createVertexArray", 0));
-    JS_SetPropertyStr(ctx, gl, "bindVertexArray", JS_NewCFunction(ctx, js_gl_bind_vertex_array, "bindVertexArray", 1));
-    JS_SetPropertyStr(ctx, gl, "enable", JS_NewCFunction(ctx, js_gl_enable, "enable", 1));
-    JS_SetPropertyStr(ctx, gl, "disable", JS_NewCFunction(ctx, js_gl_disable, "disable", 1));
-    JS_SetPropertyStr(ctx, gl, "blendFunc", JS_NewCFunction(ctx, js_gl_blend_func, "blendFunc", 2));
-    JS_SetPropertyStr(ctx, gl, "blendEquation", JS_NewCFunction(ctx, js_gl_blend_equation, "blendEquation", 1));
-    JS_SetPropertyStr(ctx, gl, "blendFuncSeparate", JS_NewCFunction(ctx, js_gl_blend_func_separate, "blendFuncSeparate", 4));
-    JS_SetPropertyStr(ctx, gl, "blendEquationSeparate", JS_NewCFunction(ctx, js_gl_blend_equation_separate, "blendEquationSeparate", 2));
-    JS_SetPropertyStr(ctx, gl, "depthFunc", JS_NewCFunction(ctx, js_gl_depth_func, "depthFunc", 1));
-    JS_SetPropertyStr(ctx, gl, "depthMask", JS_NewCFunction(ctx, js_gl_depth_mask, "depthMask", 1));
-    JS_SetPropertyStr(ctx, gl, "cullFace", JS_NewCFunction(ctx, js_gl_cull_face, "cullFace", 1));
-    JS_SetPropertyStr(ctx, gl, "frontFace", JS_NewCFunction(ctx, js_gl_front_face, "frontFace", 1));
-    JS_SetPropertyStr(ctx, gl, "polygonOffset", JS_NewCFunction(ctx, js_gl_polygon_offset, "polygonOffset", 2));
-    JS_SetPropertyStr(ctx, gl, "drawElements", JS_NewCFunction(ctx, js_gl_draw_elements, "drawElements", 4));
+        JS_PROP_INT32_DEF("VERTEX_SHADER", GL_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FRAGMENT_SHADER", GL_FRAGMENT_SHADER, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "uniform1f", JS_NewCFunction(ctx, js_gl_uniform1f, "uniform1f", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform1fv", JS_NewCFunction(ctx, js_gl_uniform1fv, "uniform1fv", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform2fv", JS_NewCFunction(ctx, js_gl_uniform2fv, "uniform2fv", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform3fv", JS_NewCFunction(ctx, js_gl_uniform3fv, "uniform3fv", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform4fv", JS_NewCFunction(ctx, js_gl_uniform4fv, "uniform4fv", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform1i", JS_NewCFunction(ctx, js_gl_uniform_1i, "uniform1i", 2));
-    JS_SetPropertyStr(ctx, gl, "uniform1u", JS_NewCFunction(ctx, js_gl_uniform_1u, "uniform1u", 2));
-    JS_SetPropertyStr(ctx, gl, "uniformMatrix4fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_4fv, "uniformMatrix4fv", 3));
-    JS_SetPropertyStr(ctx, gl, "uniformMatrix3fv", JS_NewCFunction(ctx, js_gl_uniform_matrix_3fv, "uniformMatrix3fv", 3));
-    JS_SetPropertyStr(ctx, gl, "uniformBlockBinding", JS_NewCFunction(ctx, js_gl_uniform_block_binding, "uniformBlockBinding", 3));
+        JS_PROP_INT32_DEF("UNIFORM_BUFFER", GL_UNIFORM_BUFFER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ARRAY_BUFFER", GL_ARRAY_BUFFER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ELEMENT_ARRAY_BUFFER", GL_ELEMENT_ARRAY_BUFFER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("STATIC_DRAW", GL_STATIC_DRAW, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DYNAMIC_DRAW", GL_DYNAMIC_DRAW, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("STREAM_DRAW", GL_STREAM_DRAW, JS_PROP_CONFIGURABLE),
 
-    // export webgl2 constants
-    JS_SetPropertyStr(ctx, gl, "VERTEX_SHADER", JS_NewInt32(ctx, GL_VERTEX_SHADER));
-    JS_SetPropertyStr(ctx, gl, "FRAGMENT_SHADER", JS_NewInt32(ctx, GL_FRAGMENT_SHADER));
+        JS_PROP_INT32_DEF("FLOAT", GL_FLOAT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_BYTE", GL_UNSIGNED_BYTE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_SHORT", GL_UNSIGNED_SHORT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_INT", GL_UNSIGNED_INT, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER", JS_NewInt32(ctx, GL_UNIFORM_BUFFER));
-    JS_SetPropertyStr(ctx, gl, "ARRAY_BUFFER", JS_NewInt32(ctx, GL_ARRAY_BUFFER));
-    JS_SetPropertyStr(ctx, gl, "ELEMENT_ARRAY_BUFFER", JS_NewInt32(ctx, GL_ELEMENT_ARRAY_BUFFER));
-    JS_SetPropertyStr(ctx, gl, "STATIC_DRAW", JS_NewInt32(ctx, GL_STATIC_DRAW));
-    JS_SetPropertyStr(ctx, gl, "DYNAMIC_DRAW", JS_NewInt32(ctx, GL_DYNAMIC_DRAW));
-    JS_SetPropertyStr(ctx, gl, "STREAM_DRAW", JS_NewInt32(ctx, GL_STREAM_DRAW));
+        JS_PROP_INT32_DEF("TEXTURE_2D", GL_TEXTURE_2D, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_CUBE_MAP", GL_TEXTURE_CUBE_MAP, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_CUBE_MAP_POSITIVE_X", GL_TEXTURE_CUBE_MAP_POSITIVE_X, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_2D_ARRAY", GL_TEXTURE_2D_ARRAY, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_3D", GL_TEXTURE_3D, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "FLOAT", JS_NewInt32(ctx, GL_FLOAT));
-    JS_SetPropertyStr(ctx, gl, "UNSIGNED_BYTE", JS_NewInt32(ctx, GL_UNSIGNED_BYTE));
-    JS_SetPropertyStr(ctx, gl, "UNSIGNED_SHORT", JS_NewInt32(ctx, GL_UNSIGNED_SHORT));
-    JS_SetPropertyStr(ctx, gl, "UNSIGNED_INT", JS_NewInt32(ctx, GL_UNSIGNED_INT));
+        JS_PROP_INT32_DEF("RGBA", GL_RGBA, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB", GL_RGB, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA8", GL_RGBA8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB8", GL_RGB8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT16", GL_DEPTH_COMPONENT16, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT24", GL_DEPTH_COMPONENT24, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT32F", GL_DEPTH_COMPONENT32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH24_STENCIL8", GL_DEPTH24_STENCIL8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH32F_STENCIL8", GL_DEPTH32F_STENCIL8, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_2D", JS_NewInt32(ctx, GL_TEXTURE_2D));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_CUBE_MAP", JS_NewInt32(ctx, GL_TEXTURE_CUBE_MAP));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_CUBE_MAP_POSITIVE_X", JS_NewInt32(ctx, GL_TEXTURE_CUBE_MAP_POSITIVE_X));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_2D_ARRAY", JS_NewInt32(ctx, GL_TEXTURE_2D_ARRAY));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_3D", JS_NewInt32(ctx, GL_TEXTURE_3D));
+        JS_PROP_INT32_DEF("FRAMEBUFFER", GL_FRAMEBUFFER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RENDERBUFFER", GL_RENDERBUFFER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("COLOR_ATTACHMENT0", GL_COLOR_ATTACHMENT0, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_ATTACHMENT", GL_DEPTH_ATTACHMENT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("STENCIL_ATTACHMENT", GL_STENCIL_ATTACHMENT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_STENCIL_ATTACHMENT", GL_DEPTH_STENCIL_ATTACHMENT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FRAMEBUFFER_COMPLETE", GL_FRAMEBUFFER_COMPLETE, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "RGBA", JS_NewInt32(ctx, GL_RGBA));
-    JS_SetPropertyStr(ctx, gl, "RGB", JS_NewInt32(ctx, GL_RGB));
-    JS_SetPropertyStr(ctx, gl, "RGBA8", JS_NewInt32(ctx, GL_RGBA8));
-    JS_SetPropertyStr(ctx, gl, "RGB8", JS_NewInt32(ctx, GL_RGB8));
-    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT16", JS_NewInt32(ctx, GL_DEPTH_COMPONENT16));
-    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT24", JS_NewInt32(ctx, GL_DEPTH_COMPONENT24));
-    JS_SetPropertyStr(ctx, gl, "DEPTH_COMPONENT32F", JS_NewInt32(ctx, GL_DEPTH_COMPONENT32F));
-    JS_SetPropertyStr(ctx, gl, "DEPTH24_STENCIL8", JS_NewInt32(ctx, GL_DEPTH24_STENCIL8));
-    JS_SetPropertyStr(ctx, gl, "DEPTH32F_STENCIL8", JS_NewInt32(ctx, GL_DEPTH32F_STENCIL8));
-    
-    JS_SetPropertyStr(ctx, gl, "FRAMEBUFFER", JS_NewInt32(ctx, GL_FRAMEBUFFER));
-    JS_SetPropertyStr(ctx, gl, "RENDERBUFFER", JS_NewInt32(ctx, GL_RENDERBUFFER));
-    JS_SetPropertyStr(ctx, gl, "COLOR_ATTACHMENT0", JS_NewInt32(ctx, GL_COLOR_ATTACHMENT0));
-    JS_SetPropertyStr(ctx, gl, "DEPTH_ATTACHMENT", JS_NewInt32(ctx, GL_DEPTH_ATTACHMENT));
-    JS_SetPropertyStr(ctx, gl, "STENCIL_ATTACHMENT", JS_NewInt32(ctx, GL_STENCIL_ATTACHMENT));
-    JS_SetPropertyStr(ctx, gl, "DEPTH_STENCIL_ATTACHMENT", JS_NewInt32(ctx, GL_DEPTH_STENCIL_ATTACHMENT));
-    JS_SetPropertyStr(ctx, gl, "FRAMEBUFFER_COMPLETE", JS_NewInt32(ctx, GL_FRAMEBUFFER_COMPLETE));
+        JS_PROP_INT32_DEF("TEXTURE_MIN_FILTER", GL_TEXTURE_MIN_FILTER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_MAG_FILTER", GL_TEXTURE_MAG_FILTER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("NEAREST", GL_NEAREST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("LINEAR", GL_LINEAR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_MIN_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MIN_FILTER));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_MAG_FILTER", JS_NewInt32(ctx, GL_TEXTURE_MAG_FILTER));
-    JS_SetPropertyStr(ctx, gl, "NEAREST", JS_NewInt32(ctx, GL_NEAREST));
-    JS_SetPropertyStr(ctx, gl, "LINEAR", JS_NewInt32(ctx, GL_LINEAR));
-    JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_NEAREST", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_NEAREST));
-    JS_SetPropertyStr(ctx, gl, "LINEAR_MIPMAP_NEAREST", JS_NewInt32(ctx, GL_LINEAR_MIPMAP_NEAREST));
-    JS_SetPropertyStr(ctx, gl, "NEAREST_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_NEAREST_MIPMAP_LINEAR));
-    JS_SetPropertyStr(ctx, gl, "LINEAR_MIPMAP_LINEAR", JS_NewInt32(ctx, GL_LINEAR_MIPMAP_LINEAR));
+        // texture wrap
+        JS_PROP_INT32_DEF("TEXTURE_WRAP_S", GL_TEXTURE_WRAP_S, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_WRAP_T", GL_TEXTURE_WRAP_T, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE_WRAP_R", GL_TEXTURE_WRAP_R, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("REPEAT", GL_REPEAT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("CLAMP_TO_EDGE", GL_CLAMP_TO_EDGE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MIRRORED_REPEAT", GL_MIRRORED_REPEAT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MIRROR_CLAMP_TO_EDGE", GL_MIRROR_CLAMP_TO_EDGE, JS_PROP_CONFIGURABLE),
 
-    // texture wrap
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_S", JS_NewInt32(ctx, GL_TEXTURE_WRAP_S));
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_T", JS_NewInt32(ctx, GL_TEXTURE_WRAP_T));  
-    JS_SetPropertyStr(ctx, gl, "TEXTURE_WRAP_R", JS_NewInt32(ctx, GL_TEXTURE_WRAP_R));
+        // texture format
+        JS_PROP_INT32_DEF("RED", GL_RED, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG", GL_RG, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB", GL_RGB, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA", GL_RGBA, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "REPEAT", JS_NewInt32(ctx, GL_REPEAT));
-    JS_SetPropertyStr(ctx, gl, "CLAMP_TO_EDGE", JS_NewInt32(ctx, GL_CLAMP_TO_EDGE));
-    JS_SetPropertyStr(ctx, gl, "MIRRORED_REPEAT", JS_NewInt32(ctx, GL_MIRRORED_REPEAT));
+        // texture type
+        JS_PROP_INT32_DEF("UNSIGNED_BYTE", GL_UNSIGNED_BYTE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_SHORT_5_6_5", GL_UNSIGNED_SHORT_5_6_5, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_SHORT_4_4_4_4", GL_UNSIGNED_SHORT_4_4_4_4, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_SHORT_5_5_5_1", GL_UNSIGNED_SHORT_5_5_5_1, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNSIGNED_SHORT", GL_UNSIGNED_SHORT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FLOAT", GL_FLOAT, JS_PROP_CONFIGURABLE),
 
-    JS_SetPropertyStr(ctx, gl, "DEPTH_TEST", JS_NewInt32(ctx, GL_DEPTH_TEST));
-    JS_SetPropertyStr(ctx, gl, "BLEND", JS_NewInt32(ctx, GL_BLEND));
-    JS_SetPropertyStr(ctx, gl, "CULL_FACE", JS_NewInt32(ctx, GL_CULL_FACE));
-    JS_SetPropertyStr(ctx, gl, "FRONT", JS_NewInt32(ctx, GL_FRONT));
-    JS_SetPropertyStr(ctx, gl, "BACK", JS_NewInt32(ctx, GL_BACK));
-    JS_SetPropertyStr(ctx, gl, "FRONT_AND_BACK", JS_NewInt32(ctx, GL_FRONT_AND_BACK));
+        // texture internal format
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT", GL_DEPTH_COMPONENT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_STENCIL", GL_DEPTH_STENCIL, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT16", GL_DEPTH_COMPONENT16, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT24", GL_DEPTH_COMPONENT24, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_COMPONENT32F", GL_DEPTH_COMPONENT32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH24_STENCIL8", GL_DEPTH24_STENCIL8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH32F_STENCIL8", GL_DEPTH32F_STENCIL8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R8", GL_R8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R8_SNORM", GL_R8_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R16", GL_R16, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R16_SNORM", GL_R16_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG8", GL_RG8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG8_SNORM", GL_RG8_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG16", GL_RG16, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG16_SNORM", GL_RG16_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB8", GL_RGB8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB8_SNORM", GL_RGB8_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB16_SNORM", GL_RGB16_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA8", GL_RGBA8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA8_SNORM", GL_RGBA8_SNORM, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB10_A2", GL_RGB10_A2, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB10_A2UI", GL_RGB10_A2UI, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA16", GL_RGBA16, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SRGB8", GL_SRGB8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SRGB8_ALPHA8", GL_SRGB8_ALPHA8, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R16F", GL_R16F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG16F", GL_RG16F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB16F", GL_RGB16F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA16F", GL_RGBA16F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R32F", GL_R32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RG32F", GL_RG32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB32F", GL_RGB32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGBA32F", GL_RGBA32F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("R11F_G11F_B10F", GL_R11F_G11F_B10F, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("RGB9_E5", GL_RGB9_E5, JS_PROP_CONFIGURABLE),
 
-    // blend equations
-    JS_SetPropertyStr(ctx, gl, "FUNC_ADD", JS_NewInt32(ctx, GL_FUNC_ADD));
-    JS_SetPropertyStr(ctx, gl, "FUNC_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_SUBTRACT));
-    JS_SetPropertyStr(ctx, gl, "FUNC_REVERSE_SUBTRACT", JS_NewInt32(ctx, GL_FUNC_REVERSE_SUBTRACT));
+        // blend equations
+        JS_PROP_INT32_DEF("FUNC_ADD", GL_FUNC_ADD, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FUNC_SUBTRACT", GL_FUNC_SUBTRACT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FUNC_REVERSE_SUBTRACT", GL_FUNC_REVERSE_SUBTRACT, JS_PROP_CONFIGURABLE),
 
-    // blend factors
-    JS_SetPropertyStr(ctx, gl, "ZERO", JS_NewInt32(ctx, GL_ZERO));
-    JS_SetPropertyStr(ctx, gl, "ONE", JS_NewInt32(ctx, GL_ONE));
-    JS_SetPropertyStr(ctx, gl, "SRC_COLOR", JS_NewInt32(ctx, GL_SRC_COLOR));
-    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_SRC_COLOR", JS_NewInt32(ctx, GL_ONE_MINUS_SRC_COLOR));
-    JS_SetPropertyStr(ctx, gl, "SRC_ALPHA", JS_NewInt32(ctx, GL_SRC_ALPHA));
-    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_SRC_ALPHA", JS_NewInt32(ctx, GL_ONE_MINUS_SRC_ALPHA));
-    JS_SetPropertyStr(ctx, gl, "DST_ALPHA", JS_NewInt32(ctx, GL_DST_ALPHA));
-    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_DST_ALPHA", JS_NewInt32(ctx, GL_ONE_MINUS_DST_ALPHA));
-    JS_SetPropertyStr(ctx, gl, "DST_COLOR", JS_NewInt32(ctx, GL_DST_COLOR));
-    JS_SetPropertyStr(ctx, gl, "ONE_MINUS_DST_COLOR", JS_NewInt32(ctx, GL_ONE_MINUS_DST_COLOR));
-    JS_SetPropertyStr(ctx, gl, "SRC_ALPHA_SATURATE", JS_NewInt32(ctx, GL_SRC_ALPHA_SATURATE));
+        // blend factors
+        JS_PROP_INT32_DEF("ZERO", GL_ZERO, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ONE", GL_ONE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SRC_COLOR", GL_SRC_COLOR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ONE_MINUS_SRC_COLOR", GL_ONE_MINUS_SRC_COLOR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DST_COLOR", GL_DST_COLOR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ONE_MINUS_DST_COLOR", GL_ONE_MINUS_DST_COLOR, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SRC_ALPHA", GL_SRC_ALPHA, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ONE_MINUS_SRC_ALPHA", GL_ONE_MINUS_SRC_ALPHA, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DST_ALPHA", GL_DST_ALPHA, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ONE_MINUS_DST_ALPHA", GL_ONE_MINUS_DST_ALPHA, JS_PROP_CONFIGURABLE),
 
-    // depth function
-    JS_SetPropertyStr(ctx, gl, "NEVER", JS_NewInt32(ctx, GL_NEVER));
-    JS_SetPropertyStr(ctx, gl, "LESS", JS_NewInt32(ctx, GL_LESS));
-    JS_SetPropertyStr(ctx, gl, "EQUAL", JS_NewInt32(ctx, GL_EQUAL));
-    JS_SetPropertyStr(ctx, gl, "LEQUAL", JS_NewInt32(ctx, GL_LEQUAL));
-    JS_SetPropertyStr(ctx, gl, "GREATER", JS_NewInt32(ctx, GL_GREATER));
-    JS_SetPropertyStr(ctx, gl, "NOTEQUAL", JS_NewInt32(ctx, GL_NOTEQUAL));
-    JS_SetPropertyStr(ctx, gl, "GEQUAL", JS_NewInt32(ctx, GL_GEQUAL));
-    JS_SetPropertyStr(ctx, gl, "ALWAYS", JS_NewInt32(ctx, GL_ALWAYS));
+        // depth functions
+        JS_PROP_INT32_DEF("NEVER", GL_NEVER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("LESS", GL_LESS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("EQUAL", GL_EQUAL, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("LEQUAL", GL_LEQUAL, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("GREATER", GL_GREATER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("NOTEQUAL", GL_NOTEQUAL, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("GEQUAL", GL_GEQUAL, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("ALWAYS", GL_ALWAYS, JS_PROP_CONFIGURABLE),
 
-    // parameters
-    JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_SIZE", JS_NewInt32(ctx, GL_MAX_TEXTURE_SIZE));
-    JS_SetPropertyStr(ctx, gl, "MAX_VERTEX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
-    JS_SetPropertyStr(ctx, gl, "MAX_TEXTURE_IMAGE_UNITS", JS_NewInt32(ctx, GL_MAX_TEXTURE_IMAGE_UNITS));
-    JS_SetPropertyStr(ctx, gl, "MAX_RENDERBUFFER_SIZE", JS_NewInt32(ctx, GL_MAX_RENDERBUFFER_SIZE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER_OFFSET_ALIGNMENT", JS_NewInt32(ctx, GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BUFFER_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BUFFER_SIZE));
-    JS_SetPropertyStr(ctx, gl, "MAX_UNIFORM_BLOCK_SIZE", JS_NewInt32(ctx, GL_MAX_UNIFORM_BLOCK_SIZE));
+        // cull face
+        JS_PROP_INT32_DEF("FRONT", GL_FRONT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("BACK", GL_BACK, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("FRONT_AND_BACK", GL_FRONT_AND_BACK, JS_PROP_CONFIGURABLE),
 
-    // getActiveUniforms pname
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_TYPE", JS_NewInt32(ctx, GL_UNIFORM_TYPE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_SIZE", JS_NewInt32(ctx, GL_UNIFORM_SIZE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_OFFSET", JS_NewInt32(ctx, GL_UNIFORM_OFFSET));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_INDEX", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_INDEX));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_ARRAY_STRIDE", JS_NewInt32(ctx, GL_UNIFORM_ARRAY_STRIDE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_MATRIX_STRIDE", JS_NewInt32(ctx, GL_UNIFORM_MATRIX_STRIDE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_IS_ROW_MAJOR", JS_NewInt32(ctx, GL_UNIFORM_IS_ROW_MAJOR));
+        // triangle winding
+        JS_PROP_INT32_DEF("CW", GL_CW, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("CCW", GL_CCW, JS_PROP_CONFIGURABLE),
 
-    // getActiveUniformBlock pname
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_BINDING", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_BINDING));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_DATA_SIZE", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_DATA_SIZE));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_NAME_LENGTH", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_NAME_LENGTH));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORMS", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER));
-    JS_SetPropertyStr(ctx, gl, "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", JS_NewInt32(ctx, GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER));
-    JS_FreeValue(ctx, global_obj);
+        // parameters
+        JS_PROP_INT32_DEF("DEPTH_TEST", GL_DEPTH_TEST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("BLEND", GL_BLEND, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("CULL_FACE", GL_CULL_FACE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SCISSOR_TEST", GL_SCISSOR_TEST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("STENCIL_TEST", GL_STENCIL_TEST, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("SAMPLE_SHADING", GL_SAMPLE_SHADING, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("DEPTH_CLAMP", GL_DEPTH_CLAMP, JS_PROP_CONFIGURABLE),
+
+        // limits
+        JS_PROP_INT32_DEF("MAX_TEXTURE_SIZE", GL_MAX_TEXTURE_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_CUBE_MAP_TEXTURE_SIZE", GL_MAX_CUBE_MAP_TEXTURE_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_VERTEX_UNIFORM_BLOCKS", GL_MAX_VERTEX_UNIFORM_BLOCKS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_VERTEX_TEXTURE_IMAGE_UNITS", GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_FRAGMENT_UNIFORM_BLOCKS", GL_MAX_FRAGMENT_UNIFORM_BLOCKS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_UNIFORM_BUFFER_BINDINGS", GL_MAX_UNIFORM_BUFFER_BINDINGS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_UNIFORM_BLOCK_SIZE", GL_MAX_UNIFORM_BLOCK_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_COMBINED_UNIFORM_BLOCKS", GL_MAX_COMBINED_UNIFORM_BLOCKS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_VERTEX_UNIFORM_COMPONENTS", GL_MAX_VERTEX_UNIFORM_COMPONENTS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_FRAGMENT_UNIFORM_COMPONENTS", GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_VARYING_COMPONENTS", GL_MAX_VARYING_COMPONENTS, JS_PROP_CONFIGURABLE),
+
+        // uniform block
+        JS_PROP_INT32_DEF("UNIFORM_BUFFER_OFFSET_ALIGNMENT", GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_DATA_SIZE", GL_UNIFORM_BLOCK_DATA_SIZE, JS_PROP_CONFIGURABLE),
+
+        // getActiveUniforms pname
+        JS_PROP_INT32_DEF("UNIFORM_TYPE", GL_UNIFORM_TYPE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_SIZE", GL_UNIFORM_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_INDEX", GL_UNIFORM_BLOCK_INDEX, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_OFFSET", GL_UNIFORM_OFFSET, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_ARRAY_STRIDE", GL_UNIFORM_ARRAY_STRIDE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_MATRIX_STRIDE", GL_UNIFORM_MATRIX_STRIDE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_IS_ROW_MAJOR", GL_UNIFORM_IS_ROW_MAJOR, JS_PROP_CONFIGURABLE),
+
+        // getActiveUniformBlock pname
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_BINDING", GL_UNIFORM_BLOCK_BINDING, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_DATA_SIZE", GL_UNIFORM_BLOCK_DATA_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORMS", GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, JS_PROP_CONFIGURABLE),
+    };
+
+    static JSCFunctionListEntry gl_funcs[] = {
+        JS_OBJECT_DEF("gl", gl_proto_funcs, countof(gl_proto_funcs), JS_PROP_CONFIGURABLE),
+    };
+
+    JS_SetPropertyFunctionList(ctx, global, gl_funcs, countof(gl_funcs));
 }
 
 #endif
