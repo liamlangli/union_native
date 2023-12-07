@@ -1,6 +1,7 @@
 #include "script.h"
 #include "foundation/webgl2.h"
 #include <GLFW/glfw3.h>
+#include <quickjs/quickjs.h>
 
 static script_context_t shared_context;
 
@@ -29,6 +30,21 @@ JSValue js_get_context(JSContext *context, JSValueConst this_val, int argc, JSVa
     }
 
     return JS_UNDEFINED;
+}
+
+JSValue js_document_create_element(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    if (argc >= 1) 
+    {
+        const char* id = JS_ToCString(context, argv[0]);
+        fprintf(stdout, "create_element: %s\n", id);
+
+        JSValue canvas = JS_NewObject(context);
+        JS_SetPropertyStr(context, canvas, "getContext", JS_NewCFunction(context, js_get_context, "getContext", 1));
+        return canvas;
+    } else {
+        return JS_UNDEFINED;
+    }
 }
 
 JSValue js_get_element_by_id(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv)
@@ -149,6 +165,7 @@ static const JSCFunctionListEntry js_window_funcs[] = {
 };
 
 static const JSCFunctionListEntry js_document_proto_funcs[] = {
+    JS_CFUNC_DEF("createElement", 1, js_document_create_element),
     JS_CFUNC_DEF("getElementById", 1, js_get_element_by_id),
     JS_CFUNC_DEF("getElementsByTagName", 1, js_get_elements_by_tag_name),
     JS_CFUNC_DEF("addEventListener", 2, js_add_event_listener),
@@ -176,8 +193,61 @@ static const JSCFunctionListEntry js_performance_funcs[] = {
     JS_OBJECT_DEF("performance", js_performance_proto_funcs, countof(js_performance_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
+static JSClassID js_text_decoder_class_id;
+static JSClassDef js_unreal_class = {
+    "TextDecoder",
+    .finalizer = NULL,
+    .gc_mark = NULL,
+    .call = NULL,
+    .exotic = NULL,
+};
+
+static JSValue js_text_decoder_decode(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    if (argc >= 1) 
+    {
+        const char* str = JS_ToCString(ctx, argv[0]);
+        fprintf(stdout, "text_decoder_decode: %s\n", str);
+    }
+
+    return JS_UNDEFINED;
+}
+
+static const JSCFunctionListEntry js_text_decoder_proto_funcs[] = {
+    JS_CFUNC_DEF("decode", 1, js_text_decoder_decode),
+};
+
+static JSValue js_text_decoder_ctor(JSContext *ctx, JSValueConst new_target, int argc, JSValueConst *argv)
+{
+    return JS_NewObjectProtoClass(ctx, new_target, js_text_decoder_class_id);
+}
+
+static JSClassID js_weak_ref_class_id;
+static JSClassDef js_weak_ref_class = {
+    "WeakRef",
+    .finalizer = NULL,
+    .gc_mark = NULL,
+    .call = NULL,
+    .exotic = NULL,
+};
+
+static JSValue js_weak_ref_deref(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    return JS_UNDEFINED;
+}
+
+static const JSCFunctionListEntry js_weak_ref_proto_funcs[] = {
+    JS_CFUNC_DEF("deref", 0, js_weak_ref_deref),
+};
+
+static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int argc, JSValueConst *argv)
+{
+    return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
+}
+
 void script_module_browser_register(script_context_t *context) {
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     JSValue global = JS_GetGlobalObject(ctx);
 
     JS_SetPropertyStr(ctx, global, "requestAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
@@ -187,6 +257,25 @@ void script_module_browser_register(script_context_t *context) {
     JS_SetPropertyFunctionList(ctx, global, js_console_funcs, countof(js_console_funcs));
     JS_SetPropertyStr(ctx, global, "self",  JS_NewObject(ctx));
 
+    // class defined
+    JS_NewClassID(&js_text_decoder_class_id);
+    JS_NewClass(rt, js_text_decoder_class_id, &js_unreal_class);
+    JSValue text_decoder_proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, text_decoder_proto, js_text_decoder_proto_funcs, countof(js_text_decoder_proto_funcs));
+    JS_SetClassProto(ctx, js_text_decoder_class_id, text_decoder_proto);
+    JSValue text_decoder_ctor = JS_NewCFunction2(ctx, js_text_decoder_ctor, "TextDecoder", 1, JS_CFUNC_constructor, 0);
+    JS_SetConstructor(ctx, text_decoder_ctor, text_decoder_proto);
+    JS_SetPropertyStr(ctx, global, "TextDecoder", text_decoder_ctor);
+
+    JS_NewClassID(&js_weak_ref_class_id);
+    JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
+    JSValue weak_ref_proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, weak_ref_proto, js_weak_ref_proto_funcs, countof(js_weak_ref_proto_funcs));
+    JS_SetClassProto(ctx, js_weak_ref_class_id, weak_ref_proto);
+    JSValue weak_ref_ctor = JS_NewCFunction2(ctx, js_weak_ref_ctor, "WeakRef", 1, JS_CFUNC_constructor, 0);
+    JS_SetConstructor(ctx, weak_ref_ctor, weak_ref_proto);
+    JS_SetPropertyStr(ctx, global, "WeakRef", weak_ref_ctor);
+    
     JS_FreeValue(ctx, global);
 }
 

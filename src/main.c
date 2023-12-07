@@ -1,7 +1,10 @@
 #include "foundation/io.h"
+#include "foundation/network.h"
 #include "foundation/script.h"
 #include "foundation/logger.h"
 #include "foundation/webgl2.h"
+
+#include <string.h>
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
@@ -83,9 +86,16 @@ int main(int argc, char** argv)
     glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
     script_window_resize(script_context, width - left - right, height - top - bottom);
 
-    ustring_t script_path = ustring_str(argv[1]);
-    ustring_t source = io_read_file(script_path);
-    script_eval(script_context, source, script_path);
+    ustring_t content;
+    ustring_t source = ustring_str(argv[1]);
+    url_t url = url_parse(source);
+    if (url.valid) {
+        printf("protocol: %s\n host: %s port: %d, path: %s", url.protocol.data, url.host.data, url.port, url.path.data);
+        content = io_http_get(url);
+    } else {
+        content = io_read_file(source);
+    }
+    script_eval(script_context, content, source);
 
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
