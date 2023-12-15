@@ -45,8 +45,9 @@ int main(int argc, char** argv)
  
     if (!glfwInit())
         exit(EXIT_FAILURE);
-
-    printf("GLFW platform: %d\n", glfwGetPlatform());
+#if defined(OS_LINUX)
+    printf("GLFW platform: %d\n", glfwGetPlatform(void));
+#endif
 
 #if defined(OS_MACOS)
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);

@@ -15,7 +15,4 @@ union_native
     - Network abstract layer. [tcp/udp/http]
 
 ## Build
-- Collect source files.   
-    `make collect`
-- Build & Run.   
-    `make run`
+- build with cmake

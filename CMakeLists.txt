@@ -24,6 +24,7 @@ if (APPLE)
         /usr/local/lib/quickjs
     )
     add_definitions(-DOS_MACOS)
+    add_definitions(-DGL_SILENCE_DEPRECATION)
 elseif (LINUX)
     include_directories(
         ${THIRD_PARTY}/glfw/include)
