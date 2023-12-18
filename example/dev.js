@@ -1,15 +1,21 @@
 import { context } from 'esbuild';
+import glsl from 'esbuild-plugin-glsl';
 import http from 'node:http';
 
 let ctx = await context({
     entryPoints: [
-        'src/index.ts'
+        'src/index.ts',
+        'src/simple.ts',
+        'src/terrain.ts'
     ],
     bundle: true,
     sourcemap: "inline",
     sourcesContent: true,
     outdir: "public",
-    external: ['acorn']
+    external: ['acorn'],
+    plugins: [
+        glsl({minify: true, resolveIncludes: true})
+    ]
 });
 
 let { host, port } = await ctx.serve({ servedir: 'public' });

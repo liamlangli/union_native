@@ -112,10 +112,15 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.19.8.tgz#c8285183dbdb17008578dbacb6e22748709b4822"
   integrity sha512-bfZ0cQ1uZs2PqpulNL5j/3w+GDhP36k1K5c38QdQg+Swy51jFZWWeIkteNsufkQxp986wnqRRsb/bHbY1WQ7TA==
 
-"@union_native/core@^0.2.18":
-  version "0.2.18"
-  resolved "https://registry.yarnpkg.com/@union_native/core/-/core-0.2.18.tgz#a38045705e79a76ddbe84506611c93020629c5c3"
-  integrity sha512-cmfAysgXlSwaUfdFtbBw0xLvc/NE3j4rv/o0sb1N6owSHtzOGttaf/TupKIsKMwfcWhjkWd0Pd/jQrWiLsNnaA==
+"@union_native/core@^0.2.19":
+  version "0.2.19"
+  resolved "https://registry.yarnpkg.com/@union_native/core/-/core-0.2.19.tgz#cd131d9e4e1bf53fbc359f35818a89592b9257d6"
+  integrity sha512-MywQnhBsqHB5dRyxtBDZMQD4Q1sQU8eCB0dIA4La4SwIItKspj8YJcVsHllrKyE06kr1tA6/elOUD5OEv0YqIA==
+
+esbuild-plugin-glsl@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/esbuild-plugin-glsl/-/esbuild-plugin-glsl-1.2.2.tgz#64cc84a198b73f8e2b6164d97b6056d6e8b504dc"
+  integrity sha512-HqRe6qf+9q3U4ugce7EXnXf+c+bRGZZWNkUSiJBYCKRLkA5ThhklNxlc1Z/rcBM8DIAKAdZGk+j6nTBaA5SV6A==
 
 esbuild@^0.19.8:
   version "0.19.8"
