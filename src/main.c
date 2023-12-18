@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
- 
+
     if (!glfwInit())
         exit(EXIT_FAILURE);
 #if defined(OS_LINUX)
@@ -99,6 +99,7 @@ int main(int argc, char** argv)
     script_eval(script_context, content, source);
 
     glfwSwapInterval(1);
+
     while (!glfwWindowShouldClose(window))
     {
         script_frame_tick(script_context);

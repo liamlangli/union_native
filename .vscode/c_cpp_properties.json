@@ -18,8 +18,10 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include",
-                "${workspaceFolder}/third_party/angle/include"
+
+                "${workspaceFolder}/third_party/angle/include",
+                "${workspaceFolder}/third_party/quickjs/include",
+                "${workspaceFolder}/third_party/glfw/include"
             ],
             "defines": [
                 "OS_MACOS"
