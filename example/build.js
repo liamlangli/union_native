@@ -9,5 +9,6 @@ build({
     sourcemap: "inline",
     sourcesContent: true,
     outdir: "public",
+    treeShaking: true,
     external: ['acorn']
 });

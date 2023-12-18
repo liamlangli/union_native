@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     ustring_t source = ustring_str(argv[1]);
     url_t url = url_parse(source);
     if (url.valid) {
-        printf("protocol: %s\n host: %s port: %d, path: %s", url.protocol.data, url.host.data, url.port, url.path.data);
+        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
         content = io_http_get(url);
     } else {
         content = io_read_file(source);
@@ -101,8 +101,6 @@ int main(int argc, char** argv)
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
         script_frame_tick(script_context);
         glfwSwapBuffers(window);
         glfwPollEvents();

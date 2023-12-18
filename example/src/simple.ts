@@ -5,7 +5,7 @@ const encoder = device.encoder;
 const engine = new Engine();
 
 const action = {
-    clear_color: new ColorRGBA(0.1, 0.2, 0.3, 1),
+    clear_color: new ColorRGBA(0.1, 0.1, 0.1, 1),
     clear_depth: 1,
     type: GPUActionType.ClearAll
 } as GPUAction;
