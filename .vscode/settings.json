@@ -6,7 +6,7 @@
     },
     "cmake.debugConfig": {
         "args": [
-            "${workspaceFolder}/example/public/index.js"
+            "${workspaceFolder}/example/public/simple.js"
         ],
     },
 }

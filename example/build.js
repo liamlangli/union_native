@@ -2,7 +2,8 @@ import { build } from 'esbuild';
 
 build({
     entryPoints: [
-        'src/index.ts'
+        'src/index.ts',
+        'src/simple.ts'
     ],
     bundle: true,
     sourcemap: "inline",

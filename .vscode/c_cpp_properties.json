@@ -28,6 +28,19 @@
             "intelliSenseMode": "macos-clang-x64",
             "cStandard": "c11",
             "cppStandard": "c++17"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+            ],
+            "defines": [
+                "OS_WINDOWS"
+            ],
+            "compilerPath": "D:\\msys64\\mingw64\\bin\\clang.exe",
+            "intelliSenseMode": "clang-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

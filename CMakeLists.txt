@@ -35,15 +35,26 @@ elseif (LINUX)
         ${THIRD_PARTY}/glfw/lib/linux
     )
     add_definitions(-DOS_LINUX)
+else() # OS_WINDOWS
+    include_directories(
+        /usr/include
+        ${THIRD_PARTY}/glfw/include
+        ${THIRD_PARTY}/quickjs/include)
+    link_directories(
+        /usr/lib
+        ${THIRD_PARTY}/quickjs/lib/mingw64)
+    add_definitions(-DOS_WINDOWS)
 endif()
 
 add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES})
 
-if (APPLE)
+if(APPLE)
     target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw m dl)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-elseif (LINUX)
+elseif(LINUX)
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
+else()
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 endif()

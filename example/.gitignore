@@ -58,3 +58,6 @@ asset/model/data
 *.wat
 
 .idea
+
+public/*.js
+public/*.js.map
