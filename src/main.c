@@ -23,6 +23,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
+    printf("set_content_scale: %f, %f\n", xscale, yscale);
+}
+
 static void size_callback(GLFWwindow* window, int width, int height)
 {
     script_window_resize(script_context_share(), width, height);
@@ -62,13 +66,14 @@ int main(int argc, char** argv)
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window = glfwCreateWindow(1080, 720, "union_native", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "union_native", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
 
+    glfwSetWindowContentScaleCallback(window, set_content_scale);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, size_callback);
     glfwSetKeyCallback(window, key_callback);

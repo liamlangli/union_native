@@ -5,12 +5,14 @@
 
 #include <stdlib.h>
 
-static void gl_check_error(const char *msg)
+static int gl_check_error(const char *msg, int line)
 {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        fprintf(stderr, "gl error: %d, %s\n", err, msg);
+        fprintf(stderr, "gl error: %d, %s, %d\n", err, msg, line);
+        return 1;
     }
+    return 0;
 }
 
 static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -20,9 +22,18 @@ static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int ar
 static JSValue js_gl_get_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     u32 pname;
     JS_ToUint32(ctx, &pname, argv[0]);
+    if (pname == GL_RENDERER ||
+        pname == GL_VENDOR) {
+        const GLubyte *gl_str = glGetString(pname);
+        return JS_NewString(ctx, (const char *)gl_str);
+    }
+
     GLint param;
     glGetIntegerv(pname, &param);
-    gl_check_error("glGetIntegerv");
+    if (gl_check_error("glGetIntegerv", __LINE__) != 0) {
+        printf("glGetIntegerv error: %d\n", pname);
+        return JS_UNDEFINED;
+    }
     return JS_NewInt32(ctx, param);
 }
 
@@ -66,7 +77,7 @@ static JSValue js_gl_create_buffer(JSContext *ctx, JSValueConst this_val, int ar
 {
     GLuint buffer;
     glGenBuffers(1, &buffer);
-    gl_check_error("glGenBuffers");
+    gl_check_error("glGenBuffers", __LINE__);
     return JS_NewInt32(ctx, buffer);
 }
 
@@ -156,7 +167,7 @@ static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int ar
         const char *str = JS_ToCString(ctx, source);
         glShaderSource(shader, 1, &str, NULL);
         JS_FreeCString(ctx, str);
-        gl_check_error("glShaderSource");
+        gl_check_error("glShaderSource", __LINE__);
     } else {
         JSValue buffer = JS_GetPropertyStr(ctx, source, "buffer");
         size_t length;
@@ -171,7 +182,7 @@ static JSValue js_gl_compile_shader(JSContext *ctx, JSValueConst this_val, int a
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     glCompileShader(shader);
-    gl_check_error("glCompileShader");
+    gl_check_error("glCompileShader", __LINE__);
     return JS_UNDEFINED;
 }
 
@@ -990,6 +1001,8 @@ void script_module_webgl2_register(script_context_t *context)
 
         // limits
         JS_PROP_INT32_DEF("MAX_TEXTURE_SIZE", GL_MAX_TEXTURE_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_RENDERBUFFER_SIZE", GL_MAX_RENDERBUFFER_SIZE, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("MAX_TEXTURE_IMAGE_UNITS", GL_MAX_TEXTURE_IMAGE_UNITS, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("MAX_CUBE_MAP_TEXTURE_SIZE", GL_MAX_CUBE_MAP_TEXTURE_SIZE, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("MAX_VERTEX_UNIFORM_BLOCKS", GL_MAX_VERTEX_UNIFORM_BLOCKS, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("MAX_VERTEX_TEXTURE_IMAGE_UNITS", GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, JS_PROP_CONFIGURABLE),
@@ -1021,6 +1034,9 @@ void script_module_webgl2_register(script_context_t *context)
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, JS_PROP_CONFIGURABLE),
+        
+        JS_PROP_INT32_DEF("RENDERER", GL_RENDERER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("VENDOR", GL_VENDOR, JS_PROP_CONFIGURABLE),
     };
 
     static JSCFunctionListEntry gl_funcs[] = {

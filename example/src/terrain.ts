@@ -42,7 +42,7 @@ const pipeline = create_pipeline({
         { name: 'frame_block.view_matrix', type: UniformType.Mat4 },
         { name: 'frame_block.projection_matrix', type: UniformType.Mat4 }
     ],
-    cull_mode: CullMode.Front
+    cull_mode: CullMode.None
 })!;
 
 function frame() {
