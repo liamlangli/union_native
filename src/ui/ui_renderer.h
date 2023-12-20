@@ -69,8 +69,5 @@ void ui_renderer_init(ui_renderer_t* renderer);
 void ui_renderer_free(ui_renderer_t* renderer);
 void ui_renderer_render(ui_renderer_t* renderer);
 
-// layer func
-
-
 u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent);
 ui_rect ui_renderer_read_clip(ui_renderer_t* renderer, u32 clip);

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "ui/ui_shader.h"
+
 #define PRIMITVE_DATA_INIT_COUNT 262144 // 1M
 #define UI_LAYER_1_OFFSET 237568 // size 4096
 #define UI_LAYER_2_OFFSET 241664 // size 16384
@@ -46,6 +48,10 @@ void ui_renderer_init(ui_renderer_t* renderer)
     GLuint primitive_buffer_map;
     glGenTextures(1, &primitive_buffer_map);
     glBindTexture(GL_TEXTURE_2D, primitive_buffer_map);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // glTexParameter
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, texture_width, texture_height, 0, GL_RGBA, GL_FLOAT, NULL);
     renderer->primitive_data_texture = primitive_buffer_map;
     renderer->primitive_data_texture_width = texture_width;
@@ -56,22 +62,42 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glBufferData(GL_ARRAY_BUFFER, PRIMITVE_DATA_INIT_COUNT * 3, NULL, GL_DYNAMIC_DRAW);
     renderer->index_buffer = index_buffer;
 
-    ustring vert_shader_code = io_read_file(ustring_STR("ui.vert"));
-    ustring frag_shader_code = io_read_file(ustring_STR("ui.frag"));
+    glBindBuffer(GL_ARRAY_BUFFER, index_buffer);
+    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+
+    ustring vert_shader_code = ustring_str(ui_vert);
+    ustring frag_shader_code = ustring_str(ui_frag);
     GLuint program = glCreateProgram();
 
     GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vert_shader, 1, (const GLchar *const *)vert_shader_code.data, (const GLint *)&vert_shader_code.length);
+    glShaderSource(vert_shader, 1, (const GLchar *const *)&vert_shader_code.data, NULL);
     glCompileShader(vert_shader);
 
+    GLint length;
+    glGetShaderiv(vert_shader, GL_INFO_LOG_LENGTH, &length);
+    if (length > 0) {
+        char *log = (char*)malloc(length);
+        glGetShaderInfoLog(vert_shader, length, NULL, log);
+        printf("vert shader compile log: %s\n", log);
+        free(log);
+    }
+
     GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(frag_shader, 1, (const GLchar *const *)frag_shader_code.data, (const GLint *)&frag_shader_code.length);
+    glShaderSource(frag_shader, 1, (const GLchar *const *)&frag_shader_code.data, (const GLint *)&frag_shader_code.length);
     glCompileShader(frag_shader);
+    glGetShaderiv(frag_shader, GL_INFO_LOG_LENGTH, &length);
+    if (length > 0) {
+        char *log = (char*)malloc(length);
+        glGetShaderInfoLog(frag_shader, length, NULL, log);
+        printf("frag shader compile log: %s\n", log);
+        free(log);
+    }
 
-    glAttachShader(GL_VERTEX_SHADER, vert_shader);
-    glAttachShader(GL_FRAGMENT_SHADER, frag_shader);
-
+    glAttachShader(program, vert_shader);
+    glAttachShader(program, frag_shader);
     glLinkProgram(program);
+
     renderer->window_size_location = glGetUniformLocation(program, "window_size");
     renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
     renderer->program = program;
@@ -93,19 +119,41 @@ void ui_renderer_clear(ui_renderer_t* renderer) {
     }
 }
 
+void ui_renderer_merge_layers(ui_renderer_t* renderer) {
+    ui_layer *layer = &renderer->layers[0];
+    renderer->index_offset = layer->index_offset;
+    renderer->primitive_offset = layer->primitive_offset;
+
+    for (int i = 1; i < MAX_UI_LAYERS; ++i) {
+        ui_layer *layer = &renderer->layers[i];
+        memcpy(renderer->index_data + renderer->index_offset, layer->index_data, layer->index_offset * sizeof(u32));
+        memcpy(renderer->primitive_data + renderer->primitive_offset, layer->primitive_data, layer->primitive_offset * sizeof(f32));
+        renderer->index_offset += layer->index_offset;
+        renderer->primitive_offset += layer->primitive_offset;
+    }
+
+    renderer->last_primitive_offset = renderer->primitive_offset;
+    renderer->last_index_offset = renderer->index_offset;
+    ui_renderer_clear(renderer);
+}
+
 void ui_renderer_render(ui_renderer_t* renderer)
 {
+    ui_renderer_merge_layers(renderer);
     if (renderer->index_offset <= 0) return;
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->index_offset, renderer->index_data);
-
-    glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture_width);
-    GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT, renderer->primitive_data);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glUseProgram(renderer->program);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->index_offset * sizeof(u32), renderer->index_data);
+    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+
+    glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
+    GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT, renderer->primitive_data);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
@@ -113,8 +161,6 @@ void ui_renderer_render(ui_renderer_t* renderer)
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);
     glDrawArrays(GL_TRIANGLES, 0, renderer->index_offset);
-
-    ui_renderer_clear(renderer);
 }
 
 u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent) {

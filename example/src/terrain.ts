@@ -8,7 +8,7 @@ const engine = new Engine();
 const gl = (encoder as WebGLEncoder).gl;
 
 const action = {
-    clear_color: new ColorRGBA(0.1, 0.1, 0.1, 1),
+    clear_color: new ColorRGBA(0.0, 0.0, 0.0, 0),
     clear_depth: 1,
     type: GPUActionType.ClearAll
 } as GPUAction;

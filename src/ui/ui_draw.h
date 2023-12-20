@@ -39,19 +39,19 @@ static inline u32 encode_vertex_id(u32 type, u32 corner, u32 offset) {
  * | 1 bit|        5 bits| 2 bits|                     24bits|
  * |  flag| header offset| corner|           primitive offset|
  */
-inline u32 encode_glyph_id(u32 header_offset, u32 corner, u32 offset) {
+static inline u32 encode_glyph_id(u32 header_offset, u32 corner, u32 offset) {
     return 0x80000000 | (header_offset << 26) | corner | (offset >> 2);
 }
 
-inline u32 decode_vertex_type(u32 i) {
+static inline u32 decode_vertex_type(u32 i) {
     return (i >> 26) & 0x3f;
 }
 
-inline u32 decode_corner_id(u32 i) {
+static inline u32 decode_corner_id(u32 i) {
     return (i >> 24) & 0x3;
 }
 
-inline u32 decode_vertex_offset(u32 i) {
+static inline u32 decode_vertex_offset(u32 i) {
     return (i & 0xffffff) << 2;
 }
 

@@ -48,7 +48,18 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     printf("scroll_callback: %f, %f\n", xoffset, yoffset);
 }
 
+static void renderer_init(GLFWwindow* window, script_context_t *script_context) {
+    ui_renderer_init(&renderer);
+    ui_state_init(&state, &renderer);
+    renderer.window_size.x = (f32)script_context->width;
+    renderer.window_size.y = (f32)script_context->height;
+    f32 context_scale_x, context_scale_y;
+    glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
+    renderer.window_size.z = context_scale_y;
+}
+
 static void render_location_bar() {
+    // fill_round_rect
     fill_rect(&renderer, 0, panel_0, (ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 32}, 0);
     ui_renderer_render(&renderer);
 }
@@ -78,6 +89,8 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
     window = glfwCreateWindow(1920, 1080, "union_native", NULL, NULL);
     if (!window)
@@ -86,6 +99,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    glfwSetWindowPos(window, 400, 200);
     glfwSetWindowContentScaleCallback(window, set_content_scale);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, size_callback);
@@ -116,13 +130,7 @@ int main(int argc, char** argv)
     }
     script_eval(script_context, content, source);
 
-    ui_renderer_init(&renderer);
-    ui_state_init(&state, &renderer);
-    renderer.window_size.x = (f32)script_context->width;
-    renderer.window_size.y = (f32)script_context->height;
-    f32 context_scale_x, context_scale_y;
-    glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
-    renderer.window_size.z = context_scale_y;
+    renderer_init(window, script_context);
 
     panel_0 = ui_style_from_hex(0x3a3b3cff, 0x404142ff, 0x4c4d4eff, 0xe1e1e1ab);
     glfwSwapInterval(1);
