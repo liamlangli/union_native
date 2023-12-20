@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(un)
 
+set(RENDER_DOC ON CACHE BOOL "Enable RenderDoc support")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -28,6 +30,11 @@ if (APPLE)
     )
     add_definitions(-DOS_MACOS)
     add_definitions(-DGL_SILENCE_DEPRECATION)
+    if (RENDER_DOC)
+        add_definitions(-DRENDER_DOC_CAPTURE)
+        include_directories(${THIRD_PARTY}/renderdoc/include)
+        link_directories(${THIRD_PARTY}/renderdoc/lib/macos)
+    endif()
 elseif (LINUX)
     include_directories(
         ${THIRD_PARTY}/glfw/include)
@@ -53,6 +60,12 @@ add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES} ${UI_SOURCES}
 
 if(APPLE)
     target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw.3 m dl)
+    if (RENDER_DOC)
+        target_link_libraries(${PROJECT_NAME} renderdoc)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${THIRD_PARTY}/renderdoc/lib/macos/librenderdoc.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    endif()
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)

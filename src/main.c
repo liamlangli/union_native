@@ -14,6 +14,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef RENDER_DOC_CAPTURE
+#include <dlfcn.h>
+#include "renderdoc_app.h"
+#endif
+
 static ui_renderer_t renderer;
 static ui_state_t state;
 
@@ -21,7 +26,9 @@ static ui_style panel_0;
 static ui_style panel_1;
 static ui_style panel_2;
 static ui_style panel_3;
-static ui_style panel_4;
+static ui_style panel_4;\
+
+static bool empty_launch = true;
 
 static void error_callback(int error, const char* description)
 {
@@ -72,10 +79,7 @@ static void render_location_bar() {
 
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: un /path/to/sample.js\n");
-        return 0;
-    }
+    printf("Usage: union_native [file]\n");
 
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
@@ -136,16 +140,19 @@ int main(int argc, char** argv)
     glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
     script_window_resize(script_context, width - left - right, height - top - bottom);
 
-    ustring content;
-    ustring source = ustring_str(argv[1]);
-    url_t url = url_parse(source);
-    if (url.valid) {
-        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-        content = io_http_get(url);
-    } else {
-        content = io_read_file(source);
+    if (argc > 2) {
+        ustring content;
+        ustring source = ustring_str(argv[1]);
+        url_t url = url_parse(source);
+        if (url.valid) {
+            printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
+            content = io_http_get(url);
+        } else {
+            content = io_read_file(source);
+        }
+        script_eval(script_context, content, source);
+        empty_launch = false;
     }
-    script_eval(script_context, content, source);
 
     renderer_init(window, script_context);
 
@@ -169,7 +176,13 @@ int main(int argc, char** argv)
         state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
         ui_state_update(&state);
 
-        script_frame_tick(script_context);
+        if (empty_launch) {
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+        } else {
+            script_frame_tick(script_context);
+        }
+
         render_location_bar();
         glfwSwapBuffers(window);
         glfwPollEvents();
