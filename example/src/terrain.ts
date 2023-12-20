@@ -49,7 +49,7 @@ const pipeline = create_pipeline({
 function frame() {
     control.update();
     encoder.clear(action);
-    encoder.set_viewport(0, 0, window.innerWidth, window.innerHeight);
+    encoder.set_viewport(0, 0, device.width, device.height);
     encoder.set_pipeline(pipeline);
     encoder.set_camera(camera);
     encoder.set_material_block(material_block);

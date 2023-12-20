@@ -20,12 +20,12 @@ layout(std140) uniform terrain_block {
 #endif
 
 #define VERTEX_PRE_LINE 20
-#define VALID_VERTEX_PRE_LINE 17
+#define VERTEX_VALID_PRE_LINE 18
 
 void main() {
     int vid = gl_VertexID;
     int line_vid = max(vid % VERTEX_PRE_LINE - 1, 0);
-    line_vid = line_vid >= VALID_VERTEX_PRE_LINE ? VALID_VERTEX_PRE_LINE : line_vid;
+    line_vid = line_vid >= VERTEX_VALID_PRE_LINE - 1 ? VERTEX_VALID_PRE_LINE - 1 : line_vid;
 
     float line = float(vid / VERTEX_PRE_LINE);
     float x = float(line_vid / 2);

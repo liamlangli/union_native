@@ -50,7 +50,6 @@ static JSValue js_gl_viewport(JSContext *ctx, JSValueConst this_val, int argc, J
     JS_ToUint32(ctx, &width, argv[2]);
     JS_ToUint32(ctx, &height, argv[3]);
     glViewport(x, y, width, height);
-    printf("glViewport: %d, %d, %d, %d\n", x, y, width, height);
     return JS_UNDEFINED;
 }
 
