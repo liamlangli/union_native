@@ -14,7 +14,7 @@ const action = {
 } as GPUAction;
 
 const camera = new Camera();
-camera.location.set(4, 4, 4);
+camera.location.set(30, 30, 30);
 camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.look_at(ZERO);
 const control = new SphericalControl(camera);
@@ -51,7 +51,7 @@ function frame() {
     encoder.set_pipeline(pipeline);
     encoder.set_camera(camera);
     encoder.set_material_block(material_block);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 18 * 8);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 20 * 8);
     encoder.commit();
 }
 

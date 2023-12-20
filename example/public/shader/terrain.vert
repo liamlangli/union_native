@@ -4,7 +4,6 @@ layout(location = 0) in highp float altitude;
 layout(location = 1) in mediump uvec2 yaw_pitch;
 
 #define DEBUG
-
 uniform mat4 world_matrix;
 
 layout(std140) uniform frame_block {
@@ -20,10 +19,15 @@ layout(std140) uniform terrain_block {
     flat out vec4 color;
 #endif
 
+#define VERTEX_PRE_LINE 20
+#define VALID_VERTEX_PRE_LINE 17
+
 void main() {
     int vid = gl_VertexID;
-    int line_vid = vid % 18;
-    float line = float(vid / 18);
+    int line_vid = max(vid % VERTEX_PRE_LINE - 1, 0);
+    line_vid = line_vid >= VALID_VERTEX_PRE_LINE ? VALID_VERTEX_PRE_LINE : line_vid;
+
+    float line = float(vid / VERTEX_PRE_LINE);
     float x = float(line_vid / 2);
     float z = float(line_vid % 2) + line;
 #ifdef DEBUG

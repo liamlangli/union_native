@@ -451,6 +451,7 @@ static JSValue js_gl_get_unifom_location(JSContext *ctx, JSValueConst this_val, 
     const char *name = JS_ToCString(ctx, argv[1]);
     GLint location = glGetUniformLocation(program, name);
     JS_FreeCString(ctx, name);
+    if (location == -1) return JS_NULL;
     return JS_NewInt32(ctx, location);
 }
 
