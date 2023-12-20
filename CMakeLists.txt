@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(un)
 
-set(RENDER_DOC ON CACHE BOOL "Enable RenderDoc support")
+set(RENDER_DOC OFF CACHE BOOL "Enable RenderDoc support")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
