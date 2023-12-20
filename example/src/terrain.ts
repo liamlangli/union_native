@@ -1,4 +1,4 @@
-import { Camera, ColorRGBA, CullMode, Engine, EngineEvent, EventHub, Float3, GFXDevice, GPUAction, GPUActionType, GlobalEvent, Mat4, MaterialBlock, QUATERNION_IDENTITY, SphericalControl, UniformType, WebGLEncoder, ZERO, create_pipeline } from "@union_native/core";
+import { Camera, ColorRGBA, CullMode, DepthCompareFunc, Engine, EngineEvent, EventHub, Float3, GFXDevice, GPUAction, GPUActionType, GlobalEvent, Mat4, MaterialBlock, QUATERNION_IDENTITY, SphericalControl, UniformType, WebGLEncoder, ZERO, create_pipeline } from "@union_native/core";
 import terrain_frag from '../public/shader/terrain.frag';
 import terrain_vert from '../public/shader/terrain.vert';
 
@@ -42,12 +42,14 @@ const pipeline = create_pipeline({
         { name: 'frame_block.view_matrix', type: UniformType.Mat4 },
         { name: 'frame_block.projection_matrix', type: UniformType.Mat4 }
     ],
-    cull_mode: CullMode.None
+    cull_mode: CullMode.None,
+    depth_compare_func: DepthCompareFunc.Always
 })!;
 
 function frame() {
     control.update();
     encoder.clear(action);
+    encoder.set_viewport(0, 0, window.innerWidth, window.innerHeight);
     encoder.set_pipeline(pipeline);
     encoder.set_camera(camera);
     encoder.set_material_block(material_block);
