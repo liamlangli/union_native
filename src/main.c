@@ -32,6 +32,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    if (action == GLFW_PRESS) {
+        ui_state_key_press(&state, key);
+    } else if (action == GLFW_RELEASE) {
+        ui_state_key_release(&state, key);
+    }
 }
 
 static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
@@ -45,7 +51,7 @@ static void size_callback(GLFWwindow* window, int width, int height)
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    printf("scroll_callback: %f, %f\n", xoffset, yoffset);
+    // printf("scroll_callback: %f, %f\n", xoffset, yoffset);
 }
 
 static void renderer_init(GLFWwindow* window, script_context_t *script_context) {
@@ -59,8 +65,8 @@ static void renderer_init(GLFWwindow* window, script_context_t *script_context) 
 }
 
 static void render_location_bar() {
-    // fill_round_rect
-    fill_rect(&renderer, 0, panel_0, (ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 32}, 0);
+    fill_round_rect(&renderer, 0, panel_0, state.window_rect, 6.0f, 0, TRIANGLE_SOLID);
+    fill_rect(&renderer, 0, panel_1, (ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 32}, 0);
     ui_renderer_render(&renderer);
 }
 
@@ -92,14 +98,25 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-    window = glfwCreateWindow(1920, 1080, "union_native", NULL, NULL);
+#ifdef OS_MACOS
+    int window_width = 1080;
+    int window_height = 720;
+#else
+    int window_width = 1920;
+    int window_height = 1080;
+#endif
+
+    window = glfwCreateWindow(window_width, window_height, "union_native", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
 
+#if defined(OS_WINDOWS)
     glfwSetWindowPos(window, 400, 200);
+#endif
+
     glfwSetWindowContentScaleCallback(window, set_content_scale);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, size_callback);
@@ -133,6 +150,10 @@ int main(int argc, char** argv)
     renderer_init(window, script_context);
 
     panel_0 = ui_style_from_hex(0x3a3b3cff, 0x404142ff, 0x4c4d4eff, 0xe1e1e1ab);
+    panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
+    panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
+    panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
+
     glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window))
@@ -145,6 +166,8 @@ int main(int argc, char** argv)
             .w = (f32)script_context->width,
             .h = (f32)script_context->height
         };
+        state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
+        ui_state_update(&state);
 
         script_frame_tick(script_context);
         render_location_bar();

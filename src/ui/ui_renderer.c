@@ -1,7 +1,6 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
 
-#include <GL/gl.h>
 #include <GLES3/gl3.h>
 #include <stdlib.h>
 #include <math.h>

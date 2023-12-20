@@ -1,12 +1,16 @@
 #pragma once
 
-#include "ui/ui_type.h"
-
 #include <string.h>
+
+#include "ui/ui_type.h"
+#include "ui/ui_renderer.h"
 
 #define MAX_KEY_COUNT 16
 
-#include "ui/ui_renderer.h"
+typedef struct ui_key_map_t {
+    int key;
+    bool value;
+} ui_key_map_t;
 
 typedef struct ui_state_t {
     ui_rect window_rect;
@@ -20,8 +24,9 @@ typedef struct ui_state_t {
     bool right_mouse_press, right_mouse_release;
     bool middle_mouse_press, middle_mouse_release;
     bool left_mouse_is_pressed, right_mouse_is_pressed, middle_mouse_is_pressed;
-    u8 key_press[MAX_KEY_COUNT];
-    u8 key_pressed[MAX_KEY_COUNT];
+
+    ui_key_map_t *key_press;
+    ui_key_map_t *key_pressed;
 
     bool updated;
     u32 cursor_type;
@@ -37,6 +42,9 @@ typedef struct ui_state_t {
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer);
 
 void ui_state_set_active(ui_state_t state, u32 id);
+
+void ui_state_key_press(ui_state_t *state, int key);
+void ui_state_key_release(ui_state_t *state, int key);
 
 bool ui_state_update(ui_state_t *state);
 

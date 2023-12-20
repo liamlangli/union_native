@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include"
+                "/usr/local/include",
+                "${workspaceFolder}/third_party/stb",
             ],
             "defines": [
                 "OS_LINUX"
@@ -21,7 +22,8 @@
 
                 "${workspaceFolder}/third_party/angle/include",
                 "${workspaceFolder}/third_party/quickjs/include",
-                "${workspaceFolder}/third_party/glfw/include"
+                "${workspaceFolder}/third_party/glfw/include",
+                "${workspaceFolder}/third_party/stb",
             ],
             "defines": [
                 "OS_MACOS"
@@ -35,6 +37,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/third_party/stb",
             ],
             "defines": [
                 "OS_WINDOWS"

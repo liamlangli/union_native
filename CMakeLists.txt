@@ -12,6 +12,7 @@ aux_source_directory(src/ui UI_SOURCES)
 set(MAIN_ENTRY src/main.c)
 
 include_directories(src)
+include_directories(${THIRD_PARTY}/stb)
 
 if (APPLE)
     include_directories(
