@@ -4,7 +4,15 @@
         "*.c": "c",
         "typeinfo": "c",
         "chrono": "c",
-        "functional": "c"
+        "functional": "c",
+        "bit": "c",
+        "*.tcc": "c",
+        "string_view": "c",
+        "random": "c",
+        "limits": "c",
+        "numeric": "c",
+        "algorithm": "c",
+        "cmath": "c"
     },
     "cmake.debugConfig": {
         "args": [

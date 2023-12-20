@@ -9,6 +9,8 @@
 #include "ui/ui_renderer.h"
 
 typedef struct ui_state_t {
+    ui_rect window_rect;
+
     float2 mouse_location;
     int next_hover, next_hover_layer_index;
     int focus, hover, hover_layer;
@@ -18,14 +20,24 @@ typedef struct ui_state_t {
     bool right_mouse_press, right_mouse_release;
     bool middle_mouse_press, middle_mouse_release;
     bool left_mouse_is_pressed, right_mouse_is_pressed, middle_mouse_is_pressed;
-    u32 key_press[MAX_KEY_COUNT];
-    u32 key_pressed[MAX_KEY_COUNT];
+    u8 key_press[MAX_KEY_COUNT];
+    u8 key_pressed[MAX_KEY_COUNT];
 
-    bool needs_update;
+    bool updated;
     u32 cursor_type;
 
     f32 smooth_factor;
     ui_renderer_t *renderer;
+
+    u32 active_frame_count;
+    u32 defer_update_frame_count;
+    u32 defer_update_frame_index;
 } ui_state_t;
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer);
+
+void ui_state_set_active(ui_state_t state, u32 id);
+
+bool ui_state_update(ui_state_t *state);
+
+bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index);

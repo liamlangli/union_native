@@ -1,6 +1,7 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
 
+#include <GL/gl.h>
 #include <GLES3/gl3.h>
 #include <stdlib.h>
 #include <math.h>
@@ -58,7 +59,6 @@ void ui_renderer_init(ui_renderer_t* renderer)
     ustring vert_shader_code = io_read_file(ustring_STR("ui.vert"));
     ustring frag_shader_code = io_read_file(ustring_STR("ui.frag"));
     GLuint program = glCreateProgram();
-    printf(vert_shader_code.data);
 
     GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vert_shader, 1, (const GLchar *const *)vert_shader_code.data, (const GLint *)&vert_shader_code.length);
@@ -81,6 +81,18 @@ void ui_renderer_free(ui_renderer_t* renderer) {
     free(renderer->primitive_data);
 }
 
+void ui_renderer_clear(ui_renderer_t* renderer) {
+    ui_layer *layer = &renderer->layers[0];
+    layer->last_primitive_offset = layer->primitive_offset;
+    layer->last_index_offset = layer->index_offset;
+    layer->primitive_offset = renderer->preserved_primitive_offset;
+    layer->index_offset = 0;
+
+    for (int i = 1; i < MAX_UI_LAYERS; ++i) {
+        ui_layer_clear(&renderer->layers[i]);
+    }
+}
+
 void ui_renderer_render(ui_renderer_t* renderer)
 {
     if (renderer->index_offset <= 0) return;
@@ -88,7 +100,7 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->index_offset, renderer->index_data);
 
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture_width);
-    GLsizei height = ceil(renderer->primitive_offset / renderer->primitive_data_texture_width);
+    GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT, renderer->primitive_data);
 
     glDisable(GL_DEPTH_TEST);
@@ -101,6 +113,63 @@ void ui_renderer_render(ui_renderer_t* renderer)
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);
     glDrawArrays(GL_TRIANGLES, 0, renderer->index_offset);
+
+    ui_renderer_clear(renderer);
+}
+
+u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent) {
+    u32 offset = renderer->primitive_offset;
+    if (parent == 0) {
+        *(ui_rect*)(renderer->primitive_data + offset) = rect;
+    } else {
+        ui_rect parent_rect = ui_renderer_read_clip(renderer, parent);
+        *(ui_rect*)(renderer->primitive_data + offset) = ui_rect_intersect(rect, parent_rect);
+    }
+    return offset;
+}
+
+ui_rect ui_renderer_read_clip(ui_renderer_t* renderer, u32 clip) {
+    return *(ui_rect*)(renderer->primitive_data + clip);
+}
+
+
+void ui_layer_write_index(ui_layer *layer, u32 index) {
+    layer->index_data[layer->index_offset++] = index;
+}
+
+u32 ui_layer_write_rect_vertex(ui_layer *layer, ui_rect_vertex vertex) {
+    u32 offset = layer->primitive_offset;
+    *(ui_rect_vertex*)(layer->primitive_data + layer->primitive_offset) = vertex;
+    layer->primitive_offset += 8; 
+    return offset;
+}
+
+u32 ui_layer_write_triangle_vertex(ui_layer *layer, ui_triangle_vertex vertex, bool advanced) {
+    u32 offset = layer->primitive_offset;
+    *(ui_triangle_vertex*)(layer->primitive_data + layer->primitive_offset) = vertex;
+    layer->primitive_offset += advanced ? 4 : 8;
+    return offset;
+}
+
+u32 ui_layer_write_glyph_header(ui_layer *layer, ui_glyph_header header) {
+    u32 offset = layer->primitive_offset;
+    *(ui_glyph_header*)(layer->primitive_data + layer->primitive_offset) = header;
+    layer->primitive_offset += 4;
+    return offset;
+}
+
+u32 ui_layer_write_glyph_vertex(ui_layer *layer, ui_glyph_vertex vertex) {
+    u32 offset = layer->primitive_offset;
+    *(ui_glyph_vertex*)(layer->primitive_data + layer->primitive_offset) = vertex;
+    layer->primitive_offset += 4;
+    return offset;
+}
+
+void ui_layer_clear(ui_layer *layer) {
+    layer->last_index_offset = layer->index_offset;
+    layer->last_primitive_offset = layer->primitive_offset;
+    layer->index_offset = 0;
+    layer->primitive_offset = 0;
 }
 
 void ui_renderer_add_font(ui_renderer_t *renderer, gpu_font *font);

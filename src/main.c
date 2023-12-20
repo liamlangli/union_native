@@ -17,6 +17,12 @@
 static ui_renderer_t renderer;
 static ui_state_t state;
 
+static ui_style panel_0;
+static ui_style panel_1;
+static ui_style panel_2;
+static ui_style panel_3;
+static ui_style panel_4;
+
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -43,7 +49,7 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 static void render_location_bar() {
-
+    fill_rect(&renderer, 0, panel_0, (ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 32}, 0);
     ui_renderer_render(&renderer);
 }
 
@@ -59,9 +65,6 @@ int main(int argc, char** argv)
 
     if (!glfwInit())
         exit(EXIT_FAILURE);
-#if defined(OS_LINUX)
-    printf("GLFW platform: %d\n", glfwGetPlatform(void));
-#endif
 
 #if defined(OS_MACOS) || defined(OS_WINDOWS)
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
@@ -115,11 +118,26 @@ int main(int argc, char** argv)
 
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
+    renderer.window_size.x = (f32)script_context->width;
+    renderer.window_size.y = (f32)script_context->height;
+    f32 context_scale_x, context_scale_y;
+    glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
+    renderer.window_size.z = context_scale_y;
 
+    panel_0 = ui_style_from_hex(0x3a3b3cff, 0x404142ff, 0x4c4d4eff, 0xe1e1e1ab);
     glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window))
     {
+        double mouse_x, mouse_y;
+        glfwGetCursorPos(window, &mouse_x, &mouse_y);
+        state.window_rect = (ui_rect){
+            .x = (f32)mouse_x,
+            .y = (f32)mouse_y,
+            .w = (f32)script_context->width,
+            .h = (f32)script_context->height
+        };
+
         script_frame_tick(script_context);
         render_location_bar();
         glfwSwapBuffers(window);

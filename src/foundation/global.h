@@ -6,6 +6,20 @@
 
 #include "foundation/platform.h"
 
+#ifndef bool
+    #define bool int
+#endif
+
+#ifndef F32_PI
+    #define F32_PI 3.14159265358979323846f
+    #define F32_2PI 6.28318530717958647692f
+#endif
+
+#ifndef F64_PI
+    #define F64_PI 3.14159265358979323846
+    #define F64_2PI 6.28318530717958647692
+#endif
+
 #define false 0
 #define true 1
 
