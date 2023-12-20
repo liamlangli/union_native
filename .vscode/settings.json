@@ -2,7 +2,9 @@
     "files.associations": {
         "*.h": "c",
         "*.c": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "chrono": "c",
+        "functional": "c"
     },
     "cmake.debugConfig": {
         "args": [

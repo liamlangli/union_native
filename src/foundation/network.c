@@ -3,7 +3,7 @@
 #include "foundation/ustring.h"
 #include <stdlib.h>
 
-url_t url_parse(ustring_t url) {
+url_t url_parse(ustring url) {
     url_t result = {0};
     const char *data = url.data;
     u32 length = url.length;

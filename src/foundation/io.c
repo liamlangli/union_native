@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-ustring_t io_read_file(ustring_t path) {
+ustring io_read_file(ustring path) {
   FILE *file = fopen(path.data, "rb");
   if (!file) {
     return ustring_str("");
@@ -53,7 +53,7 @@ ustring_t io_read_file(ustring_t path) {
   "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "  \
   "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 
-ustring_t io_http_get(url_t url) {
+ustring io_http_get(url_t url) {
   int sockfd;
   struct sockaddr_in server_addr;
   struct hostent *host;

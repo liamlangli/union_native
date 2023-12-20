@@ -4,6 +4,8 @@
 #include "foundation/logger.h"
 #include "foundation/webgl2.h"
 
+#include "ui/ui.h"
+
 #include <string.h>
 
 #define GLFW_INCLUDE_ES3
@@ -11,6 +13,9 @@
 #include <GLES3/gl3.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+static ui_renderer_t renderer;
+static ui_state_t state;
 
 static void error_callback(int error, const char* description)
 {
@@ -35,6 +40,11 @@ static void size_callback(GLFWwindow* window, int width, int height)
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     printf("scroll_callback: %f, %f\n", xoffset, yoffset);
+}
+
+static void render_location_bar() {
+
+    ui_renderer_render(&renderer);
 }
 
 int main(int argc, char** argv)
@@ -92,8 +102,8 @@ int main(int argc, char** argv)
     glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
     script_window_resize(script_context, width - left - right, height - top - bottom);
 
-    ustring_t content;
-    ustring_t source = ustring_str(argv[1]);
+    ustring content;
+    ustring source = ustring_str(argv[1]);
     url_t url = url_parse(source);
     if (url.valid) {
         printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
@@ -103,15 +113,21 @@ int main(int argc, char** argv)
     }
     script_eval(script_context, content, source);
 
+    ui_renderer_init(&renderer);
+    ui_state_init(&state, &renderer);
+
     glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window))
     {
         script_frame_tick(script_context);
+        render_location_bar();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
     script_context_destroy(script_context);
+    ui_renderer_free(&renderer);
  
     glfwDestroyWindow(window);
     glfwTerminate();

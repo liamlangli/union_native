@@ -10,7 +10,7 @@
             "name": "lldb launch un",
             "program": "${workspaceFolder}/build/un",
             "args": [
-                "example/public/index.js"
+                "example/public/terrain.js"
             ],
             "cwd": "${workspaceFolder}"
         }

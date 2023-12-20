@@ -11,7 +11,7 @@ JSValue js_add_event_listener(JSContext *context, JSValueConst this_val, int arg
     {
         const char* name = JS_ToCString(context, this_val);
         const char* event = JS_ToCString(context, argv[0]);
-        fprintf(stdout, "addEventListener: %s, %s\n", name, event);
+        // fprintf(stdout, "addEventListener: %s, %s\n", name, event);
     }
 
     return JS_UNDEFINED;
@@ -279,7 +279,7 @@ void script_module_browser_register(script_context_t *context) {
     JS_FreeValue(ctx, global);
 }
 
-int script_eval(script_context_t *context, ustring_t source, ustring_t filename)
+int script_eval(script_context_t *context, ustring source, ustring filename)
 {
     JSValue val;
     int ret;

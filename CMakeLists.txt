@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(THIRD_PARTY ${CMAKE_SOURCE_DIR}/third_party)
 
 aux_source_directory(src/foundation FOUNDATION_SOURCES)
+aux_source_directory(src/ui UI_SOURCES)
 set(MAIN_ENTRY src/main.c)
 
 include_directories(src)
@@ -47,7 +48,7 @@ else() # OS_WINDOWS
     add_definitions(-DOS_WINDOWS)
 endif()
 
-add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES})
+add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES} ${UI_SOURCES})
 
 if(APPLE)
     target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw.3 m dl)
@@ -62,3 +63,7 @@ elseif(LINUX)
 else()
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/shader $<TARGET_FILE_DIR:${PROJECT_NAME}>)

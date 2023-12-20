@@ -5,11 +5,11 @@
 
 typedef struct url_t {
     u16 valid, port;
-    ustring_t protocol;
-    ustring_t host;
-    ustring_t path;
-    ustring_t query;
+    ustring protocol;
+    ustring host;
+    ustring path;
+    ustring query;
 } url_t;
 
-int url_is(ustring_t src);
-url_t url_parse(ustring_t url);
+int url_is(ustring src);
+url_t url_parse(ustring url);

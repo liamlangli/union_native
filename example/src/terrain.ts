@@ -2,7 +2,7 @@ import { Camera, ColorRGBA, CullMode, DepthCompareFunc, Engine, EngineEvent, Eve
 import terrain_frag from '../public/shader/terrain.frag';
 import terrain_vert from '../public/shader/terrain.vert';
 
-const device = new GFXDevice({display_ratio: 2});
+const device = new GFXDevice({display_ratio: 1});
 const encoder = device.encoder;
 const engine = new Engine();
 const gl = (encoder as WebGLEncoder).gl;
