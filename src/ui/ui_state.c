@@ -46,7 +46,7 @@ bool ui_state_update(ui_state_t *state)
 }
 
 bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index) {
-    if (layer_index < state->next_hover_layer_index) return false;
+    if (layer_index < state->next_hover_layer_index || layer_index < state->hover_layer) return false;
     return ui_rect_contains(rect, state->mouse_location);
 }
 
@@ -56,4 +56,8 @@ void ui_state_key_press(ui_state_t *state, int key) {
 
 void ui_state_key_release(ui_state_t *state, int key) {
     hmput(state->key_press, key, false);
+}
+
+void ui_state_set_active(ui_state_t state, u32 id) {
+    
 }

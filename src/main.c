@@ -25,7 +25,7 @@
 
 static ui_renderer_t renderer;
 static ui_state_t state;
-static ui_label_t label;
+static ui_input_t search_input;
 
 static ui_style panel_0;
 static ui_style panel_1;
@@ -44,6 +44,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    // printf
 
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
@@ -73,14 +75,15 @@ static void renderer_init(GLFWwindow* window, script_context_t *script_context) 
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
 
-    ui_label_init(&label, ustring_STR("hello world"));
+    ui_input_init(&search_input, ustring_STR(""));
 }
 
 static void render_location_bar() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 64}, 8.0f, 8.0f);
-    fill_round_rect(&renderer, 0, panel_0, rect, 8.f, 0, TRIANGLE_SOLID);
-    stroke_round_rect(&renderer, 0, panel_3, rect, 8.f, 0, TRIANGLE_SOLID);
-    ui_label(&state, &label, text_style, state.window_rect, 0, 0);
+    // ui_label(&state, &label, text_style, state.window_rect, 0, 0);
+    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
+
+    }
     ui_renderer_render(&renderer);
 }
 

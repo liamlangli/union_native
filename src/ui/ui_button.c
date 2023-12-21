@@ -1,4 +1,4 @@
-#include "ui/ui_component.h"
+#include "ui/ui_button.h"
 
 void ui_button_init(ui_button_t *button, ustring text) {
     ui_label_init(&button->label, text);

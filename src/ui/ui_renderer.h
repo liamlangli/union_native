@@ -54,7 +54,8 @@ typedef struct ui_glyph_header {
 
 typedef struct ui_glyph_vertex {
     f32 xoffset;
-    u32 glyph_index, color;
+    f32 glyph_index;
+    u32 color;
     f32 scale;
 } ui_glyph_vertex;
 

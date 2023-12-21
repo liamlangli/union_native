@@ -38,6 +38,9 @@ typedef struct ui_element {
     ui_constraint constraint;
 } ui_element;
 
+u32 ui_id_create();
+void ui_id_reset();
+
 static inline ui_rect ui_rect_intersect(ui_rect a, ui_rect b) {
     f32 left = a.x > b.x ? a.x : b.x;
     f32 top = a.y > b.y ? a.y : b.y;
@@ -48,6 +51,11 @@ static inline ui_rect ui_rect_intersect(ui_rect a, ui_rect b) {
     } else {
         return (ui_rect){.x = left, .y = top, .w = right - left, .h = bottom - top};
     }
+}
+
+static inline void ui_element_init(ui_element *element) {
+    element->constraint.alignment = CENTER;
+    element->id = ui_id_create();
 }
 
 static inline ui_rect ui_rect_shrink(ui_rect a, f32 hori, f32 vert) {
@@ -73,6 +81,3 @@ static inline ui_style ui_style_from_hex(u32 color, u32 hover_color, u32 active_
 }
 
 ui_rect ui_constraint_layout(ui_constraint *constraint, ui_rect parent);
-
-u32 ui_id_create();
-void ui_id_reset();

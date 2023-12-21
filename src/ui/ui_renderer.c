@@ -26,7 +26,7 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
     const u32 glyph_stride = 8;
     const u32 font_stride = 8;
     const u32 glyph_count = hmlen(font->char_map);
-    const u32 primitive_end = offset + font_stride +  glyph_count * glyph_stride;
+    const u32 primitive_end = offset + font_stride + glyph_count * glyph_stride;
 
     renderer->preserved_primitive_offset = primitive_end;
     renderer->primitive_data[offset] = width;
@@ -47,6 +47,7 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
     }
 
     renderer->primitive_offset = primitive_end;
+    renderer->layers[0].primitive_offset = renderer->preserved_primitive_offset;
 }
 
 // renderer func
@@ -74,9 +75,12 @@ void ui_renderer_init(ui_renderer_t* renderer)
     renderer->primitive_offset = 0;
     renderer->preserved_primitive_offset = 0;
 
+    ui_font_init(&renderer->system_font, msdf_font_system_font(), 16);
+    ui_renderer_write_msdf_font(renderer, renderer->system_font.font);
+
     // gpu
     GLint max_texture_size = 4096;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    // glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
 
     GLsizei texture_width = max_texture_size;
     GLsizei texture_height = PRIMITVE_DATA_INIT_COUNT / 4 / texture_width;
@@ -133,9 +137,6 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glAttachShader(program, vert_shader);
     glAttachShader(program, frag_shader);
     glLinkProgram(program);
-
-    ui_font_init(&renderer->system_font, msdf_font_system_font(), 14);
-    ui_renderer_write_msdf_font(renderer, renderer->system_font.font);
 
     renderer->window_size_location = glGetUniformLocation(program, "window_size");
     renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
@@ -194,16 +195,15 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, NULL);
     glEnableVertexAttribArray(0);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
     GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT, renderer->primitive_data);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
     glUniform1i(renderer->primitive_data_texture_location, 0);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, renderer->system_font.font->texture_handle);
+    msdf_font *font = msdf_font_system_font();
+    glBindTexture(GL_TEXTURE_2D, font->texture_handle);
     glUniform1i(renderer->font_texture_location, 1);
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);

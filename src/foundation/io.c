@@ -127,7 +127,6 @@ ustring io_http_get(url_t url) {
     return ustring_str(file_content);
 }
 
-
 u8* io_load_image(ustring path, int* width, int* height, int *channel, int request_channel) {
     return stbi_load(path.data, width, height, channel, request_channel);
 }
