@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #if defined(OS_WINDOWS)
     int betriebssystem = 1;
     #include <winsock2.h>
@@ -122,4 +125,13 @@ ustring io_http_get(url_t url) {
     // Close socket
     close(sockfd);
     return ustring_str(file_content);
+}
+
+
+u8* io_load_image(ustring path, int* width, int* height, int *channel, int request_channel) {
+    return stbi_load(path.data, width, height, channel, request_channel);
+}
+
+u8* io_load_image_memory(u8* data, size_t length, int* width, int* height, int *channel, int request_channel) {
+    return stbi_load_from_memory(data, length, width, height, channel, request_channel);
 }

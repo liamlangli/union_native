@@ -6,3 +6,6 @@
 
 ustring io_read_file(ustring path);
 ustring io_http_get(url_t url);
+
+u8* io_load_image(ustring path, int* width, int* height, int *channel, int request_channel);
+u8* io_load_image_memory(u8* data, size_t length, int* width, int* height, int *channel, int request_channel);

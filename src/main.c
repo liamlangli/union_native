@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define STB_DS_IMPLEMENTATION
+#include <stb_ds.h>
+
 #ifdef RENDER_DOC_CAPTURE
     #include <dlfcn.h>
     #include "renderdoc_app.h"
@@ -205,7 +208,7 @@ int main(int argc, char** argv)
 
     script_context_destroy(script_context);
     ui_renderer_free(&renderer);
- 
+
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

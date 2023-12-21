@@ -1,6 +1,5 @@
 #include "ui/ui_state.h"
 
-#define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {

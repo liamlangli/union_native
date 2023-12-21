@@ -30,6 +30,7 @@ typedef struct ui_renderer_t {
     u32 primitive_data_texture;
     u32 primitive_data_texture_location;
     u32 primitive_data_texture_width;
+    u32 font_texture_location;
     u32 index_buffer;
 } ui_renderer_t;
 

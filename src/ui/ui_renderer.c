@@ -12,6 +12,17 @@
 #define UI_LAYER_2_OFFSET 241664 // size 16384
 #define UI_LAYER_3_OFFSET 258048 // size 4096
 
+static int _gpu_font_id = 0;
+static 
+
+void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
+    u32 offset = renderer->preserved_primitive_offset;
+    u32 width = font->texture_width;
+    u32 height = font->texture_height;
+
+    int gpu_font_id = _gpu_font_id++;
+}
+
 // renderer func
 void ui_renderer_init(ui_renderer_t* renderer)
 {
@@ -97,8 +108,12 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glAttachShader(program, frag_shader);
     glLinkProgram(program);
 
+    ui_font_init(&renderer->system_font, msdf_font_system_font(), 14);
+    ui_renderer_write_msdf_font();
+
     renderer->window_size_location = glGetUniformLocation(program, "window_size");
     renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
+    renderer->font_texture_location = glGetUniformLocation(program, "font_texture");
     renderer->program = program;
 }
 
@@ -160,6 +175,10 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
     glUniform1i(renderer->primitive_data_texture_location, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, renderer->system_font.font->texture_handle);
+    glUniform1i(renderer->font_texture_location, 1);
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);
     glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/ui_type.h"
+#include "ui/msdf_font.h"
 
 typedef struct gpu_glyph {
     u32 id, index;
@@ -19,9 +20,9 @@ typedef struct gpu_font {
 } gpu_font;
 
 typedef struct ui_font {
-    gpu_font *gpu_font;
+    msdf_font *font;
+    f32 scale;
 } ui_font;
 
 // font func
-void gpu_font_load(ustring json_path, ustring font_map_path);
-void ui_font_init(ui_font *font, gpu_font *gpu_font, u32 font_size);
+void ui_font_init(ui_font *font, msdf_font *gpu_font, u32 font_size);
