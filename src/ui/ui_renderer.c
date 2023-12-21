@@ -96,6 +96,16 @@ void ui_renderer_init(ui_renderer_t* renderer)
     renderer->primitive_data_texture = primitive_buffer_map;
     renderer->primitive_data_texture_width = texture_width;
 
+    GLuint icon_texture;
+    glGenTextures(1, &icon_texture);
+    glBindTexture(GL_TEXTURE_2D, icon_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // glTexParameter
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // glTexParameter
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32UI, 1024, 1024, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, NULL);
+    renderer->icon_texture = icon_texture;
+
     GLuint index_buffer;
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, index_buffer);
@@ -150,6 +160,7 @@ void ui_renderer_init(ui_renderer_t* renderer)
     renderer->window_size_location = glGetUniformLocation(program, "window_size");
     renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
     renderer->font_texture_location = glGetUniformLocation(program, "font_texture");
+    renderer->icon_texture_location = glGetUniformLocation(program, "icon_texture");
     renderer->program = program;
 }
 
@@ -217,6 +228,10 @@ void ui_renderer_render(ui_renderer_t* renderer)
     msdf_font *font = msdf_font_system_font();
     glBindTexture(GL_TEXTURE_2D, font->texture_handle);
     glUniform1i(renderer->font_texture_location, 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, renderer->icon_texture);
+    glUniform1i(renderer->icon_texture_location, 2);
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);
     glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);

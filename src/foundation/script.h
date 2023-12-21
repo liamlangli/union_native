@@ -5,14 +5,22 @@
 
 #include <quickjs/quickjs.h>
 #include <quickjs/quickjs-libc.h>
-
 #include <GLFW/glfw3.h>
+#include <stb_ds.h>
+
+typedef struct js_listener_hm {
+    ustring key;
+    JSValue value;
+} js_listener_hm;
 
 typedef struct script_context_t {
     JSRuntime* runtime;
     JSContext* context;
     int width;
     int height;
+
+    js_listener_hm *window_event_listeners;
+    js_listener_hm *document_event_listeners;
 } script_context_t;
 
 script_context_t* script_context_share(void);

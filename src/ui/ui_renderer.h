@@ -12,7 +12,6 @@ typedef struct ui_layer {
     u32 last_index_offset, last_primitive_offset;
 } ui_layer;
 
-
 typedef struct ui_renderer_t {
     // cpu side
     ui_layer layers[MAX_UI_LAYERS];
@@ -30,6 +29,8 @@ typedef struct ui_renderer_t {
     u32 primitive_data_texture;
     u32 primitive_data_texture_location;
     u32 primitive_data_texture_width;
+    u32 icon_texture;
+    u32 icon_texture_location;
     u32 font_texture_location;
     u32 index_buffer;
 } ui_renderer_t;
