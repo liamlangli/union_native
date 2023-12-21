@@ -6,9 +6,11 @@
                 "${workspaceFolder}/**",
                 "/usr/local/include",
                 "${workspaceFolder}/third_party/stb",
+                "${workspaceFolder}/third_party/renderdoc/include",
             ],
             "defines": [
-                "OS_LINUX"
+                "OS_LINUX",
+                "RENDER_DOC_CAPTURE"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",

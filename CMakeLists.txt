@@ -16,6 +16,11 @@ set(MAIN_ENTRY src/main.c)
 include_directories(src)
 include_directories(${THIRD_PARTY}/stb)
 
+if (RENDER_DOC)
+    add_definitions(-DRENDER_DOC_CAPTURE)
+    include_directories(${THIRD_PARTY}/renderdoc/include)
+endif()
+
 if (APPLE)
     include_directories(
         ${THIRD_PARTY}/angle/include
@@ -31,8 +36,6 @@ if (APPLE)
     add_definitions(-DOS_MACOS)
     add_definitions(-DGL_SILENCE_DEPRECATION)
     if (RENDER_DOC)
-        add_definitions(-DRENDER_DOC_CAPTURE)
-        include_directories(${THIRD_PARTY}/renderdoc/include)
         link_directories(${THIRD_PARTY}/renderdoc/lib/macos)
     endif()
 elseif (LINUX)
@@ -45,6 +48,9 @@ elseif (LINUX)
         ${THIRD_PARTY}/glfw/lib/linux
     )
     add_definitions(-DOS_LINUX)
+    if (RENDER_DOC)
+        link_directories(${THIRD_PARTY}/renderdoc/lib/linux)
+    endif()
 else() # OS_WINDOWS
     include_directories(
         /usr/include
@@ -74,6 +80,11 @@ if(APPLE)
         ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 elseif(LINUX)
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
+    if (RENDER_DOC)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${THIRD_PARTY}/renderdoc/lib/linux/librenderdoc.so $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    endif()
 else()
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 endif()

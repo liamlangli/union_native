@@ -15,8 +15,9 @@
 #include <stdio.h>
 
 #ifdef RENDER_DOC_CAPTURE
-#include <dlfcn.h>
-#include "renderdoc_app.h"
+    #include <dlfcn.h>
+    #include "renderdoc_app.h"
+    #include <assert.h>
 #endif
 
 static ui_renderer_t renderer;
@@ -26,7 +27,7 @@ static ui_style panel_0;
 static ui_style panel_1;
 static ui_style panel_2;
 static ui_style panel_3;
-static ui_style panel_4;\
+static ui_style panel_4;
 
 static bool empty_launch = true;
 
@@ -79,7 +80,16 @@ static void render_location_bar() {
 
 int main(int argc, char** argv)
 {
-    printf("Usage: union_native [file]\n");
+#ifdef RENDER_DOC_CAPTURE
+    RENDERDOC_API_1_1_2 *rdoc_api = NULL;
+    void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
+    if(mod != NULL)
+    {
+        pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
+        assert(ret == 1);
+    }
+#endif
 
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
@@ -117,10 +127,6 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-#if defined(OS_WINDOWS)
-    glfwSetWindowPos(window, 400, 200);
-#endif
-
     glfwSetWindowContentScaleCallback(window, set_content_scale);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, size_callback);
@@ -140,7 +146,7 @@ int main(int argc, char** argv)
     glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
     script_window_resize(script_context, width - left - right, height - top - bottom);
 
-    if (argc > 2) {
+    if (argc >= 2) {
         ustring content;
         ustring source = ustring_str(argv[1]);
         url_t url = url_parse(source);
@@ -148,10 +154,13 @@ int main(int argc, char** argv)
             printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
             content = io_http_get(url);
         } else {
+            printf("load file: %s\n", source.data);
             content = io_read_file(source);
         }
         script_eval(script_context, content, source);
         empty_launch = false;
+    } else {
+        printf("Usage: union_native [file]\n");
     }
 
     renderer_init(window, script_context);
