@@ -139,15 +139,18 @@ void ui_renderer_merge_layers(ui_renderer_t* renderer) {
 void ui_renderer_render(ui_renderer_t* renderer)
 {
     ui_renderer_merge_layers(renderer);
-    if (renderer->index_offset <= 0) return;
+    if (renderer->last_index_offset <= 0) return;
 
+    glUseProgram(renderer->program);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glUseProgram(renderer->program);
+    glEnable(GL_BLEND);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->index_offset * sizeof(u32), renderer->index_data);
-    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->last_index_offset * sizeof(u32), renderer->index_data);
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, NULL);
     glEnableVertexAttribArray(0);
 
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
@@ -159,7 +162,7 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glUniform1i(renderer->primitive_data_texture_location, 0);
 
     glUniform3fv(renderer->window_size_location, 1, (const GLfloat*)&renderer->window_size);
-    glDrawArrays(GL_TRIANGLES, 0, renderer->index_offset);
+    glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);
 }
 
 u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent) {
@@ -192,7 +195,7 @@ u32 ui_layer_write_rect_vertex(ui_layer *layer, ui_rect_vertex vertex) {
 u32 ui_layer_write_triangle_vertex(ui_layer *layer, ui_triangle_vertex vertex, bool advanced) {
     u32 offset = layer->primitive_offset;
     *(ui_triangle_vertex*)(layer->primitive_data + layer->primitive_offset) = vertex;
-    layer->primitive_offset += advanced ? 4 : 8;
+    layer->primitive_offset += advanced ? 8 : 4;
     return offset;
 }
 

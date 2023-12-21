@@ -27,7 +27,6 @@ static ui_style panel_0;
 static ui_style panel_1;
 static ui_style panel_2;
 static ui_style panel_3;
-static ui_style panel_4;
 
 static bool empty_launch = true;
 
@@ -73,8 +72,9 @@ static void renderer_init(GLFWwindow* window, script_context_t *script_context) 
 }
 
 static void render_location_bar() {
-    fill_round_rect(&renderer, 0, panel_0, state.window_rect, 6.0f, 0, TRIANGLE_SOLID);
-    fill_rect(&renderer, 0, panel_1, (ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 32}, 0);
+    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 64}, 8.0f, 8.0f);
+    fill_round_rect(&renderer, 0, panel_0, rect, 8.f, 0, TRIANGLE_SOLID);
+    stroke_round_rect(&renderer, 0, panel_3, rect, 8.f, 0, TRIANGLE_SOLID);
     ui_renderer_render(&renderer);
 }
 
@@ -109,8 +109,6 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
 #ifdef OS_MACOS
     int window_width = 1080;
@@ -143,8 +141,7 @@ int main(int argc, char** argv)
     glfwGetFramebufferSize(window, &width, &height);
     script_module_browser_register(script_context);
     script_module_webgl2_register(script_context);
-    glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
-    script_window_resize(script_context, width - left - right, height - top - bottom);
+    script_window_resize(script_context, width, height);
 
     if (argc >= 2) {
         ustring content;
@@ -165,10 +162,19 @@ int main(int argc, char** argv)
 
     renderer_init(window, script_context);
 
+    f32 ui_scale = 2.0f;
     panel_0 = ui_style_from_hex(0x3a3b3cff, 0x404142ff, 0x4c4d4eff, 0xe1e1e1ab);
+    panel_0.line_width *= ui_scale;
+    panel_0.line_feather *= ui_scale;
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
+    panel_1.line_width *= ui_scale;
+    panel_1.line_feather *= ui_scale;
     panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
+    panel_2.line_width *= ui_scale;
+    panel_2.line_feather *= ui_scale;
     panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
+    panel_3.line_width *= ui_scale;
+    panel_3.line_feather *= ui_scale;
 
     glfwSwapInterval(1);
 
@@ -177,8 +183,8 @@ int main(int argc, char** argv)
         double mouse_x, mouse_y;
         glfwGetCursorPos(window, &mouse_x, &mouse_y);
         state.window_rect = (ui_rect){
-            .x = (f32)mouse_x,
-            .y = (f32)mouse_y,
+            .x = 0.f,
+            .y = 0.f,
             .w = (f32)script_context->width,
             .h = (f32)script_context->height
         };

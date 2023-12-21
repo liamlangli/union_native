@@ -9,12 +9,12 @@ enum DRAW_CORNER {
     BOTTOM_RIGHT = 3 << 24,
 };
 
-// (F64_PI * 0.5) / 5.0)
+// cos(PI * 0.5) / 5.0 * i)
 static f64 rr_cos[] = {
-    0.3141592653589793,
-    0.6283185307179586,
-    0.9424777960769379,
-    1.2566370614359172
+    0.9510565162951535,
+    0.8090169943749478,
+    0.5877852522924731,
+    0.30901699437494745
 };
 
 #define RR_CORNER_POINTS 4
@@ -57,8 +57,8 @@ void round_rect_path(ui_rect rect, float4 radiuses) {
         data[offset++] = p0;
     } else {
         data[offset++] = (float2) {.x = rect.x, .y = p0.y};
-        float2 cos_point = (float2){.x = 1.f, .y = 0.f};
-        float2 sin_point = (float2){.x = 0.f, .y = 1.f};
+        float2 cos_point = (float2){.x = -radiuses.x, .y = 0.f};
+        float2 sin_point = (float2){.x = 0.f, .y = -radiuses.x};
         round_rect_corner(data, offset, p0, cos_point, sin_point);
         offset += RR_CORNER_POINTS;
         data[offset++] = (float2) {.x = p0.x, .y = rect.y};
@@ -67,20 +67,20 @@ void round_rect_path(ui_rect rect, float4 radiuses) {
     if (radiuses.y < EPSILON) {
         data[offset++] = p1;
     } else {
-        data[offset++] = (float2) {.x = rect.x + rect.w, .y = p1.y};
-        float2 cos_point = (float2){.x = -1.f, .y = 0.f};
-        float2 sin_point = (float2){.x = 0.f, .y = 1.f};
+        data[offset++] = (float2) {.x = p1.x, .y = rect.y};
+        float2 cos_point = (float2){.x = 0, .y = -radiuses.y};
+        float2 sin_point = (float2){.x = radiuses.y, .y = 0};
         round_rect_corner(data, offset, p1, cos_point, sin_point);
         offset += RR_CORNER_POINTS;
-        data[offset++] = (float2) {.x = p1.x, .y = rect.y};
+        data[offset++] = (float2) {.x = rect.x + rect.w, .y = p1.y};
     }
 
     if (radiuses.w < EPSILON) {
         data[offset++] = p3;
     } else {
         data[offset++] = (float2) {.x = rect.x + rect.w, .y = p3.y};
-        float2 cos_point = (float2){.x = -1.f, .y = 0.f};
-        float2 sin_point = (float2){.x = 0.f, .y = -1.f};
+        float2 cos_point = (float2){.x = radiuses.w, .y = 0.f};
+        float2 sin_point = (float2){.x = 0.f, .y = radiuses.w};
         round_rect_corner(data, offset, p3, cos_point, sin_point);
         offset += RR_CORNER_POINTS;
         data[offset++] = (float2) {.x = p3.x, .y = rect.y + rect.h};
@@ -89,12 +89,12 @@ void round_rect_path(ui_rect rect, float4 radiuses) {
     if (radiuses.z < EPSILON) {
         data[offset++] = p2;
     } else {
-        data[offset++] = (float2) {.x = rect.x, .y = p2.y};
-        float2 cos_point = (float2){.x = 1.f, .y = 0.f};
-        float2 sin_point = (float2){.x = 0.f, .y = -1.f};
+        data[offset++] = (float2) {.x = p2.x, .y = rect.y + rect.h};
+        float2 cos_point = (float2){.x = 0.f, .y = radiuses.z};
+        float2 sin_point = (float2){.x = -radiuses.z, .y = 0.f};
         round_rect_corner(data, offset, p2, cos_point, sin_point);
         offset += RR_CORNER_POINTS;
-        data[offset++] = (float2) {.x = p2.x, .y = rect.y + rect.h};
+        data[offset++] = (float2) {.x = rect.x, .y = p2.y};
     }
 
     polyline.point_count = offset;
@@ -151,7 +151,7 @@ void fill_convex_polyline(ui_renderer_t *renderer, u32 layer_index, u32 type) {
         float2 da = float2_normalize(float2_sub(prev_point, point));
         float2 db = float2_normalize(float2_sub(next_point, point));
         float2 na = (float2){.x = -da.y, .y = da.x};
-        float2 nb = (float2){.x = -db.y, .y = db.x};
+        float2 nb = (float2){.x = db.y, .y = -db.x};
         f32 d = float2_dot(da, db);
         f32 x = (float2_dot(nb, da) + float2_dot(na, db) * d) / (1 - d * d);
         float2 n = (float2){.x = x * da.x + na.x, .y = x * da.y + na.y};

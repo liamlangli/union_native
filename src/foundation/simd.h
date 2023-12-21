@@ -27,7 +27,7 @@ static inline f32 float2_dot(float2 a, float2 b) {
 }
 
 typedef struct float3 {
-    f32 x, y, z, w;
+    f32 x, y, z;
 } float3;
 
 typedef struct float4 {

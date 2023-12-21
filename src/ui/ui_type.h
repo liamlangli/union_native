@@ -50,6 +50,10 @@ static inline ui_rect ui_rect_intersect(ui_rect a, ui_rect b) {
     }
 }
 
+static inline ui_rect ui_rect_shrink(ui_rect a, f32 hori, f32 vert) {
+    return (ui_rect){.x = a.x + hori, .y = a.y + vert, .w = a.w - hori * 2.f, .h = a.h - vert * 2.f};
+}
+
 static inline bool ui_rect_contains(ui_rect rect, float2 point) {
     return point.x >= rect.x && point.y >= rect.y && point.x < rect.x + rect.w && point.y < rect.y + rect.h;
 }
@@ -64,7 +68,7 @@ static inline void ui_constraint_scale(ui_constraint *constraint, f32 scale) {
 }
 
 static inline ui_style ui_style_from_hex(u32 color, u32 hover_color, u32 active_color, u32 outline_color) {
-    ui_style style = (ui_style){.line_width = 1.f, .line_feather = 1.f, .color = color, .hover_color = hover_color, .active_color = active_color, .outline_color = outline_color};
+    ui_style style = (ui_style){.line_width = 1.f, .line_feather = 2.f, .color = color, .hover_color = hover_color, .active_color = active_color, .outline_color = outline_color};
     return style;
 }
 
