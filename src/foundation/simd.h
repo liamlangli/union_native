@@ -26,6 +26,10 @@ static inline f32 float2_dot(float2 a, float2 b) {
     return a.x * b.x + a.y * b.y;
 }
 
+static inline float2 float2_mul_f32(float2 a, f32 n) {
+    return (float2){.x = a.x * n, .y = a.y * n};
+}
+
 typedef struct float3 {
     f32 x, y, z;
 } float3;

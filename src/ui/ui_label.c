@@ -6,10 +6,16 @@ void ui_label_init(ui_label_t *label, ustring text) {
     label->text = text;
     label->element.id = ui_id_create();
     label->element.constraint.alignment = CENTER;
+    ui_label_update_text(label, text);
 }
 
-void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip)
-{
+void ui_label_update_text(ui_label_t *label, ustring text) {
+    ui_font *sys_font = ui_font_system_font();
+    ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
+    label->text = text;
+}
+
+void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
     if (label->text.length == 0) return;
     ui_rect clip_rect;
     ui_renderer_t *renderer = state->renderer;

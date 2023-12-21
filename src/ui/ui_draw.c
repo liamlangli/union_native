@@ -439,6 +439,53 @@ void stroke_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_s
     stroke_polyline(renderer, layer_index, triangle_type != TRIANGLE_SOLID, 0.f);
 }
 
-void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font *font, ustring text, u32 clip, f32 scale, ui_style style) {
+#define GLYPH_BATCH_SIZE 32
 
+void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font *font, ustring text, u32 clip, f32 scale, ui_style style) {
+    ui_layer *layer = &renderer->layers[layer_index];
+    
+    ui_glyph_header header;
+    header.x = origin.x;
+    header.y = origin.y;
+    header.clip = clip >> 2;
+    header.font = font->font->gpu_font_start;
+
+    float2 glyph_origin = origin;
+
+    ui_glyph_vertex vertex;
+    vertex.color = style.color;
+
+    f32 ratio = font->scale * scale;
+    vertex.scale = ratio;
+
+    int prev_id = -1;
+    u32 header_offset = GLYPH_BATCH_SIZE;
+    for (int i = 0; i < text.length; ++i) {
+        const int c = (int)text.data[i];
+        if (c == 0) return;
+        const msdf_glyph g = msdf_font_get_glyph(font->font, c);
+        if (g.id == 0) continue;
+
+        if (header_offset >= GLYPH_BATCH_SIZE) {
+            ui_layer_write_glyph_header(layer, header);
+            header_offset = 0;
+        }
+
+        f32 kerning = msdf_font_computer_kerning(font->font, prev_id, g.id) * ratio;
+        prev_id = g.id;
+
+        vertex.xoffset = (glyph_origin.x - origin.x) + (g.xoffset + kerning) * ratio;
+        vertex.glyph_index = g.gpu_index;
+
+        const u32 offset = ui_layer_write_glyph_vertex(layer, vertex);
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_LEFT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_RIGHT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_LEFT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_LEFT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_RIGHT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_RIGHT, offset));
+
+        glyph_origin.x += (g.xadvance + kerning) * ratio;
+        header_offset++;
+    }
 }

@@ -6,21 +6,47 @@
 #include <math.h>
 
 #include "ui/ui_shader.h"
+#include <stb_ds.h>
 
 #define PRIMITVE_DATA_INIT_COUNT 262144 // 1M
 #define UI_LAYER_1_OFFSET 237568 // size 4096
 #define UI_LAYER_2_OFFSET 241664 // size 16384
 #define UI_LAYER_3_OFFSET 258048 // size 4096
 
-static int _gpu_font_id = 0;
-static 
+static u32 _gpu_font_id = 0;
 
 void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
     u32 offset = renderer->preserved_primitive_offset;
     u32 width = font->texture_width;
     u32 height = font->texture_height;
 
-    int gpu_font_id = _gpu_font_id++;
+    u32 gpu_font_id = _gpu_font_id++;
+    font->gpu_font_id = gpu_font_id;
+    font->gpu_font_start = offset >> 2;
+    const u32 glyph_stride = 8;
+    const u32 font_stride = 8;
+    const u32 glyph_count = hmlen(font->char_map);
+    const u32 primitive_end = offset + font_stride +  glyph_count * glyph_stride;
+
+    renderer->preserved_primitive_offset = primitive_end;
+    renderer->primitive_data[offset] = width;
+    renderer->primitive_data[offset + 1] = height;
+    renderer->primitive_data[offset + 2] = gpu_font_id;
+
+    const u32 start = offset + font_stride;
+    for (int i = 0; i < glyph_count; ++i) {
+        msdf_glyph g = font->char_map[i].value;
+        const u32 index = start + i * glyph_stride;
+        renderer->primitive_data[index] = g.x;
+        renderer->primitive_data[index + 1] = g.y;
+        renderer->primitive_data[index + 2] = g.width;
+        renderer->primitive_data[index + 3] = g.height;
+        renderer->primitive_data[index + 4] = g.xoffset;
+        renderer->primitive_data[index + 5] = g.yoffset;
+        font->char_map[i].value.gpu_index = i;
+    }
+
+    renderer->primitive_offset = primitive_end;
 }
 
 // renderer func
@@ -109,7 +135,7 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glLinkProgram(program);
 
     ui_font_init(&renderer->system_font, msdf_font_system_font(), 14);
-    ui_renderer_write_msdf_font();
+    ui_renderer_write_msdf_font(renderer, renderer->system_font.font);
 
     renderer->window_size_location = glGetUniformLocation(program, "window_size");
     renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
@@ -239,4 +265,3 @@ void ui_layer_clear(ui_layer *layer) {
     layer->primitive_offset = 0;
 }
 
-void ui_renderer_add_font(ui_renderer_t *renderer, gpu_font *font);

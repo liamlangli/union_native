@@ -25,11 +25,13 @@
 
 static ui_renderer_t renderer;
 static ui_state_t state;
+static ui_label_t label;
 
 static ui_style panel_0;
 static ui_style panel_1;
 static ui_style panel_2;
 static ui_style panel_3;
+static ui_style text_style;
 
 static bool empty_launch = true;
 
@@ -54,13 +56,11 @@ static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
     printf("set_content_scale: %f, %f\n", xscale, yscale);
 }
 
-static void size_callback(GLFWwindow* window, int width, int height)
-{
+static void size_callback(GLFWwindow* window, int width, int height) {
     script_window_resize(script_context_share(), width, height);
 }
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     // printf("scroll_callback: %f, %f\n", xoffset, yoffset);
 }
 
@@ -72,12 +72,15 @@ static void renderer_init(GLFWwindow* window, script_context_t *script_context) 
     f32 context_scale_x, context_scale_y;
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
+
+    ui_label_init(&label, ustring_STR("hello world"));
 }
 
 static void render_location_bar() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 64}, 8.0f, 8.0f);
     fill_round_rect(&renderer, 0, panel_0, rect, 8.f, 0, TRIANGLE_SOLID);
     stroke_round_rect(&renderer, 0, panel_3, rect, 8.f, 0, TRIANGLE_SOLID);
+    ui_label(&state, &label, text_style, state.window_rect, 0, 0);
     ui_renderer_render(&renderer);
 }
 
@@ -178,6 +181,7 @@ int main(int argc, char** argv)
     panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
     panel_3.line_width *= ui_scale;
     panel_3.line_feather *= ui_scale;
+    text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff);
 
     glfwSwapInterval(1);
 

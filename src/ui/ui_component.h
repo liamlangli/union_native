@@ -29,6 +29,8 @@ typedef struct ui_button_t {
 } ui_button_t;
 
 extern void ui_label_init(ui_label_t *label, ustring text);
+extern void ui_label_update_text(ui_label_t *label, ustring text);
+
 extern void ui_input_init(ui_input_t *input, ustring text);
 extern void ui_button_init(ui_button_t *button, ustring text);
 

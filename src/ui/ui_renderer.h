@@ -49,7 +49,7 @@ typedef struct ui_triangle_vertex {
 
 typedef struct ui_glyph_header {
     f32 x, y;
-    u32 font_id, clip;
+    u32 font, clip;
 } ui_glyph_header;
 
 typedef struct ui_glyph_vertex {
