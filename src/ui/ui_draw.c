@@ -436,7 +436,7 @@ void stroke_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_s
     polyline.line_feather = style.line_feather;
 
     round_rect_path(rect, radiusese);
-    stroke_polyline(renderer, layer_index, triangle_type != TRIANGLE_SOLID, 0.f);
+    stroke_polyline(renderer, layer_index, false, 0.f);
 }
 
 #define GLYPH_BATCH_SIZE 32

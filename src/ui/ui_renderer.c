@@ -207,7 +207,9 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glViewport(0, 0, renderer->window_size.x * renderer->window_size.z, renderer->window_size.y * renderer->window_size.w);
     glUseProgram(renderer->program);
     glDisable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glDepthFunc(GL_ALWAYS);
+    glDisable(GL_CULL_FACE);
+    // glFrontFace(GL_CCW);
     glCullFace(GL_FRONT);
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);

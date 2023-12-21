@@ -45,8 +45,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    printf("key_callback: %d, %d, %d, %d\n", key, scancode, action, mods);
-
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
@@ -55,7 +53,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 }
 
 static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
-    printf("mouse_button: %d, %d, %d\n", button, action, mods);
     if (action == GLFW_PRESS) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             state.left_mouse_press = true;
@@ -99,16 +96,16 @@ static void renderer_init(GLFWwindow* window, script_context_t *script_context) 
     f32 context_scale_x, context_scale_y;
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
-
     ui_input_init(&search_input, ustring_STR(""));
 }
 
 static void render_location_bar() {
-    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 64}, 8.0f, 8.0f);
+    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
     // ui_label(&state, &label, text_style, state.window_rect, 0, 0);
-    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-
-    }
+    stroke_round_rect_pre_corner_solid(&renderer, 0, panel_0, rect, (float4){8.f, 8.f, 8.f, 8.f}, 0);
+    // if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
+    //     printf("search_input: %s\n", search_input.label.text.data);
+    // }
     ui_renderer_render(&renderer);
 }
 
@@ -143,6 +140,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
 
     int window_width = 1080;
     int window_height = 720;
@@ -192,7 +190,7 @@ int main(int argc, char** argv)
 
     renderer_init(window, script_context);
 
-    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ab);
+    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ff);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
     panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
     panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
