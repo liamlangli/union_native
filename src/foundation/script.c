@@ -11,7 +11,7 @@ JSValue js_add_event_listener(JSContext *context, JSValueConst this_val, int arg
     {
         const char* name = JS_ToCString(context, this_val);
         const char* event = JS_ToCString(context, argv[0]);
-        // fprintf(stdout, "addEventListener: %s, %s\n", name, event);
+        fprintf(stdout, "addEventListener: %s, %s\n", name, event);
     }
 
     return JS_UNDEFINED;

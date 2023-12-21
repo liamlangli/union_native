@@ -76,7 +76,7 @@ static inline void ui_constraint_scale(ui_constraint *constraint, f32 scale) {
 }
 
 static inline ui_style ui_style_from_hex(u32 color, u32 hover_color, u32 active_color, u32 outline_color) {
-    ui_style style = (ui_style){.line_width = 1.f, .line_feather = 2.f, .color = color, .hover_color = hover_color, .active_color = active_color, .outline_color = outline_color};
+    ui_style style = (ui_style){.line_width = 1.f, .line_feather = .5f, .color = color, .hover_color = hover_color, .active_color = active_color, .outline_color = outline_color};
     return style;
 }
 

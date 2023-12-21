@@ -475,7 +475,7 @@ void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font
         prev_id = g.id;
 
         vertex.xoffset = ((f32)glyph_origin.x - (f32)origin.x) + ((f32)g.xoffset + (f32)kerning) * ratio;
-        vertex.glyph_index = (f32)g.gpu_index;
+        vertex.glyph_index = g.gpu_index;
 
         const u32 offset = ui_layer_write_glyph_vertex(layer, vertex);
         ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_LEFT, offset));

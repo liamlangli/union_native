@@ -45,12 +45,39 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    // printf
+    printf("key_callback: %d, %d, %d, %d\n", key, scancode, action, mods);
 
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
         ui_state_key_release(&state, key);
+    }
+}
+
+static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
+    printf("mouse_button: %d, %d, %d\n", button, action, mods);
+    if (action == GLFW_PRESS) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            state.left_mouse_press = true;
+            state.left_mouse_is_pressed = true;
+        } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            state.right_mouse_press = true;
+            state.right_mouse_is_pressed = true;
+        } else {
+            state.middle_mouse_press = true;
+            state.middle_mouse_is_pressed = true;
+        }
+    } else if (action == GLFW_RELEASE) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            state.left_mouse_release = true;
+            state.left_mouse_is_pressed = false;
+        } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            state.right_mouse_release = true;
+            state.right_mouse_is_pressed = false;
+        } else {
+            state.middle_mouse_release = true;
+            state.middle_mouse_is_pressed = false;
+        }
     }
 }
 
@@ -69,8 +96,6 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 static void renderer_init(GLFWwindow* window, script_context_t *script_context) {
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
-    renderer.window_size.x = (f32)script_context->width;
-    renderer.window_size.y = (f32)script_context->height;
     f32 context_scale_x, context_scale_y;
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
@@ -119,13 +144,8 @@ int main(int argc, char** argv)
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-#ifdef OS_MACOS
     int window_width = 1080;
     int window_height = 720;
-#else
-    int window_width = 1920;
-    int window_height = 1080;
-#endif
 
     window = glfwCreateWindow(window_width, window_height, "union_native", NULL, NULL);
     if (!window)
@@ -138,6 +158,7 @@ int main(int argc, char** argv)
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, size_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button);
     glfwMakeContextCurrent(window);
 
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
@@ -171,19 +192,10 @@ int main(int argc, char** argv)
 
     renderer_init(window, script_context);
 
-    f32 ui_scale = 2.0f;
-    panel_0 = ui_style_from_hex(0x3a3b3cff, 0x404142ff, 0x4c4d4eff, 0xe1e1e1ab);
-    panel_0.line_width *= ui_scale;
-    panel_0.line_feather *= ui_scale;
+    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ab);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
-    panel_1.line_width *= ui_scale;
-    panel_1.line_feather *= ui_scale;
     panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
-    panel_2.line_width *= ui_scale;
-    panel_2.line_feather *= ui_scale;
     panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
-    panel_3.line_width *= ui_scale;
-    panel_3.line_feather *= ui_scale;
     text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff);
 
     glfwSwapInterval(1);
@@ -192,12 +204,18 @@ int main(int argc, char** argv)
     {
         double mouse_x, mouse_y;
         glfwGetCursorPos(window, &mouse_x, &mouse_y);
+        glfwGetWindowSize(window, &width, &height);
         state.window_rect = (ui_rect){
             .x = 0.f,
             .y = 0.f,
-            .w = (f32)script_context->width,
-            .h = (f32)script_context->height
+            .w = (f32)width,
+            .h = (f32)height
         };
+        renderer.window_size.x = (f32)width;
+        renderer.window_size.y = (f32)height;
+        glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
+        script_context->width = width * renderer.window_size.z;
+        script_context->height = height * renderer.window_size.w;
         state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
         ui_state_update(&state);
 

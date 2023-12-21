@@ -21,7 +21,16 @@ if (RENDER_DOC)
     include_directories(${THIRD_PARTY}/renderdoc/include)
 endif()
 
-if (APPLE)
+if (WIN32)
+    include_directories(
+        /usr/include
+        ${THIRD_PARTY}/glfw/include
+        ${THIRD_PARTY}/quickjs/include)
+    link_directories(
+        /usr/lib
+        ${THIRD_PARTY}/quickjs/lib/mingw64)
+    add_definitions(-DOS_WINDOWS)
+elseif (APPLE)
     include_directories(
         ${THIRD_PARTY}/angle/include
         ${THIRD_PARTY}/glfw/include
@@ -38,7 +47,7 @@ if (APPLE)
     if (RENDER_DOC)
         link_directories(${THIRD_PARTY}/renderdoc/lib/macos)
     endif()
-elseif (LINUX)
+else() # LINUX
     include_directories(
         ${THIRD_PARTY}/glfw/include)
 
@@ -51,20 +60,13 @@ elseif (LINUX)
     if (RENDER_DOC)
         link_directories(${THIRD_PARTY}/renderdoc/lib/linux)
     endif()
-else() # OS_WINDOWS
-    include_directories(
-        /usr/include
-        ${THIRD_PARTY}/glfw/include
-        ${THIRD_PARTY}/quickjs/include)
-    link_directories(
-        /usr/lib
-        ${THIRD_PARTY}/quickjs/lib/mingw64)
-    add_definitions(-DOS_WINDOWS)
 endif()
 
 add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES} ${UI_SOURCES})
 
-if(APPLE)
+if (WIN32)
+target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
+elseif (APPLE)
     target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw.3 m dl)
     if (RENDER_DOC)
         target_link_libraries(${PROJECT_NAME} renderdoc)
@@ -78,15 +80,13 @@ if(APPLE)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-elseif(LINUX)
+else()
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
     if (RENDER_DOC)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
             ${THIRD_PARTY}/renderdoc/lib/linux/librenderdoc.so $<TARGET_FILE_DIR:${PROJECT_NAME}>)
     endif()
-else()
-    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

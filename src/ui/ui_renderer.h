@@ -7,7 +7,7 @@
 
 typedef struct ui_layer {
     u32 *index_data;
-    f32 *primitive_data;
+    u32 *primitive_data;
     u32 index_offset, primitive_offset;
     u32 last_index_offset, last_primitive_offset;
 } ui_layer;
@@ -17,14 +17,14 @@ typedef struct ui_renderer_t {
     // cpu side
     ui_layer layers[MAX_UI_LAYERS];
     u32 *index_data;
-    f32 *primitive_data;
+    u32 *primitive_data;
     u32 index_offset, primitive_offset;
     u32 last_index_offset, last_primitive_offset;
     u32 preserved_primitive_offset;
     ui_font system_font;
 
     // gpu side
-    float3 window_size;
+    float4 window_size;
     u32 window_size_location;
     u32 program;
     u32 primitive_data_texture;
@@ -54,7 +54,7 @@ typedef struct ui_glyph_header {
 
 typedef struct ui_glyph_vertex {
     f32 xoffset;
-    f32 glyph_index;
+    u32 glyph_index;
     u32 color;
     f32 scale;
 } ui_glyph_vertex;

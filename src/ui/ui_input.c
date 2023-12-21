@@ -49,5 +49,19 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         }
     }
 
+    ui_style fill_style = style;
+    fill_style.color = hover && state->hover == id && state->active == -1 ? style.hover_color : style.color;
+    fill_round_rect_pre_corner_solid(state->renderer, 0, style, rect, input->radiuses, clip);
+
+    if (state->active == id || state->focus == id || input->outline) {
+        ui_style outline = (ui_style){.color = style.outline_color, .line_width = 2, .line_feather = 1 };
+        stroke_round_rect_pre_corner_solid(state->renderer, 0, style, rect, input->radiuses, clip);
+    }
+
+    ui_label(state, &input->label, text_primary, rect, layer_index, clip);
+    if (state->active == id || state->focus == id) {
+        ui_input_render_cursor(state, input, rect, clip);
+    }
+
     return result;
 }
