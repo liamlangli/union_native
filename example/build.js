@@ -8,11 +8,12 @@ build({
         'src/terrain.ts'
     ],
     bundle: true,
-    sourcemap: "inline",
-    sourcesContent: true,
     outdir: "public",
     treeShaking: true,
     external: ['acorn'],
+    minify: true,
+    minifyIdentifiers: true,
+    minifySyntax: true,
     plugins: [
         glsl({ minify: true, resolveIncludes: true })
     ],

@@ -57,29 +57,36 @@ static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             state.left_mouse_press = true;
             state.left_mouse_is_pressed = true;
+            script_window_mouse_down(0);
         } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             state.right_mouse_press = true;
             state.right_mouse_is_pressed = true;
+            script_window_mouse_down(1);
         } else {
             state.middle_mouse_press = true;
             state.middle_mouse_is_pressed = true;
+            script_window_mouse_down(2);
         }
     } else if (action == GLFW_RELEASE) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             state.left_mouse_release = true;
             state.left_mouse_is_pressed = false;
+            script_window_mouse_up(0);
         } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             state.right_mouse_release = true;
             state.right_mouse_is_pressed = false;
+            script_window_mouse_up(1);
         } else {
             state.middle_mouse_release = true;
             state.middle_mouse_is_pressed = false;
+            script_window_mouse_up(2);
         }
     }
 }
 
 static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
-    printf("set_content_scale: %f, %f\n", xscale, yscale);
+    script_context_t *ctx = script_context_share();
+    ctx->display_ratio = yscale;
 }
 
 static void size_callback(GLFWwindow* window, int width, int height) {
@@ -92,14 +99,12 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 
 static void script_init(GLFWwindow *window, int argc, char **argv) {
     script_context_t *script_context = script_context_share();
-    int width, height, left, top, right, bottom;
     f32 scale_x, scale_y;
-    glfwGetFramebufferSize(window, &width, &height);
+    glfwGetFramebufferSize(window, &script_context->width, &script_context->height);
     glfwGetWindowContentScale(window, &scale_x, &scale_y);
     script_context->display_ratio = scale_y;
     script_module_browser_register(script_context);
     script_module_webgl2_register(script_context);
-    script_window_resize(width, height);
 
     if (argc >= 2) {
         ustring content;
@@ -203,7 +208,6 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
 
     int window_width = 1080;
     int window_height = 720;

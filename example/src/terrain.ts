@@ -7,15 +7,13 @@ const encoder = device.encoder;
 const engine = new Engine();
 const gl = (encoder as WebGLEncoder).gl;
 
-window.addEventListener('resize', () => {
+function resize() {
     device.display_ratio = window.devicePixelRatio;
     device.set_size(window.innerWidth, window.innerHeight);
     console.log('resize ', window.innerWidth, window.innerHeight, window.devicePixelRatio);
-});
+}
 
-window.addEventListener('mousemove', (e) => {
-    console.log('mouse move', e.clientX, e.clientY);
-});
+window.addEventListener('resize', resize);
 
 const action = {
     clear_color: new ColorRGBA(0, 0, 0, 0),
@@ -33,6 +31,7 @@ EventHub.on(GlobalEvent.MouseDrag, (payload) => {
     const delta = payload.delta;
     control.rotate_horizontal(delta.x / window.innerWidth);
     control.rotate_vertical(delta.y / window.innerHeight);
+    console.log(`mouse drag ${delta.x} ${delta.y}`);
 });
 
 EventHub.on(GlobalEvent.MouseWheel, (payload) => {

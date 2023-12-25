@@ -14,7 +14,7 @@ typedef struct js_scope {
 
 typedef struct js_listener_hm {
     const char *key;
-    js_scope value;
+    js_scope *value;
 } js_listener_hm;
 
 typedef struct script_context_t {
@@ -34,6 +34,9 @@ typedef struct script_context_t {
 
 script_context_t* script_context_share(void);
 void script_context_destroy();
+
+void script_value_ref(JSValue value);
+void script_value_unref(JSValue value);
 
 void script_module_browser_register();
 int script_eval( ustring source, ustring filename);
