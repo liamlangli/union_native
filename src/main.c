@@ -134,12 +134,10 @@ static void renderer_init(GLFWwindow* window) {
 }
 
 static void render_location_bar() {
-    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
-    // ui_label(&state, &label, text_style, state.window_rect, 0, 0);
-    stroke_round_rect_pre_corner_solid(&renderer, 0, text_style, rect, (float4){8.f, 8.f, 8.f, 8.f}, 0);
-    // if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-    //     printf("search_input: %s\n", search_input.label.text.data);
-    // }
+    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
+    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
+        printf("search_input: %s\n", search_input.label.text.data);
+    }
     ui_renderer_render(&renderer);
 }
 
@@ -149,23 +147,19 @@ static void state_update(GLFWwindow *window) {
 
     script_context_t *ctx = script_context_share();
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
-    glfwGetWindowSize(window, &width, &height);
-    state.window_rect = (ui_rect){
-        .x = 0.f,
-        .y = 0.f,
-        .w = (f32)width,
-        .h = (f32)height
-    };
-    renderer.window_size.x = (f32)width;
-    renderer.window_size.y = (f32)height;
-    glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
-
-    if (ctx->width != width || ctx->height != height) {
-        script_window_resize(width, height);
-    }
 
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
     if (ctx->framebuffer_width != framebuffer_width || ctx->framebuffer_height != framebuffer_height) {
+        glfwGetWindowSize(window, &width, &height);
+        renderer.window_size.x = (f32)width;
+        renderer.window_size.y = (f32)height;
+        state.window_rect = (ui_rect){
+            .x = 0.f,
+            .y = 0.f,
+            .w = (f32)width,
+            .h = (f32)height
+        };
+        glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
         script_window_resize(width, height);
         ctx->display_ratio = (f64)framebuffer_height / (f64)height;
     }
@@ -232,7 +226,7 @@ int main(int argc, char** argv)
     script_init(window, argc, argv);
     renderer_init(window);
 
-    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ff);
+    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ab);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
     panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
     panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);

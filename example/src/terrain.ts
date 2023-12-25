@@ -2,18 +2,10 @@ import { Camera, ColorRGBA, DepthCompareFunc, Engine, EngineEvent, EventHub, Flo
 import terrain_frag from '../public/shader/terrain.frag';
 import terrain_vert from '../public/shader/terrain.vert';
 
-const device = new GFXDevice({display_ratio: window.devicePixelRatio });
+const device = new GFXDevice({display_ratio: window.devicePixelRatio});
 const encoder = device.encoder;
 const engine = new Engine();
 const gl = (encoder as WebGLEncoder).gl;
-
-function resize() {
-    device.display_ratio = window.devicePixelRatio;
-    device.set_size(window.innerWidth, window.innerHeight);
-    
-}
-
-window.addEventListener('resize', resize);
 
 const action = {
     clear_color: new ColorRGBA(0, 0, 0, 0),
@@ -35,6 +27,12 @@ EventHub.on(GlobalEvent.MouseDrag, (payload) => {
 
 EventHub.on(GlobalEvent.MouseWheel, (payload) => {
     control.zoom(payload.delta_y > 0 ? 0.9 : 1.1);
+});
+
+window.addEventListener('resize', () => {
+    device.display_ratio = window.devicePixelRatio;
+    device.set_size(window.innerWidth, window.innerHeight);
+    camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 100);
 });
 
 const scale = new Float3(2, 2, 2);

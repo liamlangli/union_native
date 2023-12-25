@@ -204,10 +204,11 @@ void ui_renderer_render(ui_renderer_t* renderer)
     if (renderer->last_index_offset <= 0) return;
 
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, renderer->window_size.x * renderer->window_size.z, renderer->window_size.y * renderer->window_size.w);
     glUseProgram(renderer->program);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_ALWAYS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
