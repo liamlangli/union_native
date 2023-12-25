@@ -33,7 +33,7 @@ bool ui_state_update(ui_state_t *state)
     state->next_hover_layer_index = -1;
 
     ui_state_reset_mouse_state(state);
-    for (int i = 0, l = hmlen(state->key_press); i < l; i++) {
+    for (int i = 0, l = (int)hmlen(state->key_press); i < l; i++) {
         hmdel(state->key_press, state->key_press[i].key);
     }
 

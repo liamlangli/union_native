@@ -32,7 +32,7 @@ ustring io_read_file(ustring path) {
     }
 
     fseek(file, 0, SEEK_END);
-    u32 size = ftell(file);
+    size_t size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     char *buffer = malloc(size + 1);
@@ -132,5 +132,5 @@ u8* io_load_image(ustring path, int* width, int* height, int *channel, int reque
 }
 
 u8* io_load_image_memory(u8* data, size_t length, int* width, int* height, int *channel, int request_channel) {
-    return stbi_load_from_memory(data, length, width, height, channel, request_channel);
+    return stbi_load_from_memory(data, (int)length, width, height, channel, request_channel);
 }

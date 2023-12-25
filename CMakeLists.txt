@@ -9,9 +9,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(THIRD_PARTY ${CMAKE_SOURCE_DIR}/third_party)
 
+
+# collect source files
 aux_source_directory(src/foundation FOUNDATION_SOURCES)
 aux_source_directory(src/ui UI_SOURCES)
 set(MAIN_ENTRY src/main.c)
+
+# source groups
+source_group(foundation FILES ${FOUNDATION_SOURCES})
+source_group(ui FILES ${UI_SOURCES})
+source_group(main FILES ${MAIN_ENTRY})
 
 include_directories(src)
 include_directories(${THIRD_PARTY}/stb)
@@ -67,7 +74,7 @@ add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES} ${UI_SOURCES}
 if (WIN32)
 target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} c++_chrome chrome_zlib EGL GLESv2 third_party_abseil-cpp_absl quickjs glfw.3 m dl)
+    target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl)
     if (RENDER_DOC)
         target_link_libraries(${PROJECT_NAME} renderdoc)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -92,3 +99,7 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/font $<TARGET_FILE_DIR:${PROJECT_NAME}>/font)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/example/public $<TARGET_FILE_DIR:${PROJECT_NAME}>/public)

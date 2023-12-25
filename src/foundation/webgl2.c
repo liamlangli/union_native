@@ -338,7 +338,7 @@ static JSValue js_gl_uniform1fv(JSContext *ctx, JSValueConst this_val, int argc,
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform1fv(location, length >> 2, (GLfloat*)data_buffer);
+    glUniform1fv(location, (GLsizei)length >> 2, (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -348,7 +348,7 @@ static JSValue js_gl_uniform2fv(JSContext *ctx, JSValueConst this_val, int argc,
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform2fv(location, (length >> 3), (GLfloat*)data_buffer);
+    glUniform2fv(location, (GLsizei)(length >> 3), (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -358,7 +358,7 @@ static JSValue js_gl_uniform3fv(JSContext *ctx, JSValueConst this_val, int argc,
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform3fv(location, (length >> 2) / 3, (GLfloat*)data_buffer);
+    glUniform3fv(location, (GLsizei)(length >> 2) / 3, (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -368,7 +368,7 @@ static JSValue js_gl_uniform4fv(JSContext *ctx, JSValueConst this_val, int argc,
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform4fv(location, length >> 4, (GLfloat*)data_buffer);
+    glUniform4fv(location, (GLsizei)length >> 4, (GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -398,7 +398,7 @@ static JSValue js_gl_uniform_matrix_4fv(JSContext *ctx, JSValueConst this_val, i
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniformMatrix4fv(location, length >> 6, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
+    glUniformMatrix4fv(location, (GLsizei)length >> 6, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -408,7 +408,7 @@ static JSValue js_gl_uniform_matrix_3fv(JSContext *ctx, JSValueConst this_val, i
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniformMatrix3fv(location, (length >> 2) / 9, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
+    glUniformMatrix3fv(location, (GLsizei)(length >> 2) / 9, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
     return JS_UNDEFINED;
 }
 

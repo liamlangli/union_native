@@ -67,8 +67,7 @@ JSValue js_window_remove_event_listener(JSContext *context, JSValueConst this_va
         JSValue handler = argv[1];
         assert(JS_IsFunction(context, handler));
 
-        int len = arrlen(scopes);
-        for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+        for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
             js_scope scope = scopes[i];
             if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
                 arrdel(scopes, i);
@@ -111,8 +110,7 @@ JSValue js_document_remove_event_listener(JSContext *context, JSValueConst this_
         JSValue handler = argv[1];
         assert(JS_IsFunction(context, handler));
 
-        int len = arrlen(scopes);
-        for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+        for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
             js_scope scope = scopes[i];
             if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
                 arrdel(scopes, i);
@@ -155,8 +153,8 @@ JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst this_va
         JSValue handler = argv[1];
         assert(JS_IsFunction(context, handler));
 
-        int len = arrlen(scopes);
-        for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+
+        for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
             js_scope scope = scopes[i];
             if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
                 arrdel(scopes, i);
@@ -416,7 +414,7 @@ void script_window_resize(int width, int height) {
     context->height = height;
     context->framebuffer_width = width * context->display_ratio;
     context->framebuffer_height = height * context->display_ratio;
-    int i = shgeti(context->window_event_listeners, resize_event);
+    int i = (int)shgeti(context->window_event_listeners, resize_event);
     if (i == -1) return;
 
     JSValue event = JS_NewObject(ctx);
@@ -424,7 +422,7 @@ void script_window_resize(int width, int height) {
     JS_SetPropertyStr(ctx, event, "width", JS_NewInt32(ctx, width));
     JS_SetPropertyStr(ctx, event, "height", JS_NewInt32(ctx, height));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_IsFunction(ctx, scope.func)) JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -437,7 +435,7 @@ void script_window_mouse_move(double x, double y) {
     context->mouse_x = x;
     context->mouse_y = y;
 
-    int i = shgeti(shared_context.window_event_listeners, mousemove_event);
+    int i = (int)shgeti(shared_context.window_event_listeners, mousemove_event);
     if (i == -1) return;
 
     JSValue event = JS_NewObject(ctx);
@@ -445,7 +443,7 @@ void script_window_mouse_move(double x, double y) {
     JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, x));
     JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, y));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_IsFunction(ctx, scope.func)) JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -455,7 +453,7 @@ void script_window_mouse_move(double x, double y) {
 void script_window_mouse_down(int button) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
-    int i = shgeti(shared_context.window_event_listeners, mousedown_event);
+    int i = (int)shgeti(shared_context.window_event_listeners, mousedown_event);
     if (i == -1) return;
 
     JSValue event = JS_NewObject(ctx);
@@ -464,7 +462,7 @@ void script_window_mouse_down(int button) {
     JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
     JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_IsFunction(ctx, scope.func)) JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -474,7 +472,7 @@ void script_window_mouse_down(int button) {
 void script_window_mouse_up(int button) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
-    int i = shgeti(shared_context.window_event_listeners, mouseup_event);
+    int i = (int)shgeti(shared_context.window_event_listeners, mouseup_event);
     if (i == -1) return;
 
     JSValue event = JS_NewObject(ctx);
@@ -483,7 +481,7 @@ void script_window_mouse_up(int button) {
     JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
     JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -493,7 +491,7 @@ void script_window_mouse_up(int button) {
 void script_window_mouse_scroll(double x, double y) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
-    int i = shgeti(shared_context.window_event_listeners, wheel_event);
+    int i = (int)shgeti(shared_context.window_event_listeners, wheel_event);
     if (i == -1) return;
 
     JSValue event = JS_NewObject(ctx);
@@ -501,7 +499,7 @@ void script_window_mouse_scroll(double x, double y) {
     JS_SetPropertyStr(ctx, event, "deltaX", JS_NewFloat64(ctx, x));
     JS_SetPropertyStr(ctx, event, "deltaY", JS_NewFloat64(ctx, y));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -511,14 +509,14 @@ void script_window_mouse_scroll(double x, double y) {
 void script_document_key_down(int key) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
-    int i = shgeti(shared_context.document_event_listeners, keydown_event);
+    int i = (int)shgeti(shared_context.document_event_listeners, keydown_event);
     if (i != -1) return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keydown_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -528,14 +526,14 @@ void script_document_key_down(int key) {
 void script_document_key_up(int key) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
-    int i = shgeti(shared_context.document_event_listeners, keyup_event);
+    int i = (int)shgeti(shared_context.document_event_listeners, keyup_event);
     if (i != -1) return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keyup_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
     js_scope* scopes = shared_context.window_event_listeners[i].value;
-    for (int i = 0, l = arrlen(scopes); i < l; ++i) {
+    for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }

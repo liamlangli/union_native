@@ -107,25 +107,18 @@ static ustring script_init(GLFWwindow *window, int argc, char **argv) {
     script_module_browser_register();
     script_module_webgl2_register();
 
-    ustring path;
-    if (argc >= 2) {
-        ustring content;
-        ustring source = ustring_str(argv[1]);
-        url_t url = url_parse(source);
-        if (url.valid) {
-            printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-            content = io_http_get(url);
-        } else {
-            printf("load file: %s\n", source.data);
-            content = io_read_file(source);
-        }
-        script_eval(content, source);
-        empty_launch = false;
-        path = source;
+    ustring path = argc >= 2 ? ustring_str(argv[1]) : ustring_str("public/terrain.js");
+    ustring content;
+    url_t url = url_parse(path);
+    if (url.valid) {
+        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
+        content = io_http_get(url);
     } else {
-        printf("Usage: union_native [file]\n");
-        path = ustring_str("");
+        printf("load file: %s\n", path.data);
+        content = io_read_file(path);
     }
+    script_eval(content, path);
+    empty_launch = false;
     return path;
 }
 

@@ -25,7 +25,7 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
     font->gpu_font_start = offset >> 2;
     const u32 glyph_stride = 8;
     const u32 font_stride = 8;
-    const u32 glyph_count = hmlen(font->char_map);
+    const u32 glyph_count = (int)hmlen(font->char_map);
     const u32 primitive_end = offset + font_stride + glyph_count * glyph_stride;
 
     renderer->preserved_primitive_offset = primitive_end;

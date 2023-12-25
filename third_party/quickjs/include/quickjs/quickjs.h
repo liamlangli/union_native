@@ -521,7 +521,7 @@ static js_force_inline JSValue JS_NewInt64(JSContext *ctx, int64_t val)
 {
     JSValue v;
     if (val == (int32_t)val) {
-        v = JS_NewInt32(ctx, val);
+        v = JS_NewInt32(ctx, (int)val);
     } else {
         v = __JS_NewFloat64(ctx, val);
     }
@@ -604,12 +604,12 @@ static inline JS_BOOL JS_IsUndefined(JSValueConst v)
 
 static inline JS_BOOL JS_IsException(JSValueConst v)
 {
-    return js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_EXCEPTION);
+    return (JS_BOOL)js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_EXCEPTION);
 }
 
 static inline JS_BOOL JS_IsUninitialized(JSValueConst v)
 {
-    return js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_UNINITIALIZED);
+    return (JS_BOOL)js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_UNINITIALIZED);
 }
 
 static inline JS_BOOL JS_IsString(JSValueConst v)
