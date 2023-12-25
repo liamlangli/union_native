@@ -12,7 +12,7 @@ static const char* resize_event = "resize";
 static const char* mousedown_event = "mousedown";
 static const char* mouseup_event = "mouseup";
 static const char* mousemove_event = "mousemove";
-static const char* wheel_event = "wheel";
+static const char* wheel_event = "mousewheel";
 static const char* keydown_event = "keydown";
 static const char* keyup_event = "keyup";
 

@@ -1,4 +1,4 @@
-import { Camera, ColorRGBA, CullMode, DepthCompareFunc, Engine, EngineEvent, EventHub, Float3, GFXDevice, GPUAction, GPUActionType, GlobalEvent, Mat4, MaterialBlock, QUATERNION_IDENTITY, SphericalControl, UniformType, WebGLEncoder, ZERO, create_pipeline } from "@union_native/core";
+import { Camera, ColorRGBA, DepthCompareFunc, Engine, EngineEvent, EventHub, Float3, GFXDevice, GPUAction, GPUActionType, GlobalEvent, Mat4, MaterialBlock, QUATERNION_IDENTITY, SphericalControl, UniformType, WebGLEncoder, ZERO, create_pipeline } from "@union_native/core";
 import terrain_frag from '../public/shader/terrain.frag';
 import terrain_vert from '../public/shader/terrain.vert';
 
@@ -10,7 +10,6 @@ const gl = (encoder as WebGLEncoder).gl;
 function resize() {
     device.display_ratio = window.devicePixelRatio;
     device.set_size(window.innerWidth, window.innerHeight);
-    console.log('resize ', window.innerWidth, window.innerHeight, window.devicePixelRatio);
 }
 
 window.addEventListener('resize', resize);
@@ -31,7 +30,6 @@ EventHub.on(GlobalEvent.MouseDrag, (payload) => {
     const delta = payload.delta;
     control.rotate_horizontal(delta.x / window.innerWidth);
     control.rotate_vertical(delta.y / window.innerHeight);
-    console.log(`mouse drag ${delta.x} ${delta.y}`);
 });
 
 EventHub.on(GlobalEvent.MouseWheel, (payload) => {
@@ -51,8 +49,8 @@ const pipeline = create_pipeline({
         { name: 'frame_block.view_matrix', type: UniformType.Mat4 },
         { name: 'frame_block.projection_matrix', type: UniformType.Mat4 }
     ],
-    cull_mode: CullMode.None,
-    depth_compare_func: DepthCompareFunc.Always
+    depth_write: true,
+    depth_compare_func: DepthCompareFunc.LessEqual
 })!;
 
 function frame() {

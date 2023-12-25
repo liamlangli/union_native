@@ -92,7 +92,7 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32UI, texture_width, texture_height, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, texture_width, texture_height, 0, GL_RGBA, GL_FLOAT, NULL);
     renderer->primitive_data_texture = primitive_buffer_map;
     renderer->primitive_data_texture_width = texture_width;
 
@@ -103,7 +103,7 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // glTexParameter
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32UI, 1024, 1024, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     renderer->icon_texture = icon_texture;
 
     GLuint index_buffer;
@@ -203,15 +203,15 @@ void ui_renderer_render(ui_renderer_t* renderer)
     ui_renderer_merge_layers(renderer);
     if (renderer->last_index_offset <= 0) return;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, renderer->window_size.x * renderer->window_size.z, renderer->window_size.y * renderer->window_size.w);
     glUseProgram(renderer->program);
     glDisable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_ALWAYS);
     glDisable(GL_CULL_FACE);
-    // glFrontFace(GL_CCW);
-    glCullFace(GL_FRONT);
     glEnable(GL_BLEND);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -223,7 +223,7 @@ void ui_renderer_render(ui_renderer_t* renderer)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
     GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA_INTEGER, GL_UNSIGNED_INT, renderer->primitive_data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT, renderer->primitive_data);
     glUniform1i(renderer->primitive_data_texture_location, 0);
 
     glActiveTexture(GL_TEXTURE1);

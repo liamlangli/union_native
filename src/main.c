@@ -136,7 +136,7 @@ static void renderer_init(GLFWwindow* window) {
 static void render_location_bar() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
     // ui_label(&state, &label, text_style, state.window_rect, 0, 0);
-    stroke_round_rect_pre_corner_solid(&renderer, 0, panel_0, rect, (float4){8.f, 8.f, 8.f, 8.f}, 0);
+    stroke_round_rect_pre_corner_solid(&renderer, 0, text_style, rect, (float4){8.f, 8.f, 8.f, 8.f}, 0);
     // if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
     //     printf("search_input: %s\n", search_input.label.text.data);
     // }
@@ -207,7 +207,6 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     int window_width = 1080;
     int window_height = 720;
@@ -240,13 +239,14 @@ int main(int argc, char** argv)
     text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff);
 
     glfwSwapInterval(1);
+    glFrontFace(GL_CCW);
 
     while (!glfwWindowShouldClose(window))
     {
         state_update(window);
         if (empty_launch) {
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         } else {
             script_frame_tick();
         }

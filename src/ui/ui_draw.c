@@ -204,7 +204,7 @@ void stroke_polyline(ui_renderer_t *renderer, u32 layer_index, bool dash, f32 da
     int next_index = -1;
     ui_layer *layer = &renderer->layers[layer_index];
     float2 *points = polyline.points;
-    u32 point_count = polyline.point_count;
+    u32 point_count = polyline.point_count + (polyline.closed ? 1 : 0);
     u32 clip = polyline.clip >> 2;
     u32 stride = dash ? 8 : 4;
     bool closed = polyline.closed;
@@ -325,7 +325,7 @@ void stroke_polyline(ui_renderer_t *renderer, u32 layer_index, bool dash, f32 da
             ui_layer_write_triangle_vertex(layer, vertex, dash);
 
             edge_t edge = (edge_t){ offset, offset + stride, offset + stride * 2, offset + stride * 3 };
-            if (point_index != -1) {
+            if (i) {
                 const u32 merge[8] =  { last_edge.e[0], last_edge.e[1], last_edge.e[2], last_edge.e[3], edge.e[0], edge.e[1], edge.e[2], edge.e[3] };
                 const u32 tri[18] = { 0U, 4, 5, 0U, 5, 1, 1U, 5, 6, 1U, 6, 2, 2U, 6, 7, 2U, 7, 3 };
                 for (int i = 0; i < 18; ++i) {
