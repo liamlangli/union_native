@@ -83,14 +83,43 @@ static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
 }
 
 static void size_callback(GLFWwindow* window, int width, int height) {
-    script_window_resize(script_context_share(), width, height);
+    script_window_resize( width, height);
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    // printf("scroll_callback: %f, %f\n", xoffset, yoffset);
+    script_window_mouse_scroll(xoffset, yoffset);
 }
 
-static void renderer_init(GLFWwindow* window, script_context_t *script_context) {
+static void script_init(GLFWwindow *window, int argc, char **argv) {
+    script_context_t *script_context = script_context_share();
+    int width, height, left, top, right, bottom;
+    f32 scale_x, scale_y;
+    glfwGetFramebufferSize(window, &width, &height);
+    glfwGetWindowContentScale(window, &scale_x, &scale_y);
+    script_context->display_ratio = scale_y;
+    script_module_browser_register(script_context);
+    script_module_webgl2_register(script_context);
+    script_window_resize(width, height);
+
+    if (argc >= 2) {
+        ustring content;
+        ustring source = ustring_str(argv[1]);
+        url_t url = url_parse(source);
+        if (url.valid) {
+            printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
+            content = io_http_get(url);
+        } else {
+            printf("load file: %s\n", source.data);
+            content = io_read_file(source);
+        }
+        script_eval(content, source);
+        empty_launch = false;
+    } else {
+        printf("Usage: union_native [file]\n");
+    }
+}
+
+static void renderer_init(GLFWwindow* window) {
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
     f32 context_scale_x, context_scale_y;
@@ -108,6 +137,40 @@ static void render_location_bar() {
     // }
     ui_renderer_render(&renderer);
 }
+
+static void state_update(GLFWwindow *window) {
+    int width, height, framebuffer_width, framebuffer_height;
+    double mouse_x, mouse_y;
+
+    script_context_t *ctx = script_context_share();
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    glfwGetWindowSize(window, &width, &height);
+    state.window_rect = (ui_rect){
+        .x = 0.f,
+        .y = 0.f,
+        .w = (f32)width,
+        .h = (f32)height
+    };
+    renderer.window_size.x = (f32)width;
+    renderer.window_size.y = (f32)height;
+    glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
+
+    if (ctx->width != width || ctx->height != height) {
+        script_window_resize(width, height);
+    }
+
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+    if (ctx->framebuffer_width != framebuffer_width || ctx->framebuffer_height != framebuffer_height) {
+        script_window_resize(width, height);
+        ctx->display_ratio = (f64)framebuffer_height / (f64)height;
+    }
+
+    if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
+        script_window_mouse_move(mouse_x, mouse_y);
+        state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
+    }
+    ui_state_update(&state);
+} 
 
 int main(int argc, char** argv)
 {
@@ -163,32 +226,8 @@ int main(int argc, char** argv)
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-
-    script_context_t *script_context = script_context_share();
-    int width, height, left, top, right, bottom;
-    glfwGetFramebufferSize(window, &width, &height);
-    script_module_browser_register(script_context);
-    script_module_webgl2_register(script_context);
-    script_window_resize(script_context, width, height);
-
-    if (argc >= 2) {
-        ustring content;
-        ustring source = ustring_str(argv[1]);
-        url_t url = url_parse(source);
-        if (url.valid) {
-            printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-            content = io_http_get(url);
-        } else {
-            printf("load file: %s\n", source.data);
-            content = io_read_file(source);
-        }
-        script_eval(script_context, content, source);
-        empty_launch = false;
-    } else {
-        printf("Usage: union_native [file]\n");
-    }
-
-    renderer_init(window, script_context);
+    script_init(window, argc, argv);
+    renderer_init(window);
 
     panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ff);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
@@ -200,28 +239,12 @@ int main(int argc, char** argv)
 
     while (!glfwWindowShouldClose(window))
     {
-        double mouse_x, mouse_y;
-        glfwGetCursorPos(window, &mouse_x, &mouse_y);
-        glfwGetWindowSize(window, &width, &height);
-        state.window_rect = (ui_rect){
-            .x = 0.f,
-            .y = 0.f,
-            .w = (f32)width,
-            .h = (f32)height
-        };
-        renderer.window_size.x = (f32)width;
-        renderer.window_size.y = (f32)height;
-        glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
-        script_context->width = width * renderer.window_size.z;
-        script_context->height = height * renderer.window_size.w;
-        state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
-        ui_state_update(&state);
-
+        state_update(window);
         if (empty_launch) {
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
         } else {
-            script_frame_tick(script_context);
+            script_frame_tick();
         }
 
         render_location_bar();
@@ -229,7 +252,7 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
-    script_context_destroy(script_context);
+    script_context_destroy();
     ui_renderer_free(&renderer);
 
     glfwDestroyWindow(window);

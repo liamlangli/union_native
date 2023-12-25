@@ -2,10 +2,20 @@ import { Camera, ColorRGBA, CullMode, DepthCompareFunc, Engine, EngineEvent, Eve
 import terrain_frag from '../public/shader/terrain.frag';
 import terrain_vert from '../public/shader/terrain.vert';
 
-const device = new GFXDevice({display_ratio: 1});
+const device = new GFXDevice({display_ratio: window.devicePixelRatio });
 const encoder = device.encoder;
 const engine = new Engine();
 const gl = (encoder as WebGLEncoder).gl;
+
+window.addEventListener('resize', () => {
+    device.display_ratio = window.devicePixelRatio;
+    device.set_size(window.innerWidth, window.innerHeight);
+    console.log('resize ', window.innerWidth, window.innerHeight, window.devicePixelRatio);
+});
+
+window.addEventListener('mousemove', (e) => {
+    console.log('mouse move', e.clientX, e.clientY);
+});
 
 const action = {
     clear_color: new ColorRGBA(0, 0, 0, 0),
