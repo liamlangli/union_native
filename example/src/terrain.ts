@@ -10,6 +10,7 @@ const gl = (encoder as WebGLEncoder).gl;
 function resize() {
     device.display_ratio = window.devicePixelRatio;
     device.set_size(window.innerWidth, window.innerHeight);
+    
 }
 
 window.addEventListener('resize', resize);
@@ -64,5 +65,5 @@ function frame() {
     encoder.commit();
 }
 
-EventHub.on(EngineEvent.Frame, frame);
+EventHub.on(EngineEvent.AfterTick, frame);
 engine.start();

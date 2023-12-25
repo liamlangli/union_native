@@ -103,8 +103,8 @@ static void script_init(GLFWwindow *window, int argc, char **argv) {
     glfwGetFramebufferSize(window, &script_context->width, &script_context->height);
     glfwGetWindowContentScale(window, &scale_x, &scale_y);
     script_context->display_ratio = scale_y;
-    script_module_browser_register(script_context);
-    script_module_webgl2_register(script_context);
+    script_module_browser_register();
+    script_module_webgl2_register();
 
     if (argc >= 2) {
         ustring content;

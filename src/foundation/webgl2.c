@@ -771,9 +771,9 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-void script_module_webgl2_register(script_context_t *context)
+void script_module_webgl2_register()
 {
-    JSContext *ctx = context->context;
+    JSContext *ctx = script_context_share()->context;
     JSValue global = JS_GetGlobalObject(ctx);
     static JSCFunctionListEntry gl_proto_funcs[] = {
         JS_CFUNC_DEF("getExtension", 1, js_gl_get_extension),
