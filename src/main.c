@@ -26,6 +26,7 @@
 static ui_renderer_t renderer;
 static ui_state_t state;
 static ui_input_t search_input;
+static ui_label_t copyright;
 
 static ui_style panel_0;
 static ui_style panel_1;
@@ -97,7 +98,7 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
     script_window_mouse_scroll(xoffset, yoffset);
 }
 
-static void script_init(GLFWwindow *window, int argc, char **argv) {
+static ustring script_init(GLFWwindow *window, int argc, char **argv) {
     script_context_t *script_context = script_context_share();
     f32 scale_x, scale_y;
     glfwGetFramebufferSize(window, &script_context->width, &script_context->height);
@@ -106,6 +107,7 @@ static void script_init(GLFWwindow *window, int argc, char **argv) {
     script_module_browser_register();
     script_module_webgl2_register();
 
+    ustring path;
     if (argc >= 2) {
         ustring content;
         ustring source = ustring_str(argv[1]);
@@ -119,18 +121,23 @@ static void script_init(GLFWwindow *window, int argc, char **argv) {
         }
         script_eval(content, source);
         empty_launch = false;
+        path = source;
     } else {
         printf("Usage: union_native [file]\n");
+        path = ustring_str("");
     }
+    return path;
 }
 
-static void renderer_init(GLFWwindow* window) {
+static void renderer_init(GLFWwindow* window, ustring path) {
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
     f32 context_scale_x, context_scale_y;
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
-    ui_input_init(&search_input, ustring_STR(""));
+    ui_input_init(&search_input, path);
+    ui_label_init(&copyright, ustring_STR("@2023 union native"));
+    copyright.element.constraint.alignment = CENTER;
 }
 
 static void render_location_bar() {
@@ -138,6 +145,9 @@ static void render_location_bar() {
     if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
         printf("search_input: %s\n", search_input.label.text.data);
     }
+
+    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = state.window_rect.h}, 8.0f, 8.0f);
+    ui_label(&state, &search_input.label, text_style, rect, 0, 0);
     ui_renderer_render(&renderer);
 }
 
@@ -223,8 +233,8 @@ int main(int argc, char** argv)
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-    script_init(window, argc, argv);
-    renderer_init(window);
+    ustring path = script_init(window, argc, argv);
+    renderer_init(window, path);
 
     panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ab);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);

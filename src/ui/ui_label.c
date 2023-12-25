@@ -14,7 +14,7 @@ void ui_label_init(ui_label_t *label, ustring text) {
 
 void ui_label_update_text(ui_label_t *label, ustring text) {
     ui_font *sys_font = ui_font_system_font();
-    ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
+    label->text_size = ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
     label->text = text;
 }
 
