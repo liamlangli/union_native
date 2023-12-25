@@ -12,7 +12,8 @@
             "args": [
                 "example/public/terrain.js"
             ],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "relativePathBase": "${workspaceFolder}"
         }
     ]
 }

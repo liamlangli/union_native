@@ -206,7 +206,7 @@ void ui_renderer_render(ui_renderer_t* renderer)
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(renderer->program);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_BLEND);

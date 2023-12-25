@@ -67,16 +67,10 @@ static inline u32 ui_rect_clip(ui_rect rect, ui_rect clip) {
 void fill_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, u32 clip);
 void fill_round_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, f32 radius, u32 clip, u32 triangle_type);
 void fill_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip, u32 triangle_type);
-static inline void fill_round_rect_pre_corner_solid(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip) {
-    fill_round_rect_pre_corner(renderer, layer_index, style, rect, radiusese, clip, TRIANGLE_SOLID);
-}
 
 void stroke_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, u32 clip);
 void stroke_round_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, f32 radius, u32 clip, u32 triangle_type);
 void stroke_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip, u32 triangle_type);
-static inline void stroke_round_rect_pre_corner_solid(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip) {
-    stroke_round_rect_pre_corner(renderer, layer_index, style, rect, radiusese, clip, TRIANGLE_SOLID);
-}
 
 
 void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font *font, ustring text, u32 clip, f32 scale, ui_style style);

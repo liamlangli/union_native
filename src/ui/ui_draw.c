@@ -176,16 +176,16 @@ void fill_convex_polyline(ui_renderer_t *renderer, u32 layer_index, u32 type) {
         u32 right_offset = offset + ni * 2 * stride;
 
         ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset));
-        ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, right_offset));
-        ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset + stride));
         ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset + stride));
         ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, right_offset));
+        ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset + stride));
         ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, right_offset + stride));
+        ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, right_offset));
 
         if (left_offset != offset && right_offset != offset) {
             ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, offset + stride));
-            ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset + stride));
             ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, right_offset + stride));
+            ui_layer_write_index(layer, encode_vertex_id(primitive_type, 0, left_offset + stride));
         }
     }
 }
@@ -195,9 +195,6 @@ typedef struct edge_t {
 } edge_t;
 
 static edge_t last_edge = {0};
-static u32 edge_index[] = {
-    0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3
-};
 
 void stroke_polyline(ui_renderer_t *renderer, u32 layer_index, bool dash, f32 dash_offset) {
     int prev_index = -1;
@@ -219,6 +216,7 @@ void stroke_polyline(ui_renderer_t *renderer, u32 layer_index, bool dash, f32 da
     u32 transparent_color = solid_color & 0xffffff00;
     ui_triangle_vertex vertex;
     if (dash) vertex.offset = dash_offset;
+    vertex.clip = clip >> 2;
 
     for (int i = 0; i < point_count; ++i) {
         int point_index = i % polyline.point_count;
@@ -408,11 +406,11 @@ void stroke_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_re
     u32 type = UI_PRIMITIVE_TYPE_RECTANGLE;
     u32 offset = ui_layer_write_rect_vertex(&renderer->layers[layer_index], vertex);
     ui_layer_write_index(layer, encode_vertex_id(type, TOP_LEFT, offset));
-    ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
-    ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
+    ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_RIGHT, offset));
+    ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
 }
 
 void stroke_round_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, f32 radius, u32 clip, u32 triangle_type) {
@@ -479,11 +477,11 @@ void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font
 
         const u32 offset = ui_layer_write_glyph_vertex(layer, vertex);
         ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_LEFT, offset));
-        ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_RIGHT, offset));
-        ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_LEFT, offset));
         ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_LEFT, offset));
         ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_RIGHT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_LEFT, offset));
         ui_layer_write_index(layer, encode_glyph_id(header_offset, BOTTOM_RIGHT, offset));
+        ui_layer_write_index(layer, encode_glyph_id(header_offset, TOP_RIGHT, offset));
 
         glyph_origin.x += (g.xadvance + kerning) * ratio;
         header_offset++;

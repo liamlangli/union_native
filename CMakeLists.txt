@@ -51,9 +51,7 @@ elseif (APPLE)
     )
     add_definitions(-DOS_MACOS)
     add_definitions(-DGL_SILENCE_DEPRECATION)
-    if (RENDER_DOC)
-        link_directories(${THIRD_PARTY}/renderdoc/lib/macos)
-    endif()
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 else() # LINUX
     include_directories(
         ${THIRD_PARTY}/glfw/include)
@@ -83,10 +81,10 @@ elseif (APPLE)
     endif()
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+        ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+        ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
 else()
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
     if (RENDER_DOC)

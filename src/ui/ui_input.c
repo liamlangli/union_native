@@ -51,11 +51,11 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
 
     ui_style fill_style = style;
     fill_style.color = hover && state->hover == id && state->active == -1 ? style.hover_color : style.color;
-    fill_round_rect_pre_corner_solid(state->renderer, 0, fill_style, rect, input->radiuses, clip);
+    fill_round_rect_pre_corner(state->renderer, 0, fill_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
 
     if (state->active == id || state->focus == id || input->outline) {
         ui_style outline_style = (ui_style){ .color = style.outline_color, .line_width = 2.f, .line_feather = 1.f };
-        stroke_round_rect_pre_corner_solid(state->renderer, 0, outline_style, rect, input->radiuses, clip);
+        stroke_round_rect_pre_corner(state->renderer, 0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
     }
 
     ui_label(state, &input->label, text_primary, rect, layer_index, clip);

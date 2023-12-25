@@ -36,8 +36,7 @@ static ui_style text_style;
 
 static bool empty_launch = true;
 
-static void error_callback(int error, const char* description)
-{
+static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
  
@@ -135,9 +134,9 @@ static void renderer_init(GLFWwindow* window, ustring path) {
 
 static void render_location_bar() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-        printf("search_input: %s\n", search_input.label.text.data);
-    }
+    // if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
+    //     printf("search_input: %s\n", search_input.label.text.data);
+    // }
 
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = state.window_rect.h}, 8.0f, 8.0f);
     ui_label(&state, &search_input.label, text_style, rect, 0, 0);
@@ -174,8 +173,7 @@ static void state_update(GLFWwindow *window) {
     ui_state_update(&state);
 } 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 #ifdef RENDER_DOC_CAPTURE
     RENDERDOC_API_1_1_2 *rdoc_api = NULL;
     void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
@@ -237,6 +235,7 @@ int main(int argc, char** argv)
 
     glfwSwapInterval(1);
     glFrontFace(GL_CCW);
+    glDepthRangef(0.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
