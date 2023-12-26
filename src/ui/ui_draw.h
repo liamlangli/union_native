@@ -73,4 +73,4 @@ void stroke_round_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style,
 void stroke_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip, u32 triangle_type);
 
 
-void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font *font, ustring text, u32 clip, f32 scale, ui_style style);
+void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font *font, ustring_view text, u32 clip, f32 scale, ui_style style);

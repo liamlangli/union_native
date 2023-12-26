@@ -19,11 +19,11 @@ msdf_font* msdf_font_load(ustring json_path, ustring image_path)
     return font;
 }
 
-float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring text, f32* offsets) {
+float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring_view text, f32* offsets) {
     float2 size = (float2){.x = 0.f, .y = (f32)font->line_height};
     int prev_id = -1;
     for (int i = 0; i < text.length; ++i) {
-        int char_code = (int)text.data[i];
+        int char_code = (int)text.base.data[i];
         msdf_glyph g = msdf_font_get_glyph(font, char_code);
         if (g.id == 0) continue;
         size.x += (f32)g.xadvance + (f32)msdf_font_computer_kerning(font, prev_id, g.id);

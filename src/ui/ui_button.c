@@ -1,6 +1,6 @@
 #include "ui/ui_button.h"
 
-void ui_button_init(ui_button_t *button, ustring text) {
+void ui_button_init(ui_button_t *button, ustring_view text) {
     ui_label_init(&button->label, text);
     button->element.constraint.alignment = CENTER;
     button->element.id = ui_id_create();

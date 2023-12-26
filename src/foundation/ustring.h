@@ -14,18 +14,23 @@ u32 ustring_safe_growth(ustring* s, u32 n);
 #define ustring_str(s) ((ustring) {.data = s, .length = s ? (u32)strlen(s) : 0, .null_terminated = 1})
 #define ustring_STR(s) ((ustring) {.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1})
 #define ustring_range(s, e) ((ustring) {.data = (s), length = (u32)((e) - (s)) })
-#define ustring_equals(a, b) (strcmp((a)->data, (b)->data) == 0)
-#define ustring_set(a, b) (ustring_safe_growth((a), (b)->length), memcpy((void*)(a)->data, (b)->data, (b)->length + 1), (a)->length = (b)->length)
-#define ustring_set_str(a, b) (ustring_safe_growth((a), strlen(b)), memcpy((void*)(a)->data, b, strlen(b) + 1), (a)->length = (u32)strlen(b))
-#define ustring_empty(s) ((s)->data == NULL || (s)->data[0] == '\0', (s)->length == 0)
-#define ustring_from(s, i) ((ustring) {.data = (s)->data + (i), .length = (s)->length - (i), .null_terminated = 0})
-#define ustring_substr(s, start, end) ((ustring) {.data = (s)->data + (start), .length = (end) - (start), .null_terminated = 0})
-
+#define ustring_equals(a, b) (strcmp((a)->data, (b)->data) == 0 && (a)->length == (b)->length && (a)->null_terminated == (b)->null_terminated)
 
 typedef struct ustring_view {
     ustring base;
     u32 start;
-    u32 end;
+    u32 length;
 } ustring_view;
 
-#define ustring_view_from(b, s, e) ((ustring_view) {.base = (b), .start = MACRO_CLAMP(s, 0, (b).length), .end = MACRO_CLAMP(e, 0, (b).length)})
+#define ustring_view_ustring(s) ((ustring_view) {.base = s, .start = 0, .length = s.length })
+#define ustring_view_str(s) ((ustring_view) {.base = ustring_str(s), .start = 0, .length = ustring_str(s).length })
+#define ustring_view_STR(s) ((ustring_view) {.base = ustring_STR(s), .start = 0, .length = ustring_STR(s).length })
+#define ustring_view_range(b, s, e) ((ustring_view) {.base = (b), .start = (s), .length = (e) - (s) })
+#define ustring_view_clear(v) ((v)->start = 0, (v)->length = 0)
+#define ustring_view_equals(a, b) ((a)->start == (b)->start && (a)->length == (b)->length && strncmp((a)->base.data + (a)->start, (b)->base.data + (b)->start, (a)->length) == 0)
+#define ustring_view_set_ustring_view(a, b) (ustring_safe_growth(&(a)->base, (b)->length), memcpy((void*)(a)->base.data + (a)->start, (b)->base.data + (b)->start, (b)->length), (a)->length = (b)->length)
+#define ustring_view_pop(v) ((v)->length = (v)->length > 0 ? (v)->length - 1 : 0)
+#define ustring_view_push(v, c) (ustring_safe_growth(&(v)->base, (v)->length + 1), (v)->length++, (v)->base.data[(v)->start + (v)->length - 1] = (c))
+#define ustring_view_push_ustring(v, s) (ustring_safe_growth(&(v)->base, (v)->length + (s)->length), memcpy((void*)(v)->base.data + (v)->start + (v)->length, (s)->data, (s)->length), (v)->length += (s)->length)
+#define ustring_view_push_str(v, s) (ustring_safe_growth(&(v)->base, (v)->length + (u32)strlen(s)), memcpy((void*)(v)->base.data + (v)->start + (v)->length, s, strlen(s)), (v)->length += (u32)strlen(s))
+#define ustring_view_free(s) (free((void*)(s)->base.data), (s)->base.data = NULL, (s)->base.length = 0, (s)->base.null_terminated = 0, (s)->start = 0, (s)->length = 0)

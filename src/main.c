@@ -32,9 +32,9 @@ static ui_style panel_2;
 static ui_style panel_3;
 static ui_style text_style;
 static ui_style transform_y;
-static ustring fps_str;
+static ustring_view fps_str;
 #define MAX_FPX_BITS 16
-static ustring status_str;
+static ustring_view status_str;
 #define MAX_STATUS_BITS 256
 
 static GLFWcursor *default_cursor;
@@ -145,12 +145,12 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     f32 context_scale_x, context_scale_y;
     glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
     renderer.window_size.z = context_scale_y;
-    ui_input_init(&search_input, path);
-    ui_label_init(&copyright, ustring_STR("@2023 union native"));
+    ui_input_init(&search_input, ustring_view_ustring(path));
+    ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
 
-    fps_str.data = malloc(MAX_FPX_BITS);
-    memset((void*)fps_str.data, 0, MAX_FPX_BITS);
+    fps_str.base.data = malloc(MAX_FPX_BITS);
+    memset((void*)fps_str.base.data, 0, MAX_FPX_BITS);
     fps_str.length = MAX_FPX_BITS;
     ui_label_init(&fps_label, fps_str);
     fps_label.element.constraint.alignment = BOTTOM | RIGHT;
@@ -158,8 +158,8 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     fps_label.element.constraint.margin.bottom = 10.f;
     fps_label.scale = 0.7f;
 
-    status_str.data = malloc(MAX_STATUS_BITS);
-    memset((void*)status_str.data, 0, MAX_STATUS_BITS);
+    status_str.base.data = malloc(MAX_STATUS_BITS);
+    memset((void*)status_str.base.data, 0, MAX_STATUS_BITS);
     status_str.length = MAX_STATUS_BITS;
     ui_label_init(&status_label, status_str);
     status_label.element.constraint.alignment = BOTTOM | LEFT;
@@ -177,7 +177,7 @@ static void ui_render() {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-        printf("search_input: %s\n", search_input.label.text.data);
+        printf("search_input: %s\n", search_input.label.text.base.data);
     }
 
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
@@ -240,12 +240,12 @@ static void state_update(GLFWwindow *window) {
 
     if (nb_frames > FPS_MA) {
         double fps = FPS_MA / (current_time - last_time[(nb_frames - FPS_MA) % FPS_MA]);
-        sprintf((void*)fps_str.data, "%16.f", fps);
+        sprintf((void*)fps_str.base.data, "%16.f", fps);
         ui_label_update_text(&fps_label, fps_str);
     }
 
     // update status label
-    sprintf((void*)status_str.data, "h: %d, a: %d, f: %d", state.hover, state.active, state.focus);
+    sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d", state.hover, state.active, state.focus);
     ui_label_update_text(&status_label, status_str);
 }
 

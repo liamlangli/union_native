@@ -3,7 +3,7 @@
 #include "ui/ui_renderer.h"
 #include "ui/ui_draw.h"
 
-void ui_label_init(ui_label_t *label, ustring text) {
+void ui_label_init(ui_label_t *label, ustring_view text) {
     ui_element_init(&label->element);
     label->text = text;
     label->scale = 1.0f;
@@ -14,11 +14,11 @@ void ui_label_init(ui_label_t *label, ustring text) {
     ui_label_update_text(label, text);
 }
 
-void ui_label_update_text(ui_label_t *label, ustring text) {
+void ui_label_update_text(ui_label_t *label, ustring_view text) {
     ui_font *sys_font = ui_font_system_font();
     label->text_size = ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
     label->text = text;
-    label->cursor_index = (u32)strlen(text.data);
+    label->cursor_index = text.length;
 }
 
 void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {

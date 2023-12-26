@@ -36,6 +36,6 @@ typedef struct msdf_font {
 msdf_font* msdf_font_load(ustring json_path, ustring image_path);
 msdf_font* msdf_font_system_font();
 
-float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring text, f32* offsets);
+float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring_view text, f32* offsets);
 msdf_glyph msdf_font_get_glyph(msdf_font *font, int index);
 int msdf_font_computer_kerning(msdf_font *font, int prev, int next);

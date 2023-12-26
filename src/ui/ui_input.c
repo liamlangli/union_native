@@ -1,4 +1,5 @@
 #include "ui/ui_input.h"
+#include "foundation/ustring.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_label.h"
@@ -7,7 +8,7 @@
 
 #include <stb_ds.h>
 
-void ui_input_init(ui_input_t *input, ustring text) {
+void ui_input_init(ui_input_t *input, ustring_view text) {
     ui_label_init(&input->label, text);
     ui_element_init(&input->element);
     input->radiuses = (float4){6.f, 6.f, 6.f, 6.f};
@@ -47,9 +48,9 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
 
     if (ui_state_is_key_press(state, KEY_BACKSPACE)) {
         if (control_pressed) {
-            ustring_empty(&input->label.text);
+            ustring_view_clear(&input->label.text);
         } else {
-            
+            ustring_view_pop(&input->label.text);
         }
         ui_label_update_text(&input->label, input->label.text);
     }
@@ -91,7 +92,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         }
 
         if (ui_state_is_key_press(state, KEY_ESCAPE)) {
-            result = !ustring_equals(&input->unmodified_text, &input->label.text);
+            result = !ustring_view_equals(&input->unmodified_text, &input->label.text);
             ui_state_clear_active(state);
             ui_state_clear_focus(state);
             hmdel(state->key_press, KEY_ESCAPE);
@@ -107,7 +108,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     if (hover && (ui_state_is_key_press(state, KEY_ENTER) || (state->left_mouse_release && last_active))) {
         ui_state_set_active(state, id);
         ui_state_set_focus(state, id);
-        ustring_set(&input->unmodified_text, &input->label.text);
+        ustring_view_set_ustring_view(&input->unmodified_text, &input->label.text);
     }
 
     if (active) {
