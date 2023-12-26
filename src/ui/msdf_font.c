@@ -812,7 +812,7 @@ msdf_font* msdf_font_system_font() {
     }
 
     int width, height, channel;
-    u8* data = io_load_image(ustring_STR("font/Lato-Regular.png"), &width, &height, &channel, 3);
+    u8* data = io_load_image(ustring_STR("public/font/Lato-Regular.png"), &width, &height, &channel, 3);
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);

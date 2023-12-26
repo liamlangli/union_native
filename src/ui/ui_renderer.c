@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "ui/ui_shader.h"
 #include <stb_ds.h>
 
 #define PRIMITVE_DATA_INIT_COUNT 262144 // 1M
@@ -29,20 +28,23 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
     const u32 primitive_end = offset + font_stride + glyph_count * glyph_stride;
 
     renderer->preserved_primitive_offset = primitive_end;
-    renderer->primitive_data[offset] = width;
-    renderer->primitive_data[offset + 1] = height;
+    f32* font_start = (f32*)renderer->primitive_data + offset;
+    font_start[0] = (f32)width;
+    font_start[1] = (f32)height;
     renderer->primitive_data[offset + 2] = gpu_font_id;
 
-    const u32 start = offset + font_stride;
+    ui_font_glyph_vertex vertex = {0};
+    ui_font_glyph_vertex* glyph_start = (ui_font_glyph_vertex*)((f32*)font_start + font_stride);
     for (int i = 0; i < glyph_count; ++i) {
         msdf_glyph g = font->char_map[i].value;
-        const u32 index = start + i * glyph_stride;
-        renderer->primitive_data[index] = g.x;
-        renderer->primitive_data[index + 1] = g.y;
-        renderer->primitive_data[index + 2] = g.width;
-        renderer->primitive_data[index + 3] = g.height;
-        renderer->primitive_data[index + 4] = g.xoffset;
-        renderer->primitive_data[index + 5] = g.yoffset;
+        const u32 index = i;
+        vertex.x = (f32)g.x;
+        vertex.y = (f32)g.y;
+        vertex.w = (f32)g.width;
+        vertex.h = (f32)g.height;
+        vertex.xoffset = (f32)g.xoffset;
+        vertex.yoffset = (f32)g.yoffset;
+        glyph_start[i] = vertex;
         font->char_map[i].value.gpu_index = i;
     }
 
@@ -116,8 +118,8 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    ustring vert_shader_code = ustring_str(ui_vert);
-    ustring frag_shader_code = ustring_str(ui_frag);
+    ustring vert_shader_code = io_read_file(ustring_str("public/shader/ui.vert"));
+    ustring frag_shader_code = io_read_file(ustring_str("public/shader/ui.frag"));
     GLuint program = glCreateProgram();
 
     GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);

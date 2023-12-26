@@ -60,6 +60,10 @@ typedef struct ui_glyph_vertex {
     f32 scale;
 } ui_glyph_vertex;
 
+typedef struct ui_font_glyph_vertex {
+    f32 x, y, w, h, xoffset, yoffset, xadvance, page;
+} ui_font_glyph_vertex;
+
 void ui_layer_write_index(ui_layer *layer, u32 index);
 u32 ui_layer_write_rect_vertex(ui_layer *layer, ui_rect_vertex vertex);
 u32 ui_layer_write_triangle_vertex(ui_layer *layer, ui_triangle_vertex vertex, bool advanced);

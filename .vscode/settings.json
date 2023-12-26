@@ -24,10 +24,5 @@
         "cstdlib": "c",
         "span": "c",
         "thread": "c"
-    },
-    "cmake.debugConfig": {
-        "args": [
-            "${workspaceFolder}/example/public/terrain.js"
-        ],
-    },
+    }
 }

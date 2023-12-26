@@ -134,12 +134,12 @@ static void renderer_init(GLFWwindow* window, ustring path) {
 
 static void render_location_bar() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    // if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-    //     printf("search_input: %s\n", search_input.label.text.data);
-    // }
+    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
+        printf("search_input: %s\n", search_input.label.text.data);
+    }
 
-    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = state.window_rect.h}, 8.0f, 8.0f);
-    ui_label(&state, &search_input.label, text_style, rect, 0, 0);
+    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
+    ui_label(&state, &copyright, text_style, rect, 0, 0);
     ui_renderer_render(&renderer);
 }
 
