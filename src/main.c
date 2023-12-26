@@ -5,6 +5,7 @@
 #include "foundation/webgl2.h"
 
 #include "ui/ui.h"
+#include "ui/ui_keycode.h"
 #include "ui/ui_state.h"
 
 #include <string.h>
@@ -48,14 +49,14 @@ static void error_callback(int error, const char* description) {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
         ui_state_key_release(&state, key);
+    }
+
+    if (ui_state_is_key_pressed(&state, KEY_LEFT_CONTROL) && ui_state_is_key_pressed(&state, KEY_Q)) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 }
 
@@ -173,6 +174,7 @@ static void renderer_init(GLFWwindow* window, ustring path) {
 }
 
 static void ui_render() {
+    state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
         printf("search_input: %s\n", search_input.label.text.data);
@@ -199,7 +201,7 @@ static void state_update(GLFWwindow *window) {
     mouse_y = mouse_y * ctx->display_ratio;
 
     if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
-        script_window_mouse_move(mouse_x, mouse_y);
+        if (state.active == -1 && state.focus == -1 && state.hover == -1) script_window_mouse_move(mouse_x, mouse_y);
         state.mouse_location = (float2){.x = (f32)mouse_x / ctx->ui_scale, .y = (f32)mouse_y / ctx->ui_scale};
     }
  

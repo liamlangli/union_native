@@ -1,3 +1,4 @@
+#include "foundation/script.h"
 #include "ui/ui_input.h"
 #include "ui/ui_renderer.h"
 #include "ui/ui_draw.h"
@@ -17,6 +18,7 @@ void ui_label_update_text(ui_label_t *label, ustring text) {
     ui_font *sys_font = ui_font_system_font();
     label->text_size = ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
     label->text = text;
+    label->cursor_index = (u32)strlen(text.data);
 }
 
 void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
@@ -40,29 +42,7 @@ void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect
 }
 
 u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location) {
-    f32 cursor_offset = ui_input_cursor_offset(label);
-    f32 scale = label->scale;
-    f32 text_width = label->text_size.x * scale;
-    f32 text_height = label->text_size.y * scale;
-    f32 text_x = rect.x + (rect.w - text_width) * 0.5f;
-    f32 text_y = rect.y + (rect.h - text_height) * 0.5f;
-    f32 text_left = text_x - cursor_offset;
-    f32 text_right = text_x + text_width - cursor_offset;
-    f32 text_top = text_y;
-    f32 text_bottom = text_y + text_height;
-    if (location.x < text_left) {
-        return 0;
-    } else if (location.x > text_right) {
-        return label->text.length;
-    } else {
-        f32 cursor_x = location.x - text_left;
-        int index = 0;
-        while (index < label->text.length && cursor_x > label->char_offsets[index] * scale) {
-            index++;
-        }
-        return index;
-    }
-
+    return 0;
 }
 
 f32 ui_input_cursor_offset(ui_label_t *label) {

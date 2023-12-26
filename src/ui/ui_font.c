@@ -19,7 +19,7 @@ static ui_font _system_font;
 ui_font* ui_font_system_font() {
     static bool system_font_initialized = false;
     if (system_font_initialized) return &_system_font;
-    ui_font_init(&_system_font, msdf_font_system_font(), 14);
+    ui_font_init(&_system_font, msdf_font_system_font(), 16);
     system_font_initialized = true;
     return &_system_font;
 }

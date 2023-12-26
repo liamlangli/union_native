@@ -24,7 +24,7 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
     int alignment = input->label.element.constraint.alignment;
 
     if (alignment & LEFT) {
-        cursor_rect.x += cursor_offset;
+        cursor_rect.x += cursor_offset + input->label.element.constraint.margin.left * scale;
     } else if (alignment & RIGHT) {
         cursor_rect.x += rect.w - (input->label.element.constraint.margin.right + input->label.text_size.x) * scale - cursor_offset;
     } else {
@@ -36,6 +36,23 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
     cursor_rect.h -= shrink * 2.f * scale;
     cursor_rect.y += shrink * scale;
     fill_rect(state->renderer, 0, text_primary, cursor_rect, clip);
+}
+
+void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
+    const bool control_pressed = ui_state_is_key_pressed(state, KEY_LEFT_CONTROL) || ui_state_is_key_pressed(state, KEY_RIGHT_CONTROL) || ui_state_is_key_pressed(state, KEY_LEFT_SUPER) || ui_state_is_key_pressed(state, KEY_RIGHT_SUPER);
+    const int start = input->label.start_index;
+    const int end = input->label.cursor_index;
+    const int from = MACRO_MIN(start, end);
+    const int to = MACRO_MAX(start, end);
+
+    if (ui_state_is_key_press(state, KEY_BACKSPACE)) {
+        if (control_pressed) {
+            ustring_empty(&input->label.text);
+        } else {
+            
+        }
+        ui_label_update_text(&input->label, input->label.text);
+    }
 }
 
 bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
@@ -55,6 +72,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     }
 
     if (hover) {
+        state->cursor_type = CURSOR_Text;
         if (state->left_mouse_press) {
             state->last_active = id;
         }
@@ -62,8 +80,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
 
     if (active || focus) {
         draw_style.color = style.active_color;
-        // handle edit;
-
+        ui_input_handle_edit(state, input);
         if (ui_state_is_key_press(state, KEY_ENTER)) {
             result = true;
             ui_state_clear_active(state);
@@ -114,7 +131,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     }
 
     ui_label(state, &input->label, text_primary, rect, layer_index, clip);
-    if (state->active == id || state->focus == id) {
+    if (active || focus) {
         ui_input_render_cursor(state, input, rect, clip);
     }
 

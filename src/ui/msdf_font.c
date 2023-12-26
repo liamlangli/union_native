@@ -16,7 +16,6 @@ msdf_font* msdf_alloc() {
 msdf_font* msdf_font_load(ustring json_path, ustring image_path)
 {
     msdf_font* font = msdf_alloc();
-
     return font;
 }
 

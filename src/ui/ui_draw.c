@@ -355,11 +355,11 @@ void fill_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect
     u32 type = UI_PRIMITIVE_TYPE_RECTANGLE;
     u32 offset = ui_layer_write_rect_vertex(&renderer->layers[layer_index], vertex);
     ui_layer_write_index(layer, encode_vertex_id(type, TOP_LEFT, offset));
-    ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
-    ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
+    ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_LEFT, offset));
     ui_layer_write_index(layer, encode_vertex_id(type, BOTTOM_RIGHT, offset));
+    ui_layer_write_index(layer, encode_vertex_id(type, TOP_RIGHT, offset));
 }
 
 void fill_round_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect rect, f32 radius, u32 clip, u32 triangle_type) {
