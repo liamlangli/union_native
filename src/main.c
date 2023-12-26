@@ -36,6 +36,7 @@ static ui_style panel_3;
 static ui_style text_style;
 static ui_style transform_y;
 static ustring fps_str;
+#define MAX_FPX_BITS 16
 
 static bool empty_launch = true;
 
@@ -87,13 +88,19 @@ static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
     }
 }
 
-static void set_content_scale(GLFWwindow *window, float xscale, float yscale) {
+static void resize_callback(GLFWwindow *window, int width, int height) {
     script_context_t *ctx = script_context_share();
-    ctx->display_ratio = yscale;
-}
-
-static void size_callback(GLFWwindow* window, int width, int height) {
-    script_window_resize( width, height);
+    glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
+    ctx->display_ratio = (f64)ctx->framebuffer_height / (f64)ctx->height;
+    renderer.window_size.x = (f32)width;
+    renderer.window_size.y = (f32)height;
+    state.window_rect = (ui_rect){
+        .x = 0.f,
+        .y = 0.f,
+        .w = (f32)width,
+        .h = (f32)height
+    };
+    script_window_resize(width, height);
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -101,11 +108,12 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 }
 
 static ustring script_init(GLFWwindow *window, int argc, char **argv) {
-    script_context_t *script_context = script_context_share();
+    script_context_t *ctx = script_context_share();
     f32 scale_x, scale_y;
-    glfwGetFramebufferSize(window, &script_context->width, &script_context->height);
+    glfwGetWindowSize(window, &ctx->width, &ctx->height);
     glfwGetWindowContentScale(window, &scale_x, &scale_y);
-    script_context->display_ratio = scale_y;
+    ctx->display_ratio = scale_y;
+    script_window_resize(ctx->width, ctx->height);
     script_module_browser_register();
     script_module_webgl2_register();
 
@@ -139,9 +147,9 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     fps_label.element.constraint.margin.bottom = 10.f;
     fps_label.scale = 0.7f;
 
-    fps_str.data = malloc(6);
-    memset(fps_str.data, 0, 6);
-    fps_str.length = 6;
+    fps_str.data = malloc(MAX_FPX_BITS);
+    memset(fps_str.data, 0, MAX_FPX_BITS);
+    fps_str.length = MAX_FPX_BITS;
 }
 
 static void ui_render() {
@@ -167,30 +175,20 @@ static void state_update(GLFWwindow *window) {
     script_context_t *ctx = script_context_share();
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
-    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-    if (ctx->framebuffer_width != framebuffer_width || ctx->framebuffer_height != framebuffer_height) {
-        glfwGetWindowSize(window, &width, &height);
-        renderer.window_size.x = (f32)width;
-        renderer.window_size.y = (f32)height;
-        state.window_rect = (ui_rect){
-            .x = 0.f,
-            .y = 0.f,
-            .w = (f32)width,
-            .h = (f32)height
-        };
-        glfwGetWindowContentScale(window, &renderer.window_size.z, &renderer.window_size.w);
-        script_window_resize(width, height);
-        ctx->display_ratio = (f64)framebuffer_height / (f64)height;
-    }
-
     if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
         script_window_mouse_move(mouse_x, mouse_y);
         state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
     }
+ 
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+    if (ctx->framebuffer_width != framebuffer_width || ctx->framebuffer_height != framebuffer_height) {
+        glfwGetWindowSize(window, &width, &height);
+        resize_callback(window, width, height);
+    }
+
     ui_state_update(&state);
 
     // compute fps
-
     double current_time = glfwGetTime();
     double delta_time = current_time - last_time[nb_frames % FPS_MA];
     last_time[nb_frames % FPS_MA] = current_time;
@@ -198,7 +196,7 @@ static void state_update(GLFWwindow *window) {
 
     if (nb_frames > FPS_MA) {
         double fps = FPS_MA / (current_time - last_time[(nb_frames - FPS_MA) % FPS_MA]);
-        sprintf(fps_str.data, "%5.f", fps);
+        sprintf(fps_str.data, "%16.f", fps);
         ui_label_update_text(&fps_label, fps_str);
     }
 } 
@@ -243,9 +241,8 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    glfwSetWindowContentScaleCallback(window, set_content_scale);
     glfwSetScrollCallback(window, scroll_callback);
-    glfwSetWindowSizeCallback(window, size_callback);
+    glfwSetWindowSizeCallback(window, resize_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button);
     glfwMakeContextCurrent(window);
@@ -264,7 +261,7 @@ int main(int argc, char** argv) {
     text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e166);
     transform_y = ui_style_from_hex(0x4dbe63ff, 0x313233ff, 0x3c3d3eff, 0x4dbe63ff);
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
 
