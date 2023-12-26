@@ -21,7 +21,7 @@
 
 static ui_renderer_t renderer;
 static ui_state_t state;
-static ui_input_t search_input;
+static ui_input_t source_input;
 static ui_label_t copyright;
 static ui_label_t fps_label;
 static ui_label_t status_label;
@@ -49,8 +49,7 @@ static void error_callback(int error, const char* description) {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
-
+    //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
@@ -117,10 +116,11 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    script_window_mouse_scroll(xoffset, yoffset);
+    if (state.active == -1 && state.focus == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
 }
 
-static ustring script_init(GLFWwindow *window, int argc, char **argv) {
+static void script_init(GLFWwindow *window, ustring_view uri) {
+    script_context_cleanup();
     script_context_t *ctx = script_context_share();
     glfwGetWindowSize(window, &ctx->width, &ctx->height);
     glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
@@ -141,26 +141,26 @@ static ustring script_init(GLFWwindow *window, int argc, char **argv) {
         .h = ui_height
     };
 
-    ustring path = argc >= 2 ? ustring_str(argv[1]) : ustring_STR("public/terrain.js");
     ustring content;
-    url_t url = url_parse(path);
+    url_t url = url_parse(uri);
     if (url.valid) {
         printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
         content = io_http_get(url);
     } else {
-        printf("load file: %s\n", path.data);
-        content = io_read_file(path);
+        printf("load file: %s\n", uri.base.data);
+        content = io_read_file(uri);
     }
-    script_eval(content, path);
+    script_eval(content, uri);
+    ustring_free(&content);
+
     empty_launch = false;
-    path.is_static = true;
-    return path;
+    uri.base.is_static = true;
 }
 
-static void renderer_init(GLFWwindow* window, ustring path) {
+static void renderer_init(GLFWwindow* window, ustring_view uri) {
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
-    ui_input_init(&search_input, ustring_view_ustring(path));
+    ui_input_init(&source_input, uri);
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
 
@@ -188,11 +188,12 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     resize_vert_cursor = glfwCreateStandardCursor(CURSOR_ResizeVert);
 }
 
-static void ui_render() {
+static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
-        printf("search_input: %s\n", search_input.label.text.base.data);
+    if (ui_input(&state, &source_input, panel_0, rect, 0, 0)) {
+        printf("source_input: %s\n", source_input.label.text.base.data);
+        script_init(window, source_input.label.text);
     }
 
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
@@ -304,8 +305,9 @@ int main(int argc, char** argv) {
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-    ustring path = script_init(window, argc, argv);
-    renderer_init(window, path);
+    ustring_view uri = argc >= 2 ? ustring_view_str(argv[1]) : ustring_view_STR("public/terrain.js");
+    renderer_init(window, uri);
+    script_init(window, uri);
 
     panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e166);
     panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e166);
@@ -327,7 +329,7 @@ int main(int argc, char** argv) {
             script_frame_tick();
         }
 
-        ui_render();
+        ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);
         glfwPollEvents();

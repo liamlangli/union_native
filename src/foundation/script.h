@@ -33,13 +33,16 @@ typedef struct script_context_t {
 } script_context_t;
 
 script_context_t* script_context_share(void);
-void script_context_destroy();
+void script_context_cleanup(void);
+void script_context_destroy(void);
 
 void script_value_ref(JSValue value);
 void script_value_unref(JSValue value);
 
-void script_module_browser_register();
-int script_eval( ustring source, ustring filename);
+void script_module_browser_register(void);
+int script_eval(ustring source, ustring_view filename);
+int script_eval_uri(ustring_view uri);
+
 void script_window_resize(int width, int height);
 void script_window_mouse_move(double x, double y);
 void script_window_mouse_down(int button);

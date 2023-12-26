@@ -16,6 +16,7 @@ u32 ustring_safe_growth(ustring* s, u32 n);
 #define ustring_STR(s) ((ustring) {.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1, .is_static = 1})
 #define ustring_range(s, e) ((ustring) {.data = (s), length = (u32)((e) - (s)),.is_static = true})
 #define ustring_equals(a, b) (strcmp((a)->data, (b)->data) == 0 && (a)->length == (b)->length && (a)->null_terminated == (b)->null_terminated)
+#define ustring_free(s) (free((void*)(s)->data), (s)->data = NULL, (s)->length = 0, (s)->null_terminated = 0, (s)->is_static = 0)
 
 typedef struct ustring_view {
     ustring base;
@@ -24,7 +25,6 @@ typedef struct ustring_view {
 } ustring_view;
 
 #define ustring_view_ustring(v) ((ustring_view) {.base = v, .start = 0, .length = v.length})
-#define ustring_view_alloc_STR(v) ((ustring_view) {.base = ustring_STR(v), .start = 0, .length = ustring_STR(v).length })
 #define ustring_view_str(v) ((ustring_view) {.base = ustring_str(v), .start = 0, .length = ustring_str(v).length })
 #define ustring_view_STR(v) ((ustring_view) {.base = ustring_STR(v), .start = 0, .length = ustring_STR(v).length })
 #define ustring_view_reserve(v, n) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + (n)))

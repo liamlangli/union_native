@@ -25,8 +25,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-ustring io_read_file(ustring path) {
-    FILE *file = fopen(path.data, "rb");
+ustring io_read_file(ustring_view path) {
+    ustring_view_set_null_terminated(&path);
+    FILE *file = fopen(path.base.data, "rb");
     if (!file) {
         return ustring_str("");
     }
@@ -127,8 +128,9 @@ ustring io_http_get(url_t url) {
     return ustring_str(file_content);
 }
 
-u8* io_load_image(ustring path, int* width, int* height, int *channel, int request_channel) {
-    return stbi_load(path.data, width, height, channel, request_channel);
+u8* io_load_image(ustring_view path, int* width, int* height, int *channel, int request_channel) {
+    ustring_view_set_null_terminated(&path);
+    return stbi_load(path.base.data, width, height, channel, request_channel);
 }
 
 u8* io_load_image_memory(u8* data, size_t length, int* width, int* height, int *channel, int request_channel) {

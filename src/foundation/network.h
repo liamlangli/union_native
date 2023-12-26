@@ -11,5 +11,4 @@ typedef struct url_t {
     ustring query;
 } url_t;
 
-int url_is(ustring src);
-url_t url_parse(ustring url);
+url_t url_parse(ustring_view url);

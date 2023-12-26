@@ -118,8 +118,8 @@ void ui_renderer_init(ui_renderer_t* renderer)
     glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    ustring vert_shader_code = io_read_file(ustring_str("public/shader/ui.vert"));
-    ustring frag_shader_code = io_read_file(ustring_str("public/shader/ui.frag"));
+    ustring vert_shader_code = io_read_file(ustring_view_STR("public/shader/ui.vert"));
+    ustring frag_shader_code = io_read_file(ustring_view_STR("public/shader/ui.frag"));
     GLuint program = glCreateProgram();
 
     GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);

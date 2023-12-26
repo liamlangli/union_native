@@ -3,9 +3,9 @@
 #include "foundation/ustring.h"
 #include <stdlib.h>
 
-url_t url_parse(ustring url) {
+url_t url_parse(ustring_view url) {
     url_t result = {0};
-    char *data = url.data;
+    char *data = url.base.data + url.start;
     u32 length = url.length;
     u32 index = 0;
     u32 colon = 0;

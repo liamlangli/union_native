@@ -1,12 +1,13 @@
 #include "script.h"
 #include "foundation/webgl2.h"
+#include "foundation/io.h"
 
 #include <GLFW/glfw3.h>
 #include <assert.h>
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
 
-static script_context_t shared_context;
+static script_context_t shared_context = {0};
 
 static const char* resize_event = "resize";
 static const char* mousedown_event = "mousedown";
@@ -389,12 +390,12 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
     return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
 }
 
-int script_eval(ustring source, ustring filename) {
+int script_eval(ustring source, ustring_view filename) {
     JSValue val;
     int ret;
 
     JSContext *ctx = script_context_share()->context;
-    val = JS_Eval(ctx, source.data, source.length, filename.data, 0);
+    val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 
     if (JS_IsException(val)) {
         js_std_dump_error(ctx);
@@ -405,6 +406,20 @@ int script_eval(ustring source, ustring filename) {
 
     JS_FreeValue(ctx, val);
     return ret;
+}
+
+int script_eval_uri(ustring_view uri) {
+    ustring content;
+    url_t url = url_parse(uri);
+    if (url.valid) {
+        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
+        content = io_http_get(url);
+    } else {
+        printf("load file: %s\n", uri.base.data);
+        content = io_read_file(uri);
+    }
+
+    return script_eval(content, uri);
 }
 
 void script_window_resize(int width, int height) {
@@ -541,7 +556,7 @@ void script_document_key_up(int key) {
     JS_FreeValue(ctx, event);
 }
 
-void script_frame_tick() {
+void script_frame_tick(void) {
     JSContext *ctx = script_context_share()->context;
     if (JS_IsFunction(ctx, _frame_callback)) 
     {
@@ -549,7 +564,7 @@ void script_frame_tick() {
     }
 }
 
-void script_context_destroy() {
+void script_context_destroy(void) {
     script_context_t *context = script_context_share();
     JS_FreeContext(context->context);
     JS_RunGC(context->runtime);
@@ -557,7 +572,16 @@ void script_context_destroy() {
     free(context);
 }
 
-void script_module_browser_register() {
+void script_context_cleanup(void) {
+    script_context_t *context = script_context_share();
+    if (context->context != NULL) {
+        JS_FreeContext(context->context);
+        JS_RunGC(context->runtime);
+        context->context = JS_NewContext(context->runtime);
+    }
+}
+
+void script_module_browser_register(void) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
     JSRuntime *rt = context->runtime;
