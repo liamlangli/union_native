@@ -17,12 +17,6 @@
 #define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>
 
-#ifdef RENDER_DOC_CAPTURE
-    #include <dlfcn.h>
-    #include "renderdoc_app.h"
-    #include <assert.h>
-#endif
-
 static ui_renderer_t renderer;
 static ui_state_t state;
 static ui_input_t search_input;
@@ -202,17 +196,6 @@ static void state_update(GLFWwindow *window) {
 } 
 
 int main(int argc, char** argv) {
-#ifdef RENDER_DOC_CAPTURE
-    RENDERDOC_API_1_1_2 *rdoc_api = NULL;
-    void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
-    if(mod != NULL)
-    {
-        pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
-        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
-        assert(ret == 1);
-    }
-#endif
-
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
 
