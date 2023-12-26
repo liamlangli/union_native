@@ -15,7 +15,7 @@ const action = {
 
 const camera = new Camera();
 camera.location.set(30, 30, 30);
-camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.look_at(ZERO);
 const control = new SphericalControl(camera);
 
@@ -32,7 +32,7 @@ EventHub.on(GlobalEvent.MouseWheel, (payload) => {
 window.addEventListener('resize', () => {
     device.display_ratio = window.devicePixelRatio;
     device.set_size(window.innerWidth, window.innerHeight);
-    camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 });
 
 const scale = new Float3(2, 2, 2);

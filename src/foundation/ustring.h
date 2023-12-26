@@ -4,7 +4,7 @@
 #include <string.h>
 
 typedef struct ustring {
-    const i8* data;
+    i8* data;
     u32 length;
     u32 null_terminated;
 } ustring;

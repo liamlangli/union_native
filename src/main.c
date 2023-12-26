@@ -27,19 +27,22 @@ static ui_renderer_t renderer;
 static ui_state_t state;
 static ui_input_t search_input;
 static ui_label_t copyright;
+static ui_label_t fps_label;
 
 static ui_style panel_0;
 static ui_style panel_1;
 static ui_style panel_2;
 static ui_style panel_3;
 static ui_style text_style;
+static ui_style transform_y;
+static ustring fps_str;
 
 static bool empty_launch = true;
 
 static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
- 
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -130,9 +133,18 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     ui_input_init(&search_input, path);
     ui_label_init(&copyright, ustring_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
+    ui_label_init(&fps_label, fps_str);
+    fps_label.element.constraint.alignment = BOTTOM | RIGHT;
+    fps_label.element.constraint.margin.right = 20.f;
+    fps_label.element.constraint.margin.bottom = 10.f;
+    fps_label.scale = 0.7f;
+
+    fps_str.data = malloc(6);
+    memset(fps_str.data, 0, 6);
+    fps_str.length = 6;
 }
 
-static void render_location_bar() {
+static void ui_render() {
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &search_input, panel_0, rect, 0, 0)) {
         printf("search_input: %s\n", search_input.label.text.data);
@@ -141,8 +153,13 @@ static void render_location_bar() {
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
     ui_label(&state, &copyright, text_style, rect, 0, 0);
     ui_renderer_render(&renderer);
+
+    ui_label(&state, &fps_label, transform_y, state.window_rect, 0, 0);
 }
 
+#define FPS_MA 10
+static double last_time[FPS_MA];
+static int nb_frames = 0;
 static void state_update(GLFWwindow *window) {
     int width, height, framebuffer_width, framebuffer_height;
     double mouse_x, mouse_y;
@@ -171,6 +188,19 @@ static void state_update(GLFWwindow *window) {
         state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
     }
     ui_state_update(&state);
+
+    // compute fps
+
+    double current_time = glfwGetTime();
+    double delta_time = current_time - last_time[nb_frames % FPS_MA];
+    last_time[nb_frames % FPS_MA] = current_time;
+    nb_frames++;
+
+    if (nb_frames > FPS_MA) {
+        double fps = FPS_MA / (current_time - last_time[(nb_frames - FPS_MA) % FPS_MA]);
+        sprintf(fps_str.data, "%5.f", fps);
+        ui_label_update_text(&fps_label, fps_str);
+    }
 } 
 
 int main(int argc, char** argv) {
@@ -227,13 +257,14 @@ int main(int argc, char** argv) {
     ustring path = script_init(window, argc, argv);
     renderer_init(window, path);
 
-    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e1ab);
-    panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e1ab);
-    panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e1ab);
-    panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e1ab);
-    text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff);
+    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e166);
+    panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e166);
+    panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e166);
+    panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e166);
+    text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e166);
+    transform_y = ui_style_from_hex(0x4dbe63ff, 0x313233ff, 0x3c3d3eff, 0x4dbe63ff);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
 
@@ -247,7 +278,7 @@ int main(int argc, char** argv) {
             script_frame_tick();
         }
 
-        render_location_bar();
+        ui_render();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
