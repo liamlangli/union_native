@@ -10,8 +10,7 @@
             "name": "lldb launch un",
             "program": "${workspaceFolder}/build/un",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "relativePathBase": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}/build",
         }
     ]
 }

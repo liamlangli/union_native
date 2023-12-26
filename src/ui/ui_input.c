@@ -1,6 +1,11 @@
 #include "ui/ui_input.h"
 #include "ui/ui_draw.h"
+#include "ui/ui_keycode.h"
+#include "ui/ui_label.h"
+#include "ui/ui_state.h"
 #include "ui/ui_style_default.h"
+
+#include <stb_ds.h>
 
 void ui_input_init(ui_input_t *input, ustring text) {
     ui_label_init(&input->label, text);
@@ -37,15 +42,65 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     bool result = false;
     u32 id = input->element.id;
 
+    ui_style draw_style;
+
     bool hover = ui_state_hovering(state, rect, layer_index);
+    bool active = state->active == id;
+    bool focus = state->focus == id;
+    bool last_active = state->last_active == id;
+
     if (hover) {
         state->next_hover = id;
         state->next_hover_layer_index = layer_index;
     }
 
-    if (state->hover == id) {
+    if (hover) {
         if (state->left_mouse_press) {
             state->last_active = id;
+        }
+    }
+
+    if (active || focus) {
+        draw_style.color = style.active_color;
+        // handle edit;
+
+        if (ui_state_is_key_press(state, KEY_ENTER)) {
+            result = true;
+            ui_state_clear_active(state);
+            ui_state_clear_focus(state);
+            hmdel(state->key_press, KEY_ENTER);
+            input->label.cursor_index = input->label.text.length;
+            input->label.render_selected = false;
+        }
+
+        if (ui_state_is_key_press(state, KEY_ESCAPE)) {
+            result = !ustring_equals(&input->unmodified_text, &input->label.text);
+            ui_state_clear_active(state);
+            ui_state_clear_focus(state);
+            hmdel(state->key_press, KEY_ESCAPE);
+            input->label.cursor_index = input->label.text.length;
+            input->label.render_selected = false;
+        }
+    }
+
+    if (active && state->left_mouse_press) {
+        input->label.start_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
+    }
+
+    if (hover && (ui_state_is_key_press(state, KEY_ENTER) || (state->left_mouse_release && last_active))) {
+        ui_state_set_active(state, id);
+        ui_state_set_focus(state, id);
+        ustring_set(&input->unmodified_text, &input->label.text);
+    }
+
+    if (active) {
+        if (state->left_mouse_is_pressed) {
+            input->label.cursor_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
+            input->label.render_selected = true;
+        }
+        if (!ui_state_hovering(state, rect, layer_index)) {
+            ui_state_clear_active(state);
+            input->label.render_selected = false;
         }
     }
 

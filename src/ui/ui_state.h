@@ -7,6 +7,14 @@
 
 #define MAX_KEY_COUNT 16
 
+enum CURSOR_TYPE {
+    CURSOR_Default = 0x00036001,
+    CURSOR_Text = 0x00036002,
+    CURSOR_Hand = 0x00036004,
+    CURSOR_ResizeHori = 0x00036005,
+    CURSOR_ResizeVert = 0x00036006
+};
+
 typedef struct ui_key_map_t {
     int key;
     bool value;
@@ -26,6 +34,7 @@ typedef struct ui_state_t {
     bool left_mouse_is_pressed, right_mouse_is_pressed, middle_mouse_is_pressed;
 
     ui_key_map_t *key_press;
+    ui_key_map_t *key_release;
     ui_key_map_t *key_pressed;
 
     bool updated;
@@ -41,10 +50,18 @@ typedef struct ui_state_t {
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer);
 
-void ui_state_set_active(ui_state_t state, u32 id);
+bool ui_state_set_active(ui_state_t *state, u32 id);
+void ui_state_set_active_force(ui_state_t *state, u32 id);
+void ui_state_clear_active(ui_state_t *state);
+
+bool ui_state_set_focus(ui_state_t *state, u32 id);
+void ui_state_clear_focus(ui_state_t *state);
 
 void ui_state_key_press(ui_state_t *state, int key);
 void ui_state_key_release(ui_state_t *state, int key);
+bool ui_state_is_key_press(ui_state_t *state, int key);
+bool ui_state_is_key_pressed(ui_state_t *state, int key);
+bool ui_state_is_key_release(ui_state_t *state, int key);
 
 bool ui_state_update(ui_state_t *state);
 bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index);

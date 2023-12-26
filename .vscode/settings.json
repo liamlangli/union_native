@@ -23,6 +23,7 @@
         "variant": "c",
         "cstdlib": "c",
         "span": "c",
-        "thread": "c"
+        "thread": "c",
+        "string": "c"
     }
 }

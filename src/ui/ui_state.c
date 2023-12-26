@@ -1,6 +1,7 @@
 #include "ui/ui_state.h"
 
 #include <stb_ds.h>
+#include <GLFW/glfw3.h>
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->renderer = renderer;
@@ -37,6 +38,10 @@ bool ui_state_update(ui_state_t *state)
         hmdel(state->key_press, state->key_press[i].key);
     }
 
+    for (int i = 0, l = (int)hmlen(state->key_release); i < l; i++) {
+        hmdel(state->key_release, state->key_release[i].key);
+    }
+
     bool updated = state->defer_update_frame_index > 0;
     if (updated) state->defer_update_frame_index--;
     state->updated = updated;
@@ -55,9 +60,48 @@ void ui_state_key_press(ui_state_t *state, int key) {
 }
 
 void ui_state_key_release(ui_state_t *state, int key) {
-    hmput(state->key_press, key, false);
+    hmput(state->key_release, key, true);
+    hmdel(state->key_pressed, key);
 }
 
-void ui_state_set_active(ui_state_t state, u32 id) {
-    
+bool ui_state_is_key_press(ui_state_t *state, int key) {
+    return hmgeti(state->key_press, key) != -1;
+}
+
+bool ui_state_is_key_pressed(ui_state_t *state, int key) {
+    return hmgeti(state->key_pressed, key) != -1;
+}
+
+bool ui_state_is_key_release(ui_state_t *state, int key) {
+    return hmgeti(state->key_release, key) != -1;
+}
+
+bool ui_state_set_active(ui_state_t *state, u32 id) {
+    if (state->active == -1) {
+        state->last_active = state->active;
+        state->active = id;
+        return true;
+    }
+    return false;
+}
+
+void ui_state_set_active_force(ui_state_t *state, u32 id) {
+    state->last_active = state->active;
+    state->active = id;
+}
+
+void ui_state_clear_active(ui_state_t *state) {
+    state->last_active = state->active;
+    state->active = -1;
+    state->active_frame_count = 0;
+    state->cursor_type = CURSOR_Default;
+}
+
+bool ui_state_set_focus(ui_state_t *state, u32 id) {
+    state->focus = id;
+    return true;
+}
+
+void ui_state_clear_focus(ui_state_t *state) {
+    state->focus = -1;
 }

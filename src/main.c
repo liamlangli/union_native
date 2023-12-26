@@ -5,6 +5,7 @@
 #include "foundation/webgl2.h"
 
 #include "ui/ui.h"
+#include "ui/ui_state.h"
 
 #include <string.h>
 
@@ -22,6 +23,7 @@ static ui_state_t state;
 static ui_input_t search_input;
 static ui_label_t copyright;
 static ui_label_t fps_label;
+static ui_label_t status_label;
 
 static ui_style panel_0;
 static ui_style panel_1;
@@ -31,6 +33,13 @@ static ui_style text_style;
 static ui_style transform_y;
 static ustring fps_str;
 #define MAX_FPX_BITS 16
+static ustring status_str;
+#define MAX_STATUS_BITS 256
+
+static GLFWcursor *default_cursor;
+static GLFWcursor *text_input_cursor;
+static GLFWcursor *resize_hori_cursor;
+static GLFWcursor *resize_vert_cursor;
 
 static bool empty_launch = true;
 
@@ -38,8 +47,8 @@ static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
@@ -138,15 +147,29 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     ui_input_init(&search_input, path);
     ui_label_init(&copyright, ustring_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
+
+    fps_str.data = malloc(MAX_FPX_BITS);
+    memset((void*)fps_str.data, 0, MAX_FPX_BITS);
+    fps_str.length = MAX_FPX_BITS;
     ui_label_init(&fps_label, fps_str);
     fps_label.element.constraint.alignment = BOTTOM | RIGHT;
     fps_label.element.constraint.margin.right = 32.f;
     fps_label.element.constraint.margin.bottom = 10.f;
     fps_label.scale = 0.7f;
 
-    fps_str.data = malloc(MAX_FPX_BITS);
-    memset(fps_str.data, 0, MAX_FPX_BITS);
-    fps_str.length = MAX_FPX_BITS;
+    status_str.data = malloc(MAX_STATUS_BITS);
+    memset((void*)status_str.data, 0, MAX_STATUS_BITS);
+    status_str.length = MAX_STATUS_BITS;
+    ui_label_init(&status_label, status_str);
+    status_label.element.constraint.alignment = BOTTOM | LEFT;
+    status_label.element.constraint.margin.left = 10.f;
+    status_label.element.constraint.margin.bottom = 10.f;
+    status_label.scale = 0.7f;
+
+    default_cursor = glfwCreateStandardCursor(CURSOR_Default);
+    text_input_cursor = glfwCreateStandardCursor(CURSOR_Text);
+    resize_hori_cursor = glfwCreateStandardCursor(CURSOR_ResizeHori);
+    resize_vert_cursor = glfwCreateStandardCursor(CURSOR_ResizeVert);
 }
 
 static void ui_render() {
@@ -160,6 +183,7 @@ static void ui_render() {
     ui_renderer_render(&renderer);
 
     ui_label(&state, &fps_label, transform_y, state.window_rect, 0, 0);
+    ui_label(&state, &status_label, text_style, state.window_rect, 0, 0);
 }
 
 #define FPS_MA 10
@@ -177,7 +201,6 @@ static void state_update(GLFWwindow *window) {
     if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
         script_window_mouse_move(mouse_x, mouse_y);
         state.mouse_location = (float2){.x = (f32)mouse_x / ctx->ui_scale, .y = (f32)mouse_y / ctx->ui_scale};
-        printf("%5.f, %5.f\n", state.mouse_location.x, state.mouse_location.y);
     }
  
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
@@ -188,6 +211,25 @@ static void state_update(GLFWwindow *window) {
 
     ui_state_update(&state);
 
+    // set cursor
+    switch (state.cursor_type)
+    {
+    case CURSOR_Default:
+        glfwSetCursor(window, default_cursor);
+        break;
+        case CURSOR_Text:
+        glfwSetCursor(window, text_input_cursor);
+        break;
+            case CURSOR_ResizeHori:
+        glfwSetCursor(window, resize_hori_cursor);
+        break;
+            case CURSOR_ResizeVert:
+        glfwSetCursor(window, resize_vert_cursor);
+        break;
+    default:
+        break;
+    }
+
     // compute fps
     double current_time = glfwGetTime();
     double delta_time = current_time - last_time[nb_frames % FPS_MA];
@@ -196,10 +238,14 @@ static void state_update(GLFWwindow *window) {
 
     if (nb_frames > FPS_MA) {
         double fps = FPS_MA / (current_time - last_time[(nb_frames - FPS_MA) % FPS_MA]);
-        sprintf(fps_str.data, "%16.f", fps);
+        sprintf((void*)fps_str.data, "%16.f", fps);
         ui_label_update_text(&fps_label, fps_str);
     }
-} 
+
+    // update status label
+    sprintf((void*)status_str.data, "h: %d, a: %d, f: %d", state.hover, state.active, state.focus);
+    ui_label_update_text(&status_label, status_str);
+}
 
 int main(int argc, char** argv) {
     GLFWwindow* window;
@@ -257,7 +303,6 @@ int main(int argc, char** argv) {
 
     while (!glfwWindowShouldClose(window))
     {
-        state_update(window);
         if (empty_launch) {
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -266,6 +311,7 @@ int main(int argc, char** argv) {
         }
 
         ui_render();
+        state_update(window);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
