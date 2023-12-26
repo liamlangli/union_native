@@ -15,7 +15,7 @@ u32 ustring_safe_growth(ustring* s, u32 n) {
         while (new_length < new_size) new_length *= 2;
         char* new_data = malloc(new_length);
         memcpy(new_data, s->data, size);
-        free((void*)s->data);
+        if (!s->is_static) free((void*)s->data);
         s->data = new_data;
         s->length = new_length;
     }

@@ -18,6 +18,7 @@ void ui_input_init(ui_input_t *input, ustring_view text) {
     input->label.element.constraint.margin.left = 5.f;
 }
 
+
 void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, u32 clip) {
     ui_rect cursor_rect = rect;
     f32 scale = input->label.scale;
@@ -48,11 +49,75 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
 
     if (ui_state_is_key_press(state, KEY_BACKSPACE)) {
         if (control_pressed) {
-            ustring_view_clear(&input->label.text);
+            to == input->label.text.length ? ustring_view_clear(&input->label.text) : ustring_view_erase(&input->label.text, from, to);
+            input->label.cursor_index = 0;
+            input->label.start_index = 0;
         } else {
-            ustring_view_pop(&input->label.text);
+            if (from == to) {
+                if (from > 0) {
+                    ustring_view_erase(&input->label.text, from - 1, from);
+                    input->label.cursor_index = from - 1;
+                    input->label.start_index = from - 1;
+                }
+            } else {
+                ustring_view_erase(&input->label.text, from, to);
+                input->label.cursor_index = from;
+                input->label.start_index = from;
+            }
         }
+        hmdel(state->key_press, KEY_BACKSPACE);
+        input->label.render_selected = false;
         ui_label_update_text(&input->label, input->label.text);
+    }
+
+    if (control_pressed) {
+        if (ui_state_is_key_press(state, KEY_A)) {
+            input->label.cursor_index = 0;
+            input->label.start_index = input->label.text.length;
+            input->label.render_selected = true;
+        }
+        if (ui_state_is_key_press(state, KEY_LEFT)) {
+            input->label.cursor_index = 0;
+            input->label.render_selected = false;
+        }
+        if (ui_state_is_key_press(state, KEY_RIGHT)) {
+            input->label.cursor_index = input->label.text.length;
+            input->label.render_selected = false;
+        }
+    } else {
+        if (ui_state_is_key_press(state, KEY_LEFT)) {
+            if (input->label.cursor_index > 0) {
+                input->label.cursor_index = MACRO_MAX(input->label.cursor_index - 1, 0);
+                input->label.start_index = input->label.cursor_index;
+            }
+        }
+
+        if (ui_state_is_key_press(state, KEY_RIGHT)) {
+            if (input->label.cursor_index < input->label.text.length) {
+                input->label.cursor_index = MACRO_MIN(input->label.cursor_index + 1, input->label.text.length);
+                input->label.start_index = input->label.cursor_index;
+            }
+        }
+
+        u32 count = ui_state_parse_char(state);
+        if (count > 0 && from != to) {
+            ustring_view_erase(&input->label.text, from, to);
+            input->label.cursor_index = from;
+            input->label.start_index = from;
+            input->label.render_selected = false;
+        }
+
+        if (input->label.cursor_index == input->label.text.length) {
+            ustring_view_append_ustring_view(&input->label.text, &state->edit_str);
+            input->label.cursor_index = input->label.text.length;
+            input->label.start_index = input->label.cursor_index;
+        } else {
+            ustring_view_insert_ustring_view(&input->label.text, input->label.cursor_index, &state->edit_str);
+            input->label.cursor_index += count;
+            if (count > 0) input->label.start_index = input->label.cursor_index;
+        }
+
+        if (count > 0) ui_label_update_text(&input->label, input->label.text);
     }
 }
 

@@ -36,6 +36,7 @@ typedef struct ui_state_t {
     ui_key_map_t *key_press;
     ui_key_map_t *key_release;
     ui_key_map_t *key_pressed;
+    ustring_view edit_str;
 
     bool updated;
     u32 cursor_type;
@@ -65,3 +66,5 @@ bool ui_state_is_key_release(ui_state_t *state, int key);
 
 bool ui_state_update(ui_state_t *state);
 bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index);
+
+u32 ui_state_parse_char(ui_state_t *state);

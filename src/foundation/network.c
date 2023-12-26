@@ -5,7 +5,7 @@
 
 url_t url_parse(ustring url) {
     url_t result = {0};
-    const char *data = url.data;
+    char *data = url.data;
     u32 length = url.length;
     u32 index = 0;
     u32 colon = 0;

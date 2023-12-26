@@ -124,7 +124,7 @@ static ustring script_init(GLFWwindow *window, int argc, char **argv) {
     script_module_browser_register();
     script_module_webgl2_register();
 
-    ustring path = argc >= 2 ? ustring_str(argv[1]) : ustring_str("public/terrain.js");
+    ustring path = argc >= 2 ? ustring_str(argv[1]) : ustring_STR("public/terrain.js");
     ustring content;
     url_t url = url_parse(path);
     if (url.valid) {
@@ -136,6 +136,7 @@ static ustring script_init(GLFWwindow *window, int argc, char **argv) {
     }
     script_eval(content, path);
     empty_launch = false;
+    path.is_static = true;
     return path;
 }
 
