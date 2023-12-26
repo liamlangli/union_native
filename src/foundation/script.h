@@ -24,7 +24,7 @@ typedef struct script_context_t {
     int height;
     int framebuffer_width;
     int framebuffer_height;
-    f64 display_ratio;
+    f64 display_ratio, ui_scale;
     f64 mouse_x, mouse_y;
 
     js_listener_hm *window_event_listeners;

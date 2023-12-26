@@ -86,15 +86,18 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
     script_context_t *ctx = script_context_share();
     glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
     ctx->display_ratio = (f64)ctx->framebuffer_height / (f64)ctx->height;
-    renderer.window_size.x = (f32)width;
-    renderer.window_size.y = (f32)height;
+    f32 ui_width = (f32)width / ctx->ui_scale * ctx->display_ratio;
+    f32 ui_height = (f32)height / ctx->ui_scale * ctx->display_ratio;
+    renderer.window_size.x = ui_width;
+    renderer.window_size.y = ui_height;
     state.window_rect = (ui_rect){
         .x = 0.f,
         .y = 0.f,
-        .w = (f32)width,
-        .h = (f32)height
+        .w = ui_width,
+        .h = ui_height
     };
     script_window_resize(width, height);
+    printf("resize w %d h %d r %.4f\n", ctx->width, ctx->height, ctx->display_ratio);
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -137,7 +140,7 @@ static void renderer_init(GLFWwindow* window, ustring path) {
     copyright.element.constraint.alignment = CENTER;
     ui_label_init(&fps_label, fps_str);
     fps_label.element.constraint.alignment = BOTTOM | RIGHT;
-    fps_label.element.constraint.margin.right = 20.f;
+    fps_label.element.constraint.margin.right = 32.f;
     fps_label.element.constraint.margin.bottom = 10.f;
     fps_label.scale = 0.7f;
 
@@ -168,10 +171,13 @@ static void state_update(GLFWwindow *window) {
 
     script_context_t *ctx = script_context_share();
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    mouse_x = mouse_x * ctx->display_ratio;
+    mouse_y = mouse_y * ctx->display_ratio;
 
     if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
         script_window_mouse_move(mouse_x, mouse_y);
-        state.mouse_location = (float2){.x = (f32)mouse_x, .y = (f32)mouse_y};
+        state.mouse_location = (float2){.x = (f32)mouse_x / ctx->ui_scale, .y = (f32)mouse_y / ctx->ui_scale};
+        printf("%5.f, %5.f\n", state.mouse_location.x, state.mouse_location.y);
     }
  
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
@@ -213,6 +219,7 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
     int window_width = 1080;
     int window_height = 720;
@@ -244,7 +251,7 @@ int main(int argc, char** argv) {
     text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e166);
     transform_y = ui_style_from_hex(0x4dbe63ff, 0x313233ff, 0x3c3d3eff, 0x4dbe63ff);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
 

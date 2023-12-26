@@ -410,6 +410,7 @@ int script_eval(ustring source, ustring filename) {
 void script_window_resize(int width, int height) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    context->ui_scale = 2.0;
     context->width = width;
     context->height = height;
     context->framebuffer_width = width * context->display_ratio;
