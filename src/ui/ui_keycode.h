@@ -1,6 +1,7 @@
 #pragma once
 
 #define KEY_LOWER_CASE_A 97
+#define KEY_SPACE_MACOS 9
 
 enum KEYCODE {
     KEY_SPACE = 32,

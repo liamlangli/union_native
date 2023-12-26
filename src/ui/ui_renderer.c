@@ -205,7 +205,6 @@ void ui_renderer_render(ui_renderer_t* renderer)
     ui_renderer_merge_layers(renderer);
     if (renderer->last_index_offset <= 0) return;
 
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(renderer->program);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

@@ -49,13 +49,19 @@ static void error_callback(int error, const char* description) {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
+
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
         ui_state_key_release(&state, key);
     }
-
-    if (ui_state_is_key_pressed(&state, KEY_LEFT_CONTROL) && ui_state_is_key_pressed(&state, KEY_Q)) {
+    
+    const bool control_pressed = ui_state_is_key_pressed(&state, KEY_LEFT_CONTROL) ||
+        ui_state_is_key_pressed(&state, KEY_RIGHT_CONTROL) ||
+        ui_state_is_key_pressed(&state, KEY_LEFT_SUPER) ||
+        ui_state_is_key_pressed(&state, KEY_RIGHT_SUPER);
+    if (control_pressed && ui_state_is_key_pressed(&state, KEY_Q)) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 }
@@ -116,13 +122,24 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 
 static ustring script_init(GLFWwindow *window, int argc, char **argv) {
     script_context_t *ctx = script_context_share();
-    f32 scale_x, scale_y;
     glfwGetWindowSize(window, &ctx->width, &ctx->height);
-    glfwGetWindowContentScale(window, &scale_x, &scale_y);
-    ctx->display_ratio = scale_y;
+    glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
+    ctx->display_ratio = (f32)ctx->framebuffer_height / (f32)ctx->height;
     script_window_resize(ctx->width, ctx->height);
     script_module_browser_register();
     script_module_webgl2_register();
+    renderer.window_size.z = (f32)ctx->display_ratio;
+
+    f32 ui_width = (f32)ctx->width / ctx->ui_scale * ctx->display_ratio;
+    f32 ui_height = (f32)ctx->height / ctx->ui_scale * ctx->display_ratio;
+    renderer.window_size.x = ui_width;
+    renderer.window_size.y = ui_height;
+    state.window_rect = (ui_rect){
+        .x = 0.f,
+        .y = 0.f,
+        .w = ui_width,
+        .h = ui_height
+    };
 
     ustring path = argc >= 2 ? ustring_str(argv[1]) : ustring_STR("public/terrain.js");
     ustring content;
@@ -143,9 +160,6 @@ static ustring script_init(GLFWwindow *window, int argc, char **argv) {
 static void renderer_init(GLFWwindow* window, ustring path) {
     ui_renderer_init(&renderer);
     ui_state_init(&state, &renderer);
-    f32 context_scale_x, context_scale_y;
-    glfwGetWindowContentScale(window, &context_scale_x, &context_scale_y);
-    renderer.window_size.z = context_scale_y;
     ui_input_init(&search_input, ustring_view_ustring(path));
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;

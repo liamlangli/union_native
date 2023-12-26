@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(un)
 
-set(RENDER_DOC OFF CACHE BOOL "Enable RenderDoc support")
+set(ENABLE_RENDER_DOC OFF CACHE BOOL "Enable RenderDoc support")
+set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable RenderDoc support")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -23,7 +24,7 @@ source_group(main FILES ${MAIN_ENTRY})
 include_directories(src)
 include_directories(${THIRD_PARTY}/stb)
 
-if (RENDER_DOC)
+if (ENABLE_RENDER_DOC)
     add_definitions(-DRENDER_DOC_CAPTURE)
     include_directories(${THIRD_PARTY}/renderdoc/include)
 endif()
@@ -49,9 +50,10 @@ elseif (APPLE)
         ${THIRD_PARTY}/glfw/lib/macos
         ${THIRD_PARTY}/quickjs/lib/macos
     )
+    set(CMAKE_INSTALL_RPATH "/usr/local/lib")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     add_definitions(-DOS_MACOS)
     add_definitions(-DGL_SILENCE_DEPRECATION)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 else() # LINUX
     include_directories(
         ${THIRD_PARTY}/glfw/include)
@@ -62,32 +64,31 @@ else() # LINUX
         ${THIRD_PARTY}/glfw/lib/linux
     )
     add_definitions(-DOS_LINUX)
-    if (RENDER_DOC)
+    if (ENABLE_RENDER_DOC)
         link_directories(${THIRD_PARTY}/renderdoc/lib/linux)
     endif()
 endif()
 
 add_executable(${PROJECT_NAME} ${MAIN_ENTRY} ${FOUNDATION_SOURCES} ${UI_SOURCES})
 
+set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD_MODE GROUP)
+set_source_files_properties(${FOUNDATION_SOURCES} PROPERTIES UNITY_GROUP "foundation")
+set_source_files_properties(${UI_SOURCES} PROPERTIES UNITY_GROUP "ui")
+
 if (WIN32)
 target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
 elseif (APPLE)
     target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl)
-    if (RENDER_DOC)
-        target_link_libraries(${PROJECT_NAME} renderdoc)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${THIRD_PARTY}/renderdoc/lib/macos/librenderdoc.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    endif()
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
+        ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 else()
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
-    if (RENDER_DOC)
+    if (ENABLE_RENDER_DOC)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
             ${THIRD_PARTY}/renderdoc/lib/linux/librenderdoc.so $<TARGET_FILE_DIR:${PROJECT_NAME}>)

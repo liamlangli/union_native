@@ -6,7 +6,6 @@
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->renderer = renderer;
-
     state->next_hover = -1;
     state->next_hover_layer_index = -1;
     state->active = -1;
@@ -114,8 +113,9 @@ u32 ui_state_parse_char(ui_state_t *state) {
     ustring_view_clear(dst);
     const bool shift = ui_state_is_key_press(state, KEY_LEFT_SHIFT) || ui_state_is_key_press(state, KEY_RIGHT_SHIFT);
     u32 valid_char_count = 0;
-    for (int i = 0, l = hmlen(state->key_press); i < l; i++) {
+    for (int i = 0, l = (int)hmlen(state->key_press); i < l; i++) {
         int key = state->key_press[i].key;
+        if (key == 0) continue;
         if (key >= KEY_A && key <= KEY_Z) {
             if (!shift) {
                 key = key - KEY_A + KEY_LOWER_CASE_A;
@@ -123,57 +123,64 @@ u32 ui_state_parse_char(ui_state_t *state) {
             ustring_view_push(dst, key);
             valid_char_count++;
         } else {
+            bool valid = true;
             switch (key) {
                 case KEY_0:
-                    key = shift ? ')' : '0';
+                    key = shift ? ')' : '0'; break;
                 case KEY_1:
-                    key = shift ? '!' : '1';
+                    key = shift ? '!' : '1'; break;
                 case KEY_2:
-                    key = shift ? '@' : '2';
+                    key = shift ? '@' : '2'; break;
                 case KEY_3:
-                    key = shift ? '#' : '3';
+                    key = shift ? '#' : '3'; break;
                 case KEY_4:
-                    key = shift ? '$' : '4';
+                    key = shift ? '$' : '4'; break;
                 case KEY_5:
-                    key = shift ? '%' : '5';
+                    key = shift ? '%' : '5'; break;
                 case KEY_6:
-                    key = shift ? '^' : '6';
+                    key = shift ? '^' : '6'; break;
                 case KEY_7:
-                    key = shift ? '&' : '7';
+                    key = shift ? '&' : '7'; break;
                 case KEY_8:
-                    key = shift ? '*' : '8';
+                    key = shift ? '*' : '8'; break;
                 case KEY_9:
-                    key = shift ? '(' : '9';
+                    key = shift ? '(' : '9'; break;
                 case KEY_MINUS:
-                    key = shift ? '_' : '-';
+                    key = shift ? '_' : '-'; break;
                 case KEY_EQUAL:
-                    key = shift ? '+' : '=';
+                    key = shift ? '+' : '='; break;
                 case KEY_LEFT_BRACKET:
-                    key = shift ? '{' : '[';
+                    key = shift ? '{' : '['; break;
                 case KEY_RIGHT_BRACKET:
-                    key = shift ? '}' : ']';
+                    key = shift ? '}' : ']'; break;
                 case KEY_BACKSLASH:
-                    key = shift ? '|' : '\\';
+                    key = shift ? '|' : '\\'; break;
                 case KEY_COMMA:
-                    key = shift ? '<' : ',';
+                    key = shift ? '<' : ','; break;
                 case KEY_PERIOD:
-                    key = shift ? '>' : '.';
+                    key = shift ? '>' : '.'; break;
                 case KEY_SLASH:
-                    key = shift ? '?' : '/';
+                    key = shift ? '?' : '/'; break;
                 case KEY_GRAVE_ACCENT:
-                    key = shift ? '~' : '`';
+                    key = shift ? '~' : '`'; break;
                 case KEY_SEMICOLON:
-                    key = shift ? ':' : ';';
-                case GLFW_KEY_APOSTROPHE   :
-                    key = shift ? 34 : 39; // 34 = ", 39 = '
+                    key = shift ? ':' : ';'; break;
+                case GLFW_KEY_APOSTROPHE:
+                    key = shift ? 34 : 39; break; // 34 = ", 39 = '
                 case KEY_SPACE:
-                    key = ' ';
+                case KEY_SPACE_MACOS:
+                    key = ' '; break;
                 case KEY_TAB:
-                    key = '\t';
+                    key = '\t'; break;
                 default:
+                    fprintf(stderr, "Unknown key: %d\n", key);
+                    valid = false;
                     break;
             }
-            valid_char_count++;
+            if (valid) {
+                ustring_view_push(dst, key);
+                valid_char_count++;
+            }
         }
     }
     return valid_char_count;

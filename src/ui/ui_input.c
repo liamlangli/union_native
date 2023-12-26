@@ -154,6 +154,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
             hmdel(state->key_press, KEY_ENTER);
             input->label.cursor_index = input->label.text.length;
             input->label.render_selected = false;
+            ustring_view_set_null_terminated(&input->label.text);
         }
 
         if (ui_state_is_key_press(state, KEY_ESCAPE)) {
@@ -161,6 +162,8 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
             ui_state_clear_active(state);
             ui_state_clear_focus(state);
             hmdel(state->key_press, KEY_ESCAPE);
+            ustring_view_set_ustring_view(&input->label.text, &input->unmodified_text);
+            ui_label_update_text(&input->label, input->label.text);
             input->label.cursor_index = input->label.text.length;
             input->label.render_selected = false;
         }

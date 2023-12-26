@@ -23,20 +23,20 @@ typedef struct ustring_view {
     u32 length;
 } ustring_view;
 
-#define ustring_view_ustring(s) ((ustring_view) {.base = s, .start = 0, .length = s.length})
-#define ustring_view_alloc_STR(s) ((ustring_view) {.base = ustring_STR(s), .start = 0, .length = ustring_STR(s).length })
-#define ustring_view_str(s) ((ustring_view) {.base = ustring_str(s), .start = 0, .length = ustring_str(s).length })
-#define ustring_view_STR(s) ((ustring_view) {.base = ustring_STR(s), .start = 0, .length = ustring_STR(s).length })
-#define ustring_view_reserve(s, n) (ustring_safe_growth(&(s)->base, (s)->start + (s)->length + (n)))
-#define ustring_view_range(b, s, e) ((ustring_view) {.base = (b), .start = (s), .length = (e) - (s) })
+#define ustring_view_ustring(v) ((ustring_view) {.base = v, .start = 0, .length = v.length})
+#define ustring_view_alloc_STR(v) ((ustring_view) {.base = ustring_STR(v), .start = 0, .length = ustring_STR(v).length })
+#define ustring_view_str(v) ((ustring_view) {.base = ustring_str(v), .start = 0, .length = ustring_str(v).length })
+#define ustring_view_STR(v) ((ustring_view) {.base = ustring_STR(v), .start = 0, .length = ustring_STR(v).length })
+#define ustring_view_reserve(v, n) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + (n)))
+#define ustring_view_range(b, s, e) ((ustring_view) {.base = (b), .start = (v), .length = (e) - (v) })
 #define ustring_view_clear(v) ((v)->start = 0, (v)->length = 0)
 #define ustring_view_erase(v, f, t) (memmove((void*)(v)->base.data + (v)->start + (f), (void*)(v)->base.data + (v)->start + (t), (v)->length - (t)), (v)->length -= (t) - (f))
 #define ustring_view_equals(a, b) ((a)->start == (b)->start && (a)->length == (b)->length && strncmp((a)->base.data + (a)->start, (b)->base.data + (b)->start, (a)->length) == 0)
-#define ustring_view_set_ustring_view(a, b) (ustring_safe_growth(&(a)->base, (b)->length), memcpy((void*)(a)->base.data + (a)->start, (b)->base.data + (b)->start, (b)->length), (a)->length = (b)->length)
 #define ustring_view_pop(v) ((v)->length = (v)->length > 0 ? (v)->length - 1 : 0)
-#define ustring_view_push(v, c) (ustring_safe_growth(&(v)->base, (v)->length + 1), (v)->length++, (v)->base.data[(v)->start + (v)->length - 1] = (c))
-#define ustring_view_append_ustring(v, s) (ustring_safe_growth(&(v)->base, (v)->length + (s)->length), memcpy((void*)(v)->base.data + (v)->start + (v)->length, (s)->data, (s)->length), (v)->length += (s)->length)
-#define ustring_view_append_ustring_view(a, b) (ustring_safe_growth(&(a)->base, (a)->start + (a)->length + (b)->length), memcpy((void*)(a)->base.data + (a)->start + (a)->length, (b)->base.data + (b)->start, (b)->length), (a)->length += (b)->length)
-#define ustring_view_push_str(v, s) (ustring_safe_growth(&(v)->base, (v)->length + (u32)strlen(s)), memcpy((void*)(v)->base.data + (v)->start + (v)->length, s, strlen(s)), (v)->length += (u32)strlen(s))
-#define ustring_view_insert_ustring_view(v, i, s) (ustring_safe_growth(&(v)->base, (v)->length + (s)->length), memmove((void*)(v)->base.data + (v)->start + (i) + (s)->length, (void*)(v)->base.data + (v)->start + (i), (v)->length - (i)), memcpy((void*)(v)->base.data + (v)->start + (i), (s)->base.data + (s)->start, (s)->length), (v)->length += (s)->length)
-#define ustring_view_free(s) (free((void*)(s)->base.data), (s)->base.data = NULL, (s)->base.length = 0, (s)->base.null_terminated = 0, (s)->start = 0, (s)->length = 0)
+#define ustring_view_push(v, c) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + 1), (v)->length++, (v)->base.data[(v)->start + (v)->length - 1] = (c))
+#define ustring_view_free(v) (free((void*)(v)->base.data), (v)->base.data = NULL, (v)->base.length = 0, (v)->base.null_terminated = 0, (v)->start = 0, (v)->length = 0)
+#define ustring_view_set_null_terminated(v) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + 1), (v)->base.null_terminated = true, (v)->base.data[(v)->start + (v)->length] = 0)
+
+u32 ustring_view_insert_ustring_view(ustring_view *a, u32 index, ustring_view *b);
+u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b);
+u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b);
