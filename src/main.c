@@ -117,7 +117,8 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
     url_t url = url_parse(uri);
     if (url.valid) {
         printf("protocol: %s\nhost: %s\nport: %d\npath: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-        content = io_http_get(url);
+        content = io_http_download(url);
+        printf("content: %s\n", content.data);
     } else {
         printf("load file: %s\n", uri.base.data);
         content = io_read_file(uri);
@@ -283,7 +284,7 @@ int main(int argc, char** argv) {
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/index.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
     renderer_init(window, uri);
     script_init(window, uri);
 

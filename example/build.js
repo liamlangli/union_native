@@ -10,10 +10,9 @@ build({
     bundle: true,
     outdir: "../build/public",
     treeShaking: true,
-    external: ['acorn'],
-    minify: true,
-    minifyIdentifiers: true,
-    minifySyntax: true,
+    // minify: true,
+    // minifyIdentifiers: true,
+    // minifySyntax: true,
     plugins: [
         glsl({ minify: true, resolveIncludes: true })
     ],

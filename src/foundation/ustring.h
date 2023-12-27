@@ -21,6 +21,9 @@ u32 ustring_safe_growth(ustring *s, u32 n);
     (strcmp((a)->data, (b)->data) == 0 && (a)->length == (b)->length && (a)->null_terminated == (b)->null_terminated)
 #define ustring_free(s)                                                                                                        \
     (free((void *)(s)->data), (s)->data = NULL, (s)->length = 0, (s)->null_terminated = 0, (s)->is_static = 0)
+#define ustring_append_length(s, d, n)                                                                                            \
+    (ustring_safe_growth(s, (s)->length + (n)), memcpy((s)->data + (s)->length, (d), (n)), (s)->length += (n),                \
+     (s)->null_terminated = false)
 
 // mutable string view
 typedef struct ustring_view {

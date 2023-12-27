@@ -5,6 +5,9 @@ build
 .vs
 .vscode/ipch
 .cache
+.idea
+
+cmake-build-debug
 
 .DS_Store
 __pycache__

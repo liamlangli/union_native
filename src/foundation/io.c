@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -50,7 +51,9 @@ ustring io_read_file(ustring_view path) {
     return ustring_str(buffer);
 }
 
-#define BUFFER_SIZE 1024
+#define HEADER_BUFFER_SIZE 1024
+#define BUFFER_SIZE 16384
+
 #define ACCEPT                                                                                                                 \
     "Accept: "                                                                                                                 \
     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"                                                  \
@@ -62,20 +65,20 @@ ustring io_read_file(ustring_view path) {
     "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "                                                \
     "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 
-ustring io_http_get(url_t url) {
+ustring io_http_download(url_t url) {
     int sockfd;
     struct sockaddr_in server_addr;
     struct hostent *host;
-    char request[BUFFER_SIZE];
-    char response[BUFFER_SIZE];
+    char *request = malloc(HEADER_BUFFER_SIZE);
     char host_buff[256];
-    char *file_content = NULL;
+    char *file_content = malloc(BUFFER_SIZE);
+    ustring file_data = ustring_STR("");
 
     // Create socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("Socket creation failed");
-        return ustring_str("");
+        return file_data;
     }
 
     // Get host information
@@ -84,50 +87,38 @@ ustring io_http_get(url_t url) {
     host = gethostbyname(host_buff);
     if (host == NULL) {
         perror("Failed to get host information");
-        return ustring_str("");
+        return file_data;
     }
 
     // Set server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(80);
     server_addr.sin_addr = *((struct in_addr *)host->h_addr);
-    memset(&(server_addr.sin_zero), 0, 8);
+    memset((void*)&(server_addr.sin_zero), 0, 8);
 
     // Connect to server
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
         perror("Connection failed");
-        return ustring_str("");
+        return file_data;
     }
 
     // Send HTTP GET request
-    snprintf(request, BUFFER_SIZE, "GET /%s HTTP/1.1\r\nHost: %s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n", url.path.data,
-             host_buff, ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, USER_AGENT);
-
+    snprintf(request, HEADER_BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\n%s\r\n\r\n", url.path.data, url.host.data, USER_AGENT);
     if (send(sockfd, request, strlen(request), 0) == -1) {
         perror("Failed to send request");
-        return ustring_str("");
+        return file_data;
     }
 
-    // Receive response
-    memset(response, 0, BUFFER_SIZE);
-    if (recv(sockfd, response, BUFFER_SIZE - 1, 0) == -1) {
-        perror("Failed to receive response");
-        return ustring_str("");
-    }
-
-    // Extract file content from response
-    char *content_start = strstr(response, "\r\n\r\n");
-    if (content_start != NULL) {
-        content_start += 4; // Skip the "\r\n\r\n"
-        size_t content_length = strlen(content_start);
-        file_content = (char *)malloc(content_length + 1);
-        strncpy(file_content, content_start, content_length);
-        file_content[content_length] = '\0';
+    // Receive file data
+    ssize_t bytes_received;
+    while ((bytes_received = recv(sockfd, file_content, BUFFER_SIZE, 0)) > 0) {
+        ustring_append_length(&file_data, file_content, bytes_received);
     }
 
     // Close socket
     close(sockfd);
-    return ustring_str(file_content);
+
+    return file_data;
 }
 
 u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {

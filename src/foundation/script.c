@@ -384,7 +384,7 @@ int script_eval_uri(ustring_view uri) {
     url_t url = url_parse(uri);
     if (url.valid) {
         printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-        content = io_http_get(url);
+        content = io_http_download(url);
     } else {
         printf("load file: %s\n", uri.base.data);
         content = io_read_file(uri);
