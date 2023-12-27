@@ -42,7 +42,8 @@
                 "${workspaceFolder}/third_party/stb",
             ],
             "defines": [
-                "OS_WINDOWS"
+                "OS_WINDOWS",
+                "RENDER_BACKEND_GLES"
             ],
             "compilerPath": "D:\\msys64\\mingw64\\bin\\clang.exe",
             "intelliSenseMode": "clang-x64",

@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(un)
 
-set(ENABLE_RENDER_DOC OFF CACHE BOOL "Enable RenderDoc support")
-set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable RenderDoc support")
+set(ENABLE_RENDER_DOC OFF CACHE BOOL "Enable renderdoc support")
+set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable group based unity build")
+set(ENABLE_GLES ON CACHE BOOL "Enable gles/webgl2 render backend")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -27,6 +28,10 @@ include_directories(${THIRD_PARTY}/stb)
 if (ENABLE_RENDER_DOC)
     add_definitions(-DRENDER_DOC_CAPTURE)
     include_directories(${THIRD_PARTY}/renderdoc/include)
+endif()
+
+if (ENABLE_GLES)
+    add_definitions(-DRENDER_BACKEND_GLES)
 endif()
 
 if (WIN32)

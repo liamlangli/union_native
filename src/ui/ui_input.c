@@ -18,7 +18,6 @@ void ui_input_init(ui_input_t *input, ustring_view text) {
     input->label.element.constraint.margin.left = 5.f;
 }
 
-
 void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, u32 clip) {
     ui_rect cursor_rect = rect;
     f32 scale = input->label.scale;
@@ -28,7 +27,8 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
     if (alignment & LEFT) {
         cursor_rect.x += cursor_offset + input->label.element.constraint.margin.left * scale;
     } else if (alignment & RIGHT) {
-        cursor_rect.x += rect.w - (input->label.element.constraint.margin.right + input->label.text_size.x) * scale - cursor_offset;
+        cursor_rect.x +=
+            rect.w - (input->label.element.constraint.margin.right + input->label.text_size.x) * scale - cursor_offset;
     } else {
         cursor_rect.x += (rect.w - input->label.text_size.x * scale) * 0.5f + cursor_offset;
     }
@@ -41,7 +41,9 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
 }
 
 void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
-    const bool control_pressed = ui_state_is_key_pressed(state, KEY_LEFT_CONTROL) || ui_state_is_key_pressed(state, KEY_RIGHT_CONTROL) || ui_state_is_key_pressed(state, KEY_LEFT_SUPER) || ui_state_is_key_pressed(state, KEY_RIGHT_SUPER);
+    const bool control_pressed =
+        ui_state_is_key_pressed(state, KEY_LEFT_CONTROL) || ui_state_is_key_pressed(state, KEY_RIGHT_CONTROL) ||
+        ui_state_is_key_pressed(state, KEY_LEFT_SUPER) || ui_state_is_key_pressed(state, KEY_RIGHT_SUPER);
     const int start = input->label.start_index;
     const int end = input->label.cursor_index;
     const int from = MACRO_MIN(start, end);
@@ -49,7 +51,8 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
 
     if (ui_state_is_key_press(state, KEY_BACKSPACE)) {
         if (control_pressed) {
-            to == input->label.text.length ? ustring_view_clear(&input->label.text) : ustring_view_erase(&input->label.text, from, to);
+            to == input->label.text.length ? ustring_view_clear(&input->label.text)
+                                           : ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = 0;
             input->label.start_index = 0;
         } else {
@@ -114,10 +117,12 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         } else {
             ustring_view_insert_ustring_view(&input->label.text, input->label.cursor_index, &state->edit_str);
             input->label.cursor_index += count;
-            if (count > 0) input->label.start_index = input->label.cursor_index;
+            if (count > 0)
+                input->label.start_index = input->label.cursor_index;
         }
 
-        if (count > 0) ui_label_update_text(&input->label, input->label.text);
+        if (count > 0)
+            ui_label_update_text(&input->label, input->label.text);
     }
 }
 
@@ -195,7 +200,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     fill_round_rect_pre_corner(state->renderer, 0, fill_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
 
     if (input->outline && (state->active == id || state->focus == id || state->hover == id)) {
-        ui_style outline_style = (ui_style){ .color = style.outline_color, .line_width = 2.f, .line_feather = 1.f };
+        ui_style outline_style = (ui_style){.color = style.outline_color, .line_width = 2.f, .line_feather = 1.f};
         stroke_round_rect_pre_corner(state->renderer, 0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
     }
 

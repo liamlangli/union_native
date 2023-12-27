@@ -2,13 +2,9 @@
 #include <math.h>
 
 static u32 ui_id = 0;
-u32 ui_id_create() {
-    return ui_id++;
-}
+u32 ui_id_create() { return ui_id++; }
 
-void ui_id_reset() {
-    ui_id = 0;
-}
+void ui_id_reset() { ui_id = 0; }
 
 ui_rect ui_constraint_layout(ui_constraint *constraint, ui_rect parent) {
     ui_rect rect = (ui_rect){.x = 0.f, .y = 0.f, .w = constraint->width, .h = constraint->height};

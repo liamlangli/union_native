@@ -9,13 +9,13 @@
 
 #if defined(OS_WINDOWS)
     int betriebssystem = 1;
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
     #include <iphlpapi.h>
+    #include <winsock2.h>
     #include <ws2def.h>
+    #include <ws2tcpip.h>
     #pragma comment(lib, "Ws2_32.lib")
-    #include <windows.h>
     #include <io.h>
+    #include <windows.h>
 #else
     #include <netdb.h>
     #include <netinet/in.h>
@@ -46,15 +46,15 @@ ustring io_read_file(ustring_view path) {
 }
 
 #define BUFFER_SIZE 1024
-#define ACCEPT                                                                 \
-    "Accept: "                                                                   \
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"    \
+#define ACCEPT                                                                                                                 \
+    "Accept: "                                                                                                                 \
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"                                                  \
     "webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
 #define ACCEPT_ENCODING "Accept-Encoding: gzip, deflate, br"
 #define ACCEPT_LANGUAGE "Accept-Language: en-US,en;q=0.9"
 #define CACHE_CONTROL "Cache-Control: no-cache"
-#define USER_AGENT                                                             \
-    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "  \
+#define USER_AGENT                                                                                                             \
+    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "                                                \
     "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 
 ustring io_http_get(url_t url) {
@@ -89,17 +89,14 @@ ustring io_http_get(url_t url) {
     memset(&(server_addr.sin_zero), 0, 8);
 
     // Connect to server
-    if (connect(sockfd, (struct sockaddr *)&server_addr,
-                sizeof(struct sockaddr)) == -1) {
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
         perror("Connection failed");
         return ustring_str("");
     }
 
     // Send HTTP GET request
-    snprintf(request, BUFFER_SIZE,
-            "GET /%s HTTP/1.1\r\nHost: %s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n",
-            url.path.data, host_buff, ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE,
-            CACHE_CONTROL, USER_AGENT);
+    snprintf(request, BUFFER_SIZE, "GET /%s HTTP/1.1\r\nHost: %s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n", url.path.data,
+             host_buff, ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, USER_AGENT);
 
     if (send(sockfd, request, strlen(request), 0) == -1) {
         perror("Failed to send request");
@@ -128,11 +125,11 @@ ustring io_http_get(url_t url) {
     return ustring_str(file_content);
 }
 
-u8* io_load_image(ustring_view path, int* width, int* height, int *channel, int request_channel) {
+u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {
     ustring_view_set_null_terminated(&path);
     return stbi_load(path.base.data, width, height, channel, request_channel);
 }
 
-u8* io_load_image_memory(u8* data, size_t length, int* width, int* height, int *channel, int request_channel) {
+u8 *io_load_image_memory(u8 *data, size_t length, int *width, int *height, int *channel, int request_channel) {
     return stbi_load_from_memory(data, (int)length, width, height, channel, request_channel);
 }

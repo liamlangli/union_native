@@ -1,5 +1,4 @@
-#include "foundation/script.h"
-#include "ui/ui_input.h"
+#include "ui/ui_label.h"
 #include "ui/ui_renderer.h"
 #include "ui/ui_draw.h"
 

@@ -1,9 +1,13 @@
 #include "foundation/webgl2.h"
 
 #if defined(RENDER_BACKEND_GLES)
-#include <GLES3/gl3.h>
 
+#include "foundation/global.h"
+#include "foundation/script.h"
+
+#include <GLES3/gl3.h>
 #include <stdlib.h>
+#include <quickjs/quickjs.h>
 
 static int gl_check_error(const char *msg, int line)
 {

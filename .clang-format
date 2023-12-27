@@ -1,0 +1,8 @@
+---
+BreakBeforeBinaryOperators: false
+IndentWidth: 4
+SortIncludes: true
+ColumnLimit: 128
+IndentPPDirectives: BeforeHash
+AlignAfterOpenBracket : AlwaysBreak
+  

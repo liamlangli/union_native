@@ -1,7 +1,7 @@
 #pragma once
 
-#include "foundation/ustring.h"
 #include "foundation/global.h"
+#include "foundation/ustring.h"
 
 typedef struct url_t {
     u16 valid, port;

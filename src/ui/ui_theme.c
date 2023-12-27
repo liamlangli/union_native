@@ -4,7 +4,8 @@ static ui_theme_t system_theme;
 
 ui_theme_t *ui_theme_share() {
     static bool initialized = false;
-    if (initialized) return &system_theme;
+    if (initialized)
+        return &system_theme;
     initialized = true;
     system_theme.panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e166);
     system_theme.panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e166);

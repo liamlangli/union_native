@@ -3,9 +3,9 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 
-#include <quickjs/quickjs.h>
-#include <quickjs/quickjs-libc.h>
 #include <GLFW/glfw3.h>
+#include <quickjs/quickjs-libc.h>
+#include <quickjs/quickjs.h>
 #include <stb_ds.h>
 
 typedef struct js_scope {
@@ -18,8 +18,8 @@ typedef struct js_listener_hm {
 } js_listener_hm;
 
 typedef struct script_context_t {
-    JSRuntime* runtime;
-    JSContext* context;
+    JSRuntime *runtime;
+    JSContext *context;
     int width;
     int height;
     int framebuffer_width;
@@ -32,7 +32,7 @@ typedef struct script_context_t {
     js_listener_hm *canvas_event_listeners;
 } script_context_t;
 
-script_context_t* script_context_share(void);
+script_context_t *script_context_share(void);
 void script_context_cleanup(void);
 void script_context_destroy(void);
 

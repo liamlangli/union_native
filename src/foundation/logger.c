@@ -3,15 +3,10 @@
 #include <stdio.h>
 static FILE *dst;
 
-void logger_init(void)
-{
-    dst = fopen("log.txt", "ab+");
-}
+void logger_init(void) { dst = fopen("log.txt", "ab+"); }
 
-void logger_write_to_file(const char* message)
-{
-    if (message == NULL)
-    {
+void logger_write_to_file(const char *message) {
+    if (message == NULL) {
         return;
     }
 

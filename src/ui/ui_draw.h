@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ui/ui.h"
+#include "foundation/global.h"
+#include "ui/ui_renderer.h"
 
 enum UI_PRIMITIVE_TYPE {
     UI_PRIMITIVE_TYPE_RECTANGLE = (1 << 26),

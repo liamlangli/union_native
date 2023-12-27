@@ -1,10 +1,6 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdbool.h>
-#include <stdlib.h>
-
-#include "foundation/platform.h"
 
 #ifndef bool
     #define bool int
@@ -26,7 +22,7 @@
 #define EXPORT
 #define FORCE_INLINE static inline
 
-typedef char * string;
+typedef char *string;
 
 typedef unsigned char u8;
 typedef char i8;

@@ -114,23 +114,8 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 static void script_init(GLFWwindow *window, ustring_view uri) {
     script_context_cleanup();
     script_context_t *ctx = script_context_share();
-    glfwGetWindowSize(window, &ctx->width, &ctx->height);
-    glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
-    ctx->display_ratio = (f32)ctx->framebuffer_height / (f32)ctx->height;
-    renderer.window_size.z = (f32)ctx->display_ratio;
-    f32 ui_width = (f32)ctx->width / ctx->ui_scale * ctx->display_ratio;
-    f32 ui_height = (f32)ctx->height / ctx->ui_scale * ctx->display_ratio;
-    renderer.window_size.x = ui_width;
-    renderer.window_size.y = ui_height;
-    state.window_rect = (ui_rect){
-        .x = 0.f,
-        .y = 0.f,
-        .w = ui_width,
-        .h = ui_height
-    };
     script_module_browser_register();
     script_module_webgl2_register();
-
     ustring content;
     url_t url = url_parse(uri);
     if (url.valid) {
@@ -142,10 +127,11 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
     }
     script_eval(content, uri);
     ustring_free(&content);
-
-    script_window_resize(ctx->width, ctx->height);
     empty_launch = false;
     uri.base.is_static = true;
+
+    glfwGetWindowSize(window, &ctx->width, &ctx->height);
+    resize_callback(window, ctx->width, ctx->height);
 }
 
 static void renderer_init(GLFWwindow* window, ustring_view uri) {

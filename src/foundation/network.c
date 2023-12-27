@@ -17,7 +17,7 @@ url_t url_parse(ustring_view url) {
 protocol:
     for (index = 0; index < length; index++) {
         if (data[index] == ':') {
-            if(index < length - 2 && data[index + 1] == '/' && data[index + 2] == '/') {
+            if (index < length - 2 && data[index + 1] == '/' && data[index + 2] == '/') {
                 colon = index;
                 goto domain;
             } else {
@@ -80,7 +80,8 @@ fail:
 end:
     result.valid = 1;
     result.protocol = ustring_range(data, data + colon);
-    result.host = port_colon ? ustring_range(data + colon + 3, data + port_colon) : ustring_range(data + colon + 3, data + slash);
+    result.host =
+        port_colon ? ustring_range(data + colon + 3, data + port_colon) : ustring_range(data + colon + 3, data + slash);
     result.port = port_colon ? atoi(data + port_colon + 1) : 80;
     result.path = ustring_range(data + slash + 1, data + question);
     result.query = ustring_range(data + question + 1, data + terminate);
