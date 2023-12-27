@@ -1,16 +1,14 @@
 #include "foundation/webgl2.h"
 
 #if defined(RENDER_BACKEND_GLES)
+    #include "foundation/global.h"
+    #include "foundation/script.h"
 
-#include "foundation/global.h"
-#include "foundation/script.h"
+    #include <GLES3/gl3.h>
+    #include <quickjs/quickjs.h>
+    #include <stdlib.h>
 
-#include <GLES3/gl3.h>
-#include <stdlib.h>
-#include <quickjs/quickjs.h>
-
-static int gl_check_error(const char *msg, int line)
-{
+static int gl_check_error(const char *msg, int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
         fprintf(stderr, "gl error: %d, %s, %d\n", err, msg, line);
@@ -26,8 +24,7 @@ static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int ar
 static JSValue js_gl_get_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     u32 pname;
     JS_ToUint32(ctx, &pname, argv[0]);
-    if (pname == GL_RENDERER ||
-        pname == GL_VENDOR) {
+    if (pname == GL_RENDERER || pname == GL_VENDOR) {
         const GLubyte *gl_str = glGetString(pname);
         return JS_NewString(ctx, (const char *)gl_str);
     }
@@ -41,8 +38,7 @@ static JSValue js_gl_get_parameter(JSContext *ctx, JSValueConst this_val, int ar
     return JS_NewInt32(ctx, param);
 }
 
-static JSValue js_gl_clear(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_clear(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     return JS_UNDEFINED;
 }
@@ -57,8 +53,7 @@ static JSValue js_gl_viewport(JSContext *ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_clear_color(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_clear_color(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     f64 r, g, b, a;
     JS_ToFloat64(ctx, &r, argv[0]);
     JS_ToFloat64(ctx, &g, argv[1]);
@@ -68,24 +63,21 @@ static JSValue js_gl_clear_color(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_clear_depth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_clear_depth(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     f64 depth;
     JS_ToFloat64(ctx, &depth, argv[0]);
     glClearDepthf(depth);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint buffer;
     glGenBuffers(1, &buffer);
     gl_check_error("glGenBuffers", __LINE__);
     return JS_NewInt32(ctx, buffer);
 }
 
-static JSValue js_gl_bind_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, buffer;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &buffer, argv[1]);
@@ -93,8 +85,7 @@ static JSValue js_gl_bind_buffer(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_buffer_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_buffer_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, usage;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &usage, argv[2]);
@@ -113,8 +104,7 @@ static JSValue js_gl_buffer_data(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_buffer_sub_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_buffer_sub_data(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, dst_offset, src_offset, length;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &dst_offset, argv[1]);
@@ -133,8 +123,7 @@ static JSValue js_gl_buffer_sub_data(JSContext *ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_bind_buffer_range(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_buffer_range(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, index, buffer, offset, length;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &index, argv[1]);
@@ -145,24 +134,21 @@ static JSValue js_gl_bind_buffer_range(JSContext *ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_delete_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_delete_buffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint buffer;
     JS_ToUint32(ctx, &buffer, argv[0]);
     glDeleteBuffers(1, &buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     shader = glCreateShader(shader);
     return JS_NewInt32(ctx, shader);
 }
 
-static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     JSValue source = argv[1];
@@ -174,14 +160,13 @@ static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int ar
     } else {
         JSValue buffer = JS_GetPropertyStr(ctx, source, "buffer");
         size_t length;
-        u8* str = JS_GetArrayBuffer(ctx, &length, buffer);
-        glShaderSource(shader, 1, (const char * const*)&str, NULL);
+        u8 *str = JS_GetArrayBuffer(ctx, &length, buffer);
+        glShaderSource(shader, 1, (const char *const *)&str, NULL);
     }
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_compile_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_compile_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     glCompileShader(shader);
@@ -189,8 +174,7 @@ static JSValue js_gl_compile_shader(JSContext *ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_get_shader_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_shader_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint shader, pname;
     JS_ToUint32(ctx, &shader, argv[0]);
     JS_ToUint32(ctx, &pname, argv[1]);
@@ -199,8 +183,7 @@ static JSValue js_gl_get_shader_parameter(JSContext *ctx, JSValueConst this_val,
     return JS_NewInt32(ctx, param);
 }
 
-static JSValue js_gl_get_shader_info_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_shader_info_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     GLint length = 0;
@@ -209,22 +192,20 @@ static JSValue js_gl_get_shader_info_log(JSContext *ctx, JSValueConst this_val, 
         return JS_NewAtomString(ctx, "");
     }
 
-    char *info_log = (char*)malloc(length);
+    char *info_log = (char *)malloc(length);
     glGetShaderInfoLog(shader, length, NULL, info_log);
     JSValue ret = JS_NewString(ctx, info_log);
     free(info_log);
     return ret;
 }
 
-static JSValue js_gl_create_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     program = glCreateProgram();
     return JS_NewInt32(ctx, program);
 }
 
-static JSValue js_gl_attach_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_attach_shader(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program, shader;
     JS_ToUint32(ctx, &program, argv[0]);
     JS_ToUint32(ctx, &shader, argv[1]);
@@ -232,8 +213,7 @@ static JSValue js_gl_attach_shader(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_link_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_link_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     glLinkProgram(program);
@@ -246,16 +226,14 @@ static JSValue js_gl_link_program(JSContext *ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_delete_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_delete_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     glDeleteProgram(program);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_get_uniform_block_index(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_uniform_block_index(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     const char *uniformBlockName = JS_ToCString(ctx, argv[1]);
@@ -268,8 +246,7 @@ static JSValue js_gl_get_uniform_block_index(JSContext *ctx, JSValueConst this_v
     return JS_NewInt32(ctx, index);
 }
 
-static JSValue js_gl_get_active_uniform_block_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_active_uniform_block_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program, uniformBlockIndex, pname;
     JS_ToUint32(ctx, &program, argv[0]);
     JS_ToUint32(ctx, &uniformBlockIndex, argv[1]);
@@ -279,19 +256,18 @@ static JSValue js_gl_get_active_uniform_block_parameter(JSContext *ctx, JSValueC
     return JS_NewInt32(ctx, param);
 }
 
-static JSValue js_gl_get_uniform_indices(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_uniform_indices(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JSValue uniformNames = argv[1];
     JS_ToUint32(ctx, &program, argv[0]);
     GLuint uniformCount;
     JS_ToUint32(ctx, &uniformCount, JS_GetPropertyStr(ctx, uniformNames, "length"));
-    const char **uniformNamesArray = (const char**)malloc(sizeof(const char*) * uniformCount);
+    const char **uniformNamesArray = (const char **)malloc(sizeof(const char *) * uniformCount);
     for (int i = 0; i < uniformCount; i++) {
         JSValue name = JS_GetPropertyUint32(ctx, uniformNames, i);
         uniformNamesArray[i] = JS_ToCString(ctx, name);
     }
-    GLuint *uniformIndices = (GLuint*)malloc(sizeof(GLuint) * uniformCount);
+    GLuint *uniformIndices = (GLuint *)malloc(sizeof(GLuint) * uniformCount);
     glGetUniformIndices(program, uniformCount, uniformNamesArray, uniformIndices);
     JSValue ret = JS_NewArray(ctx);
     for (int i = 0; i < uniformCount; i++) {
@@ -301,21 +277,20 @@ static JSValue js_gl_get_uniform_indices(JSContext *ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_gl_get_active_uniforms(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_active_uniforms(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JSValue uniformIndices = argv[1];
     JS_ToUint32(ctx, &program, argv[0]);
     GLuint uniformCount;
     JS_ToUint32(ctx, &uniformCount, JS_GetPropertyStr(ctx, uniformIndices, "length"));
-    GLuint *uniformIndicesArray = (GLuint*)malloc(sizeof(GLuint) * uniformCount);
+    GLuint *uniformIndicesArray = (GLuint *)malloc(sizeof(GLuint) * uniformCount);
     for (int i = 0; i < uniformCount; i++) {
         JSValue index = JS_GetPropertyUint32(ctx, uniformIndices, i);
         JS_ToUint32(ctx, &uniformIndicesArray[i], index);
     }
     GLuint pname;
     JS_ToUint32(ctx, &pname, argv[2]);
-    GLint *params = (GLint*)malloc(sizeof(GLint) * uniformCount);
+    GLint *params = (GLint *)malloc(sizeof(GLint) * uniformCount);
     glGetActiveUniformsiv(program, uniformCount, uniformIndicesArray, pname, params);
     JSValue ret = JS_NewArray(ctx);
     for (int i = 0; i < uniformCount; i++) {
@@ -326,8 +301,7 @@ static JSValue js_gl_get_active_uniforms(JSContext *ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_gl_uniform1f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform1f(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     f64 v0;
     JS_ToUint32(ctx, &location, argv[0]);
@@ -336,48 +310,43 @@ static JSValue js_gl_uniform1f(JSContext *ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform1fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform1fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform1fv(location, (GLsizei)length >> 2, (GLfloat*)data_buffer);
+    glUniform1fv(location, (GLsizei)length >> 2, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform2fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform2fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform2fv(location, (GLsizei)(length >> 3), (GLfloat*)data_buffer);
+    glUniform2fv(location, (GLsizei)(length >> 3), (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform3fv(location, (GLsizei)(length >> 2) / 3, (GLfloat*)data_buffer);
+    glUniform3fv(location, (GLsizei)(length >> 2) / 3, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniform4fv(location, (GLsizei)length >> 4, (GLfloat*)data_buffer);
+    glUniform4fv(location, (GLsizei)length >> 4, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform_1i(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform_1i(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     GLint v0;
     JS_ToUint32(ctx, &location, argv[0]);
@@ -386,8 +355,7 @@ static JSValue js_gl_uniform_1i(JSContext *ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform_1u(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform_1u(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     GLuint v0;
     JS_ToUint32(ctx, &location, argv[0]);
@@ -396,28 +364,25 @@ static JSValue js_gl_uniform_1u(JSContext *ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform_matrix_4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform_matrix_4fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniformMatrix4fv(location, (GLsizei)length >> 6, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
+    glUniformMatrix4fv(location, (GLsizei)length >> 6, JS_ToBool(ctx, argv[1]), (const GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_uniform_matrix_3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform_matrix_3fv(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
-    glUniformMatrix3fv(location, (GLsizei)(length >> 2) / 9, JS_ToBool(ctx, argv[1]), (const GLfloat*)data_buffer);
+    glUniformMatrix3fv(location, (GLsizei)(length >> 2) / 9, JS_ToBool(ctx, argv[1]), (const GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_get_program_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_program_parameter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program, pname;
     JS_ToUint32(ctx, &program, argv[0]);
     JS_ToUint32(ctx, &pname, argv[1]);
@@ -426,40 +391,37 @@ static JSValue js_gl_get_program_parameter(JSContext *ctx, JSValueConst this_val
     return JS_NewInt32(ctx, param);
 }
 
-static JSValue js_gl_get_program_info_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_program_info_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     GLint length;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    char *info_log = (char*)malloc(length);
+    char *info_log = (char *)malloc(length);
     glGetProgramInfoLog(program, length, NULL, info_log);
     JSValue ret = JS_NewString(ctx, info_log);
     free(info_log);
     return ret;
 }
 
-static JSValue js_gl_use_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_use_program(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     glUseProgram(program);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_get_unifom_location(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_unifom_location(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     const char *name = JS_ToCString(ctx, argv[1]);
     GLint location = glGetUniformLocation(program, name);
     JS_FreeCString(ctx, name);
-    if (location == -1) return JS_NULL;
+    if (location == -1)
+        return JS_NULL;
     return JS_NewInt32(ctx, location);
 }
 
-static JSValue js_gl_uniform_block_binding(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_uniform_block_binding(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program, uniformBlockIndex, uniformBlockBinding;
     JS_ToUint32(ctx, &program, argv[0]);
     JS_ToUint32(ctx, &uniformBlockIndex, argv[1]);
@@ -468,8 +430,7 @@ static JSValue js_gl_uniform_block_binding(JSContext *ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_get_attrib_location(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_get_attrib_location(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint program;
     JS_ToUint32(ctx, &program, argv[0]);
     const char *name = JS_ToCString(ctx, argv[1]);
@@ -478,8 +439,7 @@ static JSValue js_gl_get_attrib_location(JSContext *ctx, JSValueConst this_val, 
     return JS_NewInt32(ctx, location);
 }
 
-static JSValue js_gl_vertex_attrib_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_vertex_attrib_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint index, size, type, normalized, stride;
     JS_ToUint32(ctx, &index, argv[0]);
     JS_ToUint32(ctx, &size, argv[1]);
@@ -490,8 +450,7 @@ static JSValue js_gl_vertex_attrib_pointer(JSContext *ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_vertex_attribi_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_vertex_attribi_pointer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint index, size, type, stride;
     JS_ToUint32(ctx, &index, argv[0]);
     JS_ToUint32(ctx, &size, argv[1]);
@@ -501,16 +460,14 @@ static JSValue js_gl_vertex_attribi_pointer(JSContext *ctx, JSValueConst this_va
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_enable_vertex_attrib_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_enable_vertex_attrib_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint index;
     JS_ToUint32(ctx, &index, argv[0]);
     glEnableVertexAttribArray(index);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_draw_arrays(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_draw_arrays(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint mode, first, count;
     JS_ToUint32(ctx, &mode, argv[0]);
     JS_ToUint32(ctx, &first, argv[1]);
@@ -519,15 +476,13 @@ static JSValue js_gl_draw_arrays(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint texture;
     glGenTextures(1, &texture);
     return JS_NewInt32(ctx, texture);
 }
 
-static JSValue js_gl_bind_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, texture;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &texture, argv[1]);
@@ -535,8 +490,7 @@ static JSValue js_gl_bind_texture(JSContext *ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, level, internalformat, width, height, border, format, type;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &level, argv[1]);
@@ -556,8 +510,7 @@ static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_tex_parameteri(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_tex_parameteri(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, pname, param;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &pname, argv[1]);
@@ -566,23 +519,20 @@ static JSValue js_gl_tex_parameteri(JSContext *ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_delete_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_delete_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint texture;
     JS_ToUint32(ctx, &texture, argv[0]);
     glDeleteTextures(1, &texture);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint framebuffer;
     glGenFramebuffers(1, &framebuffer);
     return JS_NewInt32(ctx, framebuffer);
 }
 
-static JSValue js_gl_bind_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, framebuffer;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &framebuffer, argv[1]);
@@ -590,8 +540,7 @@ static JSValue js_gl_bind_framebuffer(JSContext *ctx, JSValueConst this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_framebuffer_texture2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_framebuffer_texture2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, attachment, textarget, texture, level;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &attachment, argv[1]);
@@ -602,31 +551,27 @@ static JSValue js_gl_framebuffer_texture2d(JSContext *ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_check_framebuffer_status(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_check_framebuffer_status(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target;
     JS_ToUint32(ctx, &target, argv[0]);
     GLenum status = glCheckFramebufferStatus(target);
     return JS_NewInt32(ctx, status);
 }
 
-static JSValue js_gl_delete_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_delete_framebuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint framebuffer;
     JS_ToUint32(ctx, &framebuffer, argv[0]);
     glDeleteFramebuffers(1, &framebuffer);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint renderbuffer;
     glGenRenderbuffers(1, &renderbuffer);
     return JS_NewInt32(ctx, renderbuffer);
 }
 
-static JSValue js_gl_bind_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, renderbuffer;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &renderbuffer, argv[1]);
@@ -634,8 +579,7 @@ static JSValue js_gl_bind_renderbuffer(JSContext *ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_renderbuffer_storage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_renderbuffer_storage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, internalformat, width, height;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &internalformat, argv[1]);
@@ -645,8 +589,7 @@ static JSValue js_gl_renderbuffer_storage(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_framebuffer_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_framebuffer_renderbuffer(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, attachment, renderbuffertarget, renderbuffer;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &attachment, argv[1]);
@@ -656,39 +599,34 @@ static JSValue js_gl_framebuffer_renderbuffer(JSContext *ctx, JSValueConst this_
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_create_vertex_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_create_vertex_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint vertex_array;
     glGenVertexArrays(1, &vertex_array);
     return JS_NewInt32(ctx, vertex_array);
 }
 
-static JSValue js_gl_bind_vertex_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_bind_vertex_array(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint array;
     JS_ToUint32(ctx, &array, argv[0]);
     glBindVertexArray(array);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_enable(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_enable(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint cap;
     JS_ToUint32(ctx, &cap, argv[0]);
     glEnable(cap);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_disable(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_disable(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint cap;
     JS_ToUint32(ctx, &cap, argv[0]);
     glDisable(cap);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_blend_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_blend_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint sfactor, dfactor;
     JS_ToUint32(ctx, &sfactor, argv[0]);
     JS_ToUint32(ctx, &dfactor, argv[1]);
@@ -696,16 +634,14 @@ static JSValue js_gl_blend_func(JSContext *ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_blend_equation(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_blend_equation(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint mode;
     JS_ToUint32(ctx, &mode, argv[0]);
     glBlendEquation(mode);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_blend_func_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_blend_func_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint srcRGB, dstRGB, srcAlpha, dstAlpha;
     JS_ToUint32(ctx, &srcRGB, argv[0]);
     JS_ToUint32(ctx, &dstRGB, argv[1]);
@@ -715,8 +651,7 @@ static JSValue js_gl_blend_func_separate(JSContext *ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_blend_equation_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_blend_equation_separate(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint modeRGB, modeAlpha;
     JS_ToUint32(ctx, &modeRGB, argv[0]);
     JS_ToUint32(ctx, &modeAlpha, argv[1]);
@@ -724,40 +659,35 @@ static JSValue js_gl_blend_equation_separate(JSContext *ctx, JSValueConst this_v
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_depth_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_depth_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint func;
     JS_ToUint32(ctx, &func, argv[0]);
     glDepthFunc(func);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_depth_mask(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_depth_mask(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint flag;
     JS_ToUint32(ctx, &flag, argv[0]);
     glDepthMask(flag);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_cull_face(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_cull_face(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint mode;
     JS_ToUint32(ctx, &mode, argv[0]);
     glCullFace(mode);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_front_face(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_front_face(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint mode;
     JS_ToUint32(ctx, &mode, argv[0]);
     glFrontFace(mode);
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_polygon_offset(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_polygon_offset(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint factor, units;
     JS_ToUint32(ctx, &factor, argv[0]);
     JS_ToUint32(ctx, &units, argv[1]);
@@ -765,8 +695,7 @@ static JSValue js_gl_polygon_offset(JSContext *ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-{
+static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint mode, count, type;
     JS_ToUint32(ctx, &mode, argv[0]);
     JS_ToUint32(ctx, &count, argv[1]);
@@ -775,8 +704,7 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-void script_module_webgl2_register()
-{
+void script_module_webgl2_register() {
     JSContext *ctx = script_context_share()->context;
     JSValue global = JS_GetGlobalObject(ctx);
     static JSCFunctionListEntry gl_proto_funcs[] = {
@@ -1044,10 +972,14 @@ void script_module_webgl2_register()
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_BINDING", GL_UNIFORM_BLOCK_BINDING, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_DATA_SIZE", GL_UNIFORM_BLOCK_DATA_SIZE, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORMS", GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, JS_PROP_CONFIGURABLE),
-        
+        JS_PROP_INT32_DEF(
+            "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF(
+            "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF(
+            "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER,
+            JS_PROP_CONFIGURABLE),
+
         JS_PROP_INT32_DEF("RENDERER", GL_RENDERER, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("VENDOR", GL_VENDOR, JS_PROP_CONFIGURABLE),
     };
