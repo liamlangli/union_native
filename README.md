@@ -28,3 +28,5 @@ union_native
     - build & install [Angle](https://chromium.googlesource.com/angle/angle) project.
 - Macos
     - `brew install glfw3`
+    - `brew install libuv`
+    - project provide a precompiled [MetalANGLE](https://github.com/kakashidinho/metalangle) library

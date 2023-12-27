@@ -10,3 +10,7 @@ u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int 
 u8 *io_load_image_memory(u8 *data, size_t length, int *width, int *height, int *channel, int request_channel);
 int io_save_png(ustring_view path, int width, int height, int channel, u8 *data);
 int io_save_jpg(ustring_view path, int width, int height, int channel, u8 *data);
+
+// clipboard
+void io_clipboard_set(ustring text);
+ustring io_clipboard_get(void);

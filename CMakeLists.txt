@@ -88,7 +88,7 @@ set_source_files_properties(${UI_SOURCES} PROPERTIES UNITY_GROUP "ui")
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32 uv)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl uv)
+    target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl ${LIBUV_LIBRARIES})
     add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)

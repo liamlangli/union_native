@@ -1,5 +1,8 @@
-#include "ui/ui_input.h"
 #include "foundation/ustring.h"
+#include "foundation/script.h"
+#include "foundation/io.h"
+
+#include "ui/ui_input.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_label.h"
@@ -21,7 +24,7 @@ void ui_input_init(ui_input_t *input, ustring_view text) {
 void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, u32 clip) {
     ui_rect cursor_rect = rect;
     f32 scale = input->label.scale;
-    f32 cursor_offset = ui_input_cursor_offset(&input->label);
+    f32 cursor_offset = ui_label_cursor_offset(&input->label);
     int alignment = input->label.element.constraint.alignment;
 
     if (alignment & LEFT) {
@@ -33,10 +36,9 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
         cursor_rect.x += (rect.w - input->label.text_size.x * scale) * 0.5f + cursor_offset;
     }
 
-    const f32 shrink = 3;
     cursor_rect.w = 1.2 * scale;
-    cursor_rect.h -= shrink * 2.f * scale;
-    cursor_rect.y += shrink * scale;
+    cursor_rect.h = input->label.text_size.y * scale;
+    cursor_rect.y += (rect.h - cursor_rect.h) * 0.5f;
     fill_rect(state->renderer, 0, ui_theme_share()->text, cursor_rect, clip);
 }
 
@@ -52,7 +54,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
     if (ui_state_is_key_press(state, KEY_BACKSPACE)) {
         if (control_pressed) {
             to == input->label.text.length ? ustring_view_clear(&input->label.text)
-                                           : ustring_view_erase(&input->label.text, from, to);
+                                           : ustring_view_erase(&input->label.text, 0, to);
             input->label.cursor_index = 0;
             input->label.start_index = 0;
         } else {
@@ -87,6 +89,29 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.cursor_index = input->label.text.length;
             input->label.render_selected = false;
         }
+        if (ui_state_is_key_press(state, KEY_C)) {
+            io_clipboard_set(ustring_view_to_ustring(&input->label.text));
+        }
+        if (ui_state_is_key_press(state, KEY_X)) {
+            ustring cuted = ustring_view_sub_ustring(&input->label.text, from, to);
+            io_clipboard_set(cuted);
+            ustring_view_erase(&input->label.text, from, to);
+            input->label.cursor_index = from;
+            input->label.start_index = from;
+            input->label.render_selected = false;
+            ui_label_update_text(&input->label, input->label.text);
+        }
+        if (ui_state_is_key_press(state, KEY_V)) {
+            if (from != to)
+                ustring_view_erase(&input->label.text, from, to);
+            ustring pasted = io_clipboard_get();
+            ustring_view_insert_ustring(&input->label.text, from, &pasted);
+            input->label.cursor_index = from + io_clipboard_get().length;
+            input->label.start_index = from + io_clipboard_get().length;
+            input->label.render_selected = false;
+            ui_label_update_text(&input->label, input->label.text);
+        }
+
     } else {
         if (ui_state_is_key_press(state, KEY_LEFT)) {
             if (input->label.cursor_index > 0) {
@@ -174,14 +199,14 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         }
     }
 
-    if (active && state->left_mouse_press) {
-        input->label.start_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
-    }
-
     if (hover && (ui_state_is_key_press(state, KEY_ENTER) || (state->left_mouse_release && last_active))) {
         ui_state_set_active(state, id);
         ui_state_set_focus(state, id);
         ustring_view_set_ustring_view(&input->unmodified_text, &input->label.text);
+    }
+
+    if (active && state->left_mouse_press) {
+        input->label.start_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
     }
 
     if (active) {

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #define MIN_CAPACITY 64
+#define MIN_MEMORY_OP_SIZE 8
 
 u32 ustring_safe_growth(ustring *s, u32 n) {
     if (n <= 0)
@@ -43,6 +44,41 @@ ustring_view ustring_view_STR(const char *src) {
     return view;
 }
 
+ustring ustring_view_sub_ustring(ustring_view *v, u32 from, u32 to) {
+    if (from >= to)
+        return ustring_str("");
+    ustring s;
+    s.data = v->base.data + v->start + from;
+    s.length = to - from;
+    s.data[s.length] = 0;
+    s.null_terminated = 1;
+    return s;
+}
+
+ustring ustring_view_to_ustring(ustring_view *v) {
+    ustring s;
+    s.data = v->base.data + v->start;
+    s.length = v->length;
+    s.data[s.length] = 0;
+    s.null_terminated = 1;
+    return s;
+}
+
+u32 ustring_view_erase(ustring_view *v, u32 from, u32 to) {
+    if (from >= to)
+        return v->length;
+    u32 new_size = v->length - (to - from);
+    if (to - from < MIN_MEMORY_OP_SIZE) {
+        for (int i = to; i < v->length; i++) {
+            v->base.data[v->start + from + i - to] = v->base.data[v->start + i];
+        }
+    } else {
+        memmove((void *)v->base.data + v->start + from, (void *)v->base.data + v->start + to, v->length - to);
+    }
+    v->length = new_size;
+    return new_size;
+}
+
 u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b) {
     if (b->length == 0)
         return a->length;
@@ -59,7 +95,7 @@ u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b) {
         return a->length;
     u32 new_size = a->start + a->length + b->length;
     ustring_safe_growth(&a->base, new_size);
-    if (b->length < 8) {
+    if (b->length < MIN_MEMORY_OP_SIZE) {
         for (int i = 0; i < b->length; i++) {
             a->base.data[a->start + a->length + i] = b->base.data[b->start + i];
         }
@@ -77,6 +113,17 @@ u32 ustring_view_insert_ustring_view(ustring_view *a, u32 index, ustring_view *b
     ustring_safe_growth(&a->base, new_size);
     memmove((void *)a->base.data + a->start + index + b->length, (void *)a->base.data + a->start + index, a->length - index);
     memcpy((void *)a->base.data + a->start + index, (void *)b->base.data + b->start, b->length);
+    a->length += b->length;
+    return new_size;
+}
+
+u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b) {
+    if (b->length == 0)
+        return a->length;
+    u32 new_size = a->start + a->length + b->length;
+    ustring_safe_growth(&a->base, new_size);
+    memmove((void *)a->base.data + a->start + index + b->length, (void *)a->base.data + a->start + index, a->length - index);
+    memcpy((void *)a->base.data + a->start + index, (void *)b->data, b->length);
     a->length += b->length;
     return new_size;
 }

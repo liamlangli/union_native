@@ -110,21 +110,23 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 static void script_init(GLFWwindow *window, ustring_view uri) {
     script_context_cleanup();
     script_context_t *ctx = script_context_share();
+    ctx->window = window;
     script_module_browser_register();
     script_module_webgl2_register();
     ustring content;
     url_t url = url_parse(uri);
     if (url.valid) {
-        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
+        printf("protocol: %s\nhost: %s\nport: %d\npath: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
         content = io_http_get(url);
     } else {
         printf("load file: %s\n", uri.base.data);
         content = io_read_file(uri);
     }
-    script_eval(content, uri);
-    ustring_free(&content);
-    empty_launch = false;
-    uri.base.is_static = true;
+    if (content.length > 0) {
+        script_eval(content, uri);
+        ustring_free(&content);
+        empty_launch = false;
+    }
 
     glfwGetWindowSize(window, &ctx->width, &ctx->height);
     resize_callback(window, ctx->width, ctx->height);

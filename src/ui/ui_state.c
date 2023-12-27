@@ -205,7 +205,7 @@ u32 ui_state_parse_char(ui_state_t *state) {
                 key = '\t';
                 break;
             default:
-                fprintf(stderr, "Unknown key: %d\n", key);
+                // fprintf(stderr, "Unknown key: %d\n", key);
                 valid = false;
                 break;
             }

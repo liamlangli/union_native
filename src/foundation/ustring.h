@@ -13,7 +13,7 @@ typedef struct ustring {
 
 u32 ustring_safe_growth(ustring *s, u32 n);
 
-#define ustring_str(s) ((ustring){.data = s, .length = s ? (u32)strlen(s) : 0, .null_terminated = true, .is_static = false})
+#define ustring_str(s) ((ustring){.data = (s), .length = s ? (u32)strlen(s) : 0, .null_terminated = true, .is_static = false})
 #define ustring_STR(s)                                                                                                         \
     ((ustring){.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1, .is_static = 1})
 #define ustring_range(s, e) ((ustring){.data = (s), length = (u32)((e) - (s)), .is_static = true})
@@ -34,9 +34,6 @@ typedef struct ustring_view {
 #define ustring_view_reserve(v, n) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + (n)))
 #define ustring_view_range(b, s, e) ((ustring_view){.base = (b), .start = (v), .length = (e) - (v)})
 #define ustring_view_clear(v) ((v)->start = 0, (v)->length = 0)
-#define ustring_view_erase(v, f, t)                                                                                            \
-    (memmove((void *)(v)->base.data + (v)->start + (f), (void *)(v)->base.data + (v)->start + (t), (v)->length - (t)),         \
-     (v)->length -= (t) - (f))
 #define ustring_view_equals(a, b)                                                                                              \
     ((a)->start == (b)->start && (a)->length == (b)->length &&                                                                 \
      strncmp((a)->base.data + (a)->start, (b)->base.data + (b)->start, (a)->length) == 0)
@@ -52,6 +49,10 @@ typedef struct ustring_view {
      (v)->base.data[(v)->start + (v)->length] = 0)
 
 ustring_view ustring_view_STR(const char *src);
+ustring ustring_view_sub_ustring(ustring_view *v, u32 from, u32 to);
+ustring ustring_view_to_ustring(ustring_view *v);
+u32 ustring_view_erase(ustring_view *v, u32 from, u32 to);
 u32 ustring_view_insert_ustring_view(ustring_view *a, u32 index, ustring_view *b);
+u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b);
 u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b);
 u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b);

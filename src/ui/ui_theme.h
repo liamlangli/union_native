@@ -8,6 +8,7 @@ typedef struct ui_theme_t {
     ui_style panel_2;
     ui_style panel_3;
     ui_style text;
+    ui_style text_selected;
     ui_style transform_y;
 } ui_theme_t;
 

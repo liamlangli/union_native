@@ -1,6 +1,8 @@
 #include "foundation/io.h"
 #include "foundation/network.h"
 #include "foundation/ustring.h"
+#include "foundation/script.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -145,4 +147,15 @@ int io_save_png(ustring_view path, int width, int height, int channel, u8 *data)
 int io_save_jpg(ustring_view path, int width, int height, int channel, u8 *data) {
     ustring_view_set_null_terminated(&path);
     return stbi_write_jpg(path.base.data, width, height, channel, data, 100);
+}
+
+void io_clipboard_set(ustring text) {
+    script_context_t *ctx = script_context_share();
+    glfwSetClipboardString(ctx->window, text.data);
+}
+
+ustring io_clipboard_get(void) {
+    script_context_t *ctx = script_context_share();
+    const char *text = glfwGetClipboardString(ctx->window);
+    return ustring_str((i8*)text);
 }

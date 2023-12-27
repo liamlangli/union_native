@@ -21,6 +21,7 @@
         {
             "name": "Mac",
             "includePath": [
+                "/usr/local/include",
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/third_party/angle/include",
                 "${workspaceFolder}/third_party/quickjs/include",
