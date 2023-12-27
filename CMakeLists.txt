@@ -63,6 +63,8 @@ elseif (APPLE)
     add_definitions(-DGL_SILENCE_DEPRECATION)
 else() # LINUX
     include_directories(
+        /usr/include
+        /usr/local/include
         ${THIRD_PARTY}/glfw/include)
 
     link_directories(
@@ -94,7 +96,7 @@ elseif (APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy
         ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 else()
-    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl)
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv)
     if (ENABLE_RENDER_DOC)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy

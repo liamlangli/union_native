@@ -20,5 +20,6 @@ void ui_label_init(ui_label_t *label, ustring_view text);
 void ui_label_update_text(ui_label_t *label, ustring_view text);
 void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip);
 u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location);
+float2 ui_label_text_origin(ui_label_t *label, ui_rect rect);
 
 f32 ui_input_cursor_offset(ui_label_t *label);

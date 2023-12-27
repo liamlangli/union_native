@@ -31,17 +31,33 @@ void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect
         if (ui_rect_clip(rect, clip_rect) == CLIP_RESULT_DISCARD) return;
     }
 
-    label->element.constraint.width = label->text_size.x * scale;
-    label->element.constraint.height = label->text_size.y * scale;
+    draw_glyph(renderer, layer_index, ui_label_text_origin(label, rect), &renderer->system_font, label->text, clip, scale, style);
+}
+
+float2 ui_label_text_origin(ui_label_t *label, ui_rect rect) {
+    f32 scale = label->scale;
     ui_constraint constraint = label->element.constraint;
+    constraint.width = label->text_size.x * scale;
+    constraint.height = label->text_size.y * scale;
     ui_constraint_scale(&constraint, scale);
-    clip_rect = ui_constraint_layout(&constraint, rect);
-    float2 text_origin = (float2){.x = clip_rect.x, .y = clip_rect.y};
-    draw_glyph(renderer, layer_index, text_origin, &renderer->system_font, label->text, clip, scale, style);
+    ui_rect clip_rect = ui_constraint_layout(&constraint, rect);
+    return (float2){.x = clip_rect.x, .y = clip_rect.y};
 }
 
 u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location) {
-    return 0;
+    if (label->text.length == 0) return 0;
+    f32 scale = label->scale;
+
+    float2 text_origin = ui_label_text_origin(label, rect);
+    f32 relative_x = location.x - text_origin.x;
+
+    int index = 0;
+    while (index < label->text.length) {
+        if (relative_x < label->char_offsets[index] * scale) break;
+        index++;
+    }
+
+    return index;
 }
 
 f32 ui_input_cursor_offset(ui_label_t *label) {

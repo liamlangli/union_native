@@ -7,6 +7,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 #if defined(OS_WINDOWS)
     int betriebssystem = 1;
     #include <winsock2.h>
@@ -132,4 +135,14 @@ u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int 
 
 u8 *io_load_image_memory(u8 *data, size_t length, int *width, int *height, int *channel, int request_channel) {
     return stbi_load_from_memory(data, (int)length, width, height, channel, request_channel);
+}
+
+int io_save_png(ustring_view path, int width, int height, int channel, u8 *data) {
+    ustring_view_set_null_terminated(&path);
+    return stbi_write_png(path.base.data, width, height, channel, data, width * channel);
+}
+
+int io_save_jpg(ustring_view path, int width, int height, int channel, u8 *data) {
+    ustring_view_set_null_terminated(&path);
+    return stbi_write_jpg(path.base.data, width, height, channel, data, 100);
 }

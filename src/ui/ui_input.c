@@ -189,7 +189,8 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
             input->label.cursor_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
             input->label.render_selected = true;
         }
-        if (!ui_state_hovering(state, rect, layer_index)) {
+
+        if (!ui_state_hovering(state, rect, layer_index) && state->left_mouse_press) {
             ui_state_clear_active(state);
             input->label.render_selected = false;
         }

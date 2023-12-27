@@ -101,11 +101,10 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
         .h = ui_height
     };
     script_window_resize(width, height);
-    printf("resize w %d h %d r %.4f\n", ctx->width, ctx->height, ctx->display_ratio);
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (state.active == -1 && state.focus == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
+    if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
@@ -137,6 +136,7 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     ui_input_init(&source_input, uri);
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
+    copyright.scale = 0.5;
 
     fps_str.base.data = malloc(MAX_FPX_BITS);
     memset((void*)fps_str.base.data, 0, MAX_FPX_BITS);
@@ -170,7 +170,7 @@ static void ui_render(GLFWwindow *window) {
         script_init(window, source_input.label.text);
     }
 
-    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
+    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 22.f, .w = state.window_rect.w, .h = 22.f}, 8.0f, 8.0f);
     ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
     ui_renderer_render(&renderer);
 
@@ -191,7 +191,7 @@ static void state_update(GLFWwindow *window) {
     mouse_y = mouse_y * ctx->display_ratio;
 
     if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
-        if (state.active == -1 && state.focus == -1 && state.hover == -1) script_window_mouse_move(mouse_x, mouse_y);
+        if (state.active == -1 && state.hover == -1) script_window_mouse_move(mouse_x, mouse_y);
         state.mouse_location = (float2){.x = (f32)mouse_x / ctx->ui_scale, .y = (f32)mouse_y / ctx->ui_scale};
     }
  
@@ -235,7 +235,7 @@ static void state_update(GLFWwindow *window) {
     }
 
     // update status label
-    sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d", state.hover, state.active, state.focus);
+    sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d, l: %d", state.hover, state.active, state.focus, state.left_mouse_is_pressed);
     ui_label_update_text(&status_label, status_str);
 }
 

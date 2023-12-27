@@ -1,4 +1,4 @@
-#include "script.h"
+#include "foundation/script.h"
 #include "foundation/io.h"
 
 #include <GLFW/glfw3.h>
@@ -547,8 +547,7 @@ void script_context_destroy(void) {
     script_context_t *context = script_context_share();
     JS_FreeContext(context->context);
     JS_RunGC(context->runtime);
-    JS_FreeRuntime(context->runtime);
-    free(context);
+    // JS_FreeRuntime(context->runtime);
 }
 
 void script_context_cleanup(void) {

@@ -3,14 +3,15 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "/usr/include",
                 "/usr/local/include",
+                "${workspaceFolder}/**",
                 "${workspaceFolder}/third_party/stb",
-                "${workspaceFolder}/third_party/renderdoc/include",
+                "${workspaceFolder}/third_party/renderdoc/include"
             ],
             "defines": [
                 "OS_LINUX",
-                "RENDER_DOC_CAPTURE"
+                "_DEFAULT_SOURCE"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
@@ -21,11 +22,10 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-
                 "${workspaceFolder}/third_party/angle/include",
                 "${workspaceFolder}/third_party/quickjs/include",
                 "${workspaceFolder}/third_party/glfw/include",
-                "${workspaceFolder}/third_party/stb",
+                "${workspaceFolder}/third_party/stb"
             ],
             "defines": [
                 "OS_MACOS"
@@ -39,7 +39,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/stb",
+                "${workspaceFolder}/third_party/stb"
             ],
             "defines": [
                 "OS_WINDOWS",

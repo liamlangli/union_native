@@ -14,7 +14,7 @@ const action = {
 const camera = new Camera();
 camera.location.set(4, 4, 4);
 camera.look_at(ZERO);
-camera.perspective(45, window.innerWidth / window.innerHeight, 1, 1000);
+camera.perspective(60, window.innerWidth / window.innerHeight, 1, 1000);
 const control = new SphericalControl(camera);
 const pipeline = create_default_pipeline();
 const material = new MaterialBlock();
@@ -33,13 +33,13 @@ EventHub.on(GlobalEvent.MouseWheel, (payload) => {
 window.addEventListener('resize', () => {
     device.display_ratio = window.devicePixelRatio;
     device.set_size(window.innerWidth, window.innerHeight);
-    camera.perspective(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.perspective(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 });
 
 const cube = create_box_mesh();
 function frame() {
-    // control.update();
-    // encoder.set_viewport(0, 0, device.width, device.height);
+    control.update();
+    encoder.set_viewport(0, 0, device.width, device.height);
     encoder.clear(action);
     encoder.set_pipeline(pipeline);
     encoder.set_camera(camera);
