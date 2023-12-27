@@ -2,7 +2,7 @@
 
 static ui_theme_t system_theme;
 
-ui_theme_t *ui_theme_system_share() {
+ui_theme_t *ui_theme_share() {
     static bool initialized = false;
     if (initialized) return &system_theme;
     initialized = true;

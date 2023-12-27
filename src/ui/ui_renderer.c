@@ -1,5 +1,6 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
+#include "foundation/script.h"
 
 #include <GLES3/gl3.h>
 #include <stdlib.h>
@@ -205,6 +206,9 @@ void ui_renderer_render(ui_renderer_t* renderer)
     ui_renderer_merge_layers(renderer);
     if (renderer->last_index_offset <= 0) return;
 
+    script_context_t *ctx = script_context_share();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, ctx->framebuffer_width, ctx->framebuffer_height);
     glUseProgram(renderer->program);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -255,7 +259,6 @@ u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent) {
 ui_rect ui_renderer_read_clip(ui_renderer_t* renderer, u32 clip) {
     return *(ui_rect*)(renderer->primitive_data + clip);
 }
-
 
 void ui_layer_write_index(ui_layer *layer, u32 index) {
     layer->index_data[layer->index_offset++] = index;

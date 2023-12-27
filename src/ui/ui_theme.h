@@ -11,4 +11,4 @@ typedef struct ui_theme_t {
     ui_style transform_y;
 } ui_theme_t;
 
-ui_theme_t *ui_theme_system_share();
+ui_theme_t *ui_theme_share();

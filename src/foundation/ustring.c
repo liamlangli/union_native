@@ -1,5 +1,7 @@
 #include "foundation/ustring.h"
 
+#define MIN_CAPACITY 64
+
 u32 ustring_safe_growth(ustring* s, u32 n) {
     if (n <= 0) return 0;
 
@@ -23,6 +25,19 @@ u32 ustring_safe_growth(ustring* s, u32 n) {
     return new_size;
 }
 
+ustring_view ustring_view_STR(const char *src) {
+    ustring_view view;
+    size_t len = strlen(src);
+    size_t new_size = MACRO_MAX(len + 1, MIN_CAPACITY);
+    view.base.data = malloc(new_size);
+    memcpy(view.base.data, src, strlen(src) + 1);
+    view.base.length = new_size;
+    view.base.null_terminated = 1;
+    view.start = 0;
+    view.length = len;
+    return view;
+}
+
 u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b) {
     if (b->length == 0) return a->length;
     u32 new_size = b->length;
@@ -34,10 +49,16 @@ u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b) {
 }
 
 u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b) {
-    if (b->length == 0) return a->length;
+    if (b->length <= 0) return a->length;
     u32 new_size = a->start + a->length + b->length;
     ustring_safe_growth(&a->base, new_size);
-    memcpy((void*)a->base.data + a->start + a->length, (void*)b->base.data + b->start, b->length);
+    if (b->length < 8) {
+        for (int i = 0; i < b->length; i++) {
+            a->base.data[a->start + a->length + i] = b->base.data[b->start + i];
+        }
+    } else {
+        memcpy((void*)a->base.data + a->start + a->length, (void*)b->base.data + b->start, b->length);
+    }
     a->length += b->length;
     return new_size;
 }

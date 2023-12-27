@@ -117,11 +117,7 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
     glfwGetWindowSize(window, &ctx->width, &ctx->height);
     glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
     ctx->display_ratio = (f32)ctx->framebuffer_height / (f32)ctx->height;
-    script_window_resize(ctx->width, ctx->height);
-    script_module_browser_register();
-    script_module_webgl2_register();
     renderer.window_size.z = (f32)ctx->display_ratio;
-
     f32 ui_width = (f32)ctx->width / ctx->ui_scale * ctx->display_ratio;
     f32 ui_height = (f32)ctx->height / ctx->ui_scale * ctx->display_ratio;
     renderer.window_size.x = ui_width;
@@ -132,6 +128,8 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
         .w = ui_width,
         .h = ui_height
     };
+    script_module_browser_register();
+    script_module_webgl2_register();
 
     ustring content;
     url_t url = url_parse(uri);
@@ -145,6 +143,7 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
     script_eval(content, uri);
     ustring_free(&content);
 
+    script_window_resize(ctx->width, ctx->height);
     empty_launch = false;
     uri.base.is_static = true;
 }
@@ -183,17 +182,17 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
 static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    if (ui_input(&state, &source_input, ui_theme_system_share()->panel_0, rect, 0, 0)) {
+    if (ui_input(&state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
         printf("source_input: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
-    ui_label(&state, &copyright, ui_theme_system_share()->text, rect, 0, 0);
+    ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
     ui_renderer_render(&renderer);
 
-    ui_label(&state, &fps_label, ui_theme_system_share()->transform_y, state.window_rect, 0, 0);
-    ui_label(&state, &status_label, ui_theme_system_share()->text, state.window_rect, 0, 0);
+    ui_label(&state, &fps_label, ui_theme_share()->transform_y, state.window_rect, 0, 0);
+    ui_label(&state, &status_label, ui_theme_share()->text, state.window_rect, 0, 0);
 }
 
 #define FPS_MA 10
@@ -297,7 +296,7 @@ int main(int argc, char** argv) {
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-    ustring_view uri = argc >= 2 ? ustring_view_str(argv[1]) : ustring_view_STR("public/terrain.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/terrain.js");
     renderer_init(window, uri);
     script_init(window, uri);
 

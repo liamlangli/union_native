@@ -37,7 +37,7 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
     cursor_rect.w = 1.2 * scale;
     cursor_rect.h -= shrink * 2.f * scale;
     cursor_rect.y += shrink * scale;
-    fill_rect(state->renderer, 0, ui_theme_system_share()->text, cursor_rect, clip);
+    fill_rect(state->renderer, 0, ui_theme_share()->text, cursor_rect, clip);
 }
 
 void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
@@ -199,7 +199,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         stroke_round_rect_pre_corner(state->renderer, 0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
     }
 
-    ui_label(state, &input->label, ui_theme_system_share()->text, rect, layer_index, clip);
+    ui_label(state, &input->label, ui_theme_share()->text, rect, layer_index, clip);
     if (active || focus) {
         ui_input_render_cursor(state, input, rect, clip);
     }

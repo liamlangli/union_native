@@ -1,4 +1,4 @@
-import { GFXDevice, Engine, ColorRGBA, GPUActionType, GPUAction, EventHub, EngineEvent } from "@union_native/core";
+import { ColorRGBA, Engine, EngineEvent, EventHub, GFXDevice, GPUAction, GPUActionType } from "@union_native/core";
 
 const device = new GFXDevice();
 const encoder = device.encoder;
@@ -11,6 +11,7 @@ const action = {
 } as GPUAction;
 
 function frame() {
+    encoder.set_viewport(0, 0, device.width, device.height);
     encoder.clear(action);
     encoder.commit();
 }
