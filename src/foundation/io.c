@@ -9,13 +9,13 @@
 
 #if defined(OS_WINDOWS)
     int betriebssystem = 1;
-    #include <iphlpapi.h>
     #include <winsock2.h>
-    #include <ws2def.h>
     #include <ws2tcpip.h>
+    #include <iphlpapi.h>
+    #include <ws2def.h>
     #pragma comment(lib, "Ws2_32.lib")
-    #include <io.h>
     #include <windows.h>
+    #include <io.h>
 #else
     #include <netdb.h>
     #include <netinet/in.h>

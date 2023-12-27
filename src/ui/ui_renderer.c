@@ -114,9 +114,14 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     glBufferData(GL_ARRAY_BUFFER, PRIMITVE_DATA_INIT_COUNT * 3, NULL, GL_DYNAMIC_DRAW);
     renderer->index_buffer = index_buffer;
 
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, index_buffer);
     glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
+    glDisableVertexAttribArray(vao);
+    renderer->vao = vao;
 
     ustring vert_shader_code = io_read_file(ustring_view_STR("public/shader/ui.vert"));
     ustring frag_shader_code = io_read_file(ustring_view_STR("public/shader/ui.frag"));
@@ -219,10 +224,10 @@ void ui_renderer_render(ui_renderer_t *renderer) {
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->last_index_offset * sizeof(u32), renderer->index_data);
     glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, NULL);
-    glEnableVertexAttribArray(0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);

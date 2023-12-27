@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ui/ui_type.h"
 #include "ui/ui_font.h"
+#include "ui/ui_type.h"
 
 #define MAX_UI_LAYERS 4
 
@@ -23,9 +23,10 @@ typedef struct ui_renderer_t {
     ui_font system_font;
 
     // gpu side
+    u32 program;
+    u32 vao;
     float4 window_size;
     u32 window_size_location;
-    u32 program;
     u32 primitive_data_texture;
     u32 primitive_data_texture_location;
     u32 primitive_data_texture_width;
@@ -72,9 +73,9 @@ u32 ui_layer_write_glyph_vertex(ui_layer *layer, ui_glyph_vertex vertex);
 void ui_layer_clear(ui_layer *layer);
 
 // renderer func
-void ui_renderer_init(ui_renderer_t* renderer);
-void ui_renderer_free(ui_renderer_t* renderer);
-void ui_renderer_render(ui_renderer_t* renderer);
+void ui_renderer_init(ui_renderer_t *renderer);
+void ui_renderer_free(ui_renderer_t *renderer);
+void ui_renderer_render(ui_renderer_t *renderer);
 
-u32 ui_renderer_write_clip(ui_renderer_t* renderer, ui_rect rect, u32 parent);
-ui_rect ui_renderer_read_clip(ui_renderer_t* renderer, u32 clip);
+u32 ui_renderer_write_clip(ui_renderer_t *renderer, ui_rect rect, u32 parent);
+ui_rect ui_renderer_read_clip(ui_renderer_t *renderer, u32 clip);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ui/ui_type.h"
 #include "ui/ui_state.h"
+#include "ui/ui_type.h"
 
 #define MAX_CHAR_LENGTH 256
 

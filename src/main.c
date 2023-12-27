@@ -1,18 +1,13 @@
-#include "foundation/io.h"
-#include "foundation/network.h"
-#include "foundation/script.h"
-#include "foundation/logger.h"
-#include "foundation/webgl2.h"
-
+#include "foundation/foundation.h"
 #include "ui/ui.h"
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>
@@ -282,7 +277,7 @@ int main(int argc, char** argv) {
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
     logger_init();
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/terrain.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/index.js");
     renderer_init(window, uri);
     script_init(window, uri);
 
