@@ -4,6 +4,9 @@
 #include <GLFW/glfw3.h>
 #include "ui/ui_keycode.h"
 
+#define LONG_PRESS_TIME 0.5
+#define LONG_PRESS_COLD_DOWN 0.02
+
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->renderer = renderer;
     state->next_hover = -1;
@@ -11,11 +14,9 @@ void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->active = -1;
     state->hover = -1;
     state->focus = -1;
+    state->time = glfwGetTime();
 
     ustring_view_reserve(&state->edit_str, 32);
-
-    hmdefault(state->key_press, false);
-    hmdefault(state->key_pressed, false);
 }
 
 void ui_state_reset_mouse_state(ui_state_t *state) {
@@ -27,9 +28,11 @@ void ui_state_reset_mouse_state(ui_state_t *state) {
     state->middle_mouse_release = false;
 }
 
-bool ui_state_update(ui_state_t *state) 
-{
-    memset(state->key_press, 0, MAX_KEY_COUNT);
+bool ui_state_update(ui_state_t *state) {
+    state->last_time = state->time;
+    state->time = glfwGetTime();
+    state->delta_time = state->time - state->last_time;
+
     state->hover = state->next_hover;
     state->hover_layer = state->next_hover_layer_index;
     state->next_hover = -1;
@@ -42,6 +45,14 @@ bool ui_state_update(ui_state_t *state)
 
     for (int i = 0, l = (int)hmlen(state->key_release); i < l; i++) {
         hmdel(state->key_release, state->key_release[i].key);
+    }
+
+    for (int i = 0, l = (int)hmlen(state->key_pressed); i < l; i++) {
+        ui_key_map_t *pair = &state->key_pressed[i];
+        if (state->time - pair->value > LONG_PRESS_TIME) {
+            hmput(state->key_press, pair->key, state->time);
+            pair->value = state->time - LONG_PRESS_TIME + LONG_PRESS_COLD_DOWN;
+        }
     }
 
     bool updated = state->defer_update_frame_index > 0;
@@ -58,11 +69,12 @@ bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index) {
 }
 
 void ui_state_key_press(ui_state_t *state, int key) {
-    hmput(state->key_press, key, true);
+    hmput(state->key_press, key, state->time);
+    hmput(state->key_pressed, key, state->time);
 }
 
 void ui_state_key_release(ui_state_t *state, int key) {
-    hmput(state->key_release, key, true);
+    hmput(state->key_release, key, state->time);
     hmdel(state->key_pressed, key);
 }
 

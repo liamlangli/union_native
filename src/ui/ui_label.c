@@ -46,6 +46,7 @@ u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location) {
 }
 
 f32 ui_input_cursor_offset(ui_label_t *label) {
+    if (label->cursor_index <= 0) return 0.f;
     int text_length = label->text.length;
     int index = MACRO_CLAMP(label->cursor_index - 1, 0, text_length);
     return label->char_offsets[index] * label->scale;

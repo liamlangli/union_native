@@ -5,8 +5,6 @@
 #include "foundation/webgl2.h"
 
 #include "ui/ui.h"
-#include "ui/ui_keycode.h"
-#include "ui/ui_state.h"
 
 #include <string.h>
 
@@ -26,12 +24,6 @@ static ui_label_t copyright;
 static ui_label_t fps_label;
 static ui_label_t status_label;
 
-static ui_style panel_0;
-static ui_style panel_1;
-static ui_style panel_2;
-static ui_style panel_3;
-static ui_style text_style;
-static ui_style transform_y;
 static ustring_view fps_str;
 #define MAX_FPX_BITS 16
 static ustring_view status_str;
@@ -191,17 +183,17 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
 static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    if (ui_input(&state, &source_input, panel_0, rect, 0, 0)) {
+    if (ui_input(&state, &source_input, ui_theme_system_share()->panel_0, rect, 0, 0)) {
         printf("source_input: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
     rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 44.f, .w = state.window_rect.w, .h = 44.f}, 8.0f, 8.0f);
-    ui_label(&state, &copyright, text_style, rect, 0, 0);
+    ui_label(&state, &copyright, ui_theme_system_share()->text, rect, 0, 0);
     ui_renderer_render(&renderer);
 
-    ui_label(&state, &fps_label, transform_y, state.window_rect, 0, 0);
-    ui_label(&state, &status_label, text_style, state.window_rect, 0, 0);
+    ui_label(&state, &fps_label, ui_theme_system_share()->transform_y, state.window_rect, 0, 0);
+    ui_label(&state, &status_label, ui_theme_system_share()->text, state.window_rect, 0, 0);
 }
 
 #define FPS_MA 10
@@ -308,13 +300,6 @@ int main(int argc, char** argv) {
     ustring_view uri = argc >= 2 ? ustring_view_str(argv[1]) : ustring_view_STR("public/terrain.js");
     renderer_init(window, uri);
     script_init(window, uri);
-
-    panel_0 = ui_style_from_hex(0x28292aab, 0x2b2c2dab, 0x313233ab, 0xe1e1e166);
-    panel_1 = ui_style_from_hex(0x414243ff, 0x4a4b4cff, 0x515253ff, 0xe1e1e166);
-    panel_2 = ui_style_from_hex(0x474849ff, 0x515253ff, 0x6c6d6eff, 0xe1e1e166);
-    panel_3 = ui_style_from_hex(0x505152ff, 0x575859ff, 0x6c6d6eff, 0xe1e1e166);
-    text_style = ui_style_from_hex(0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e1ff, 0xe1e1e166);
-    transform_y = ui_style_from_hex(0x4dbe63ff, 0x313233ff, 0x3c3d3eff, 0x4dbe63ff);
 
     glfwSwapInterval(0);
     glFrontFace(GL_CCW);

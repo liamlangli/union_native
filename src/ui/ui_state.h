@@ -17,7 +17,7 @@ enum CURSOR_TYPE {
 
 typedef struct ui_key_map_t {
     int key;
-    bool value;
+    f64 value; // last active time
 } ui_key_map_t;
 
 typedef struct ui_state_t {
@@ -47,6 +47,10 @@ typedef struct ui_state_t {
     u32 active_frame_count;
     u32 defer_update_frame_count;
     u32 defer_update_frame_index;
+
+    f64 time; // time in seconds
+    f64 last_time;
+    f64 delta_time;
 } ui_state_t;
 
 void ui_state_init(ui_state_t *state, ui_renderer_t *renderer);

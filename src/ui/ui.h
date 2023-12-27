@@ -9,3 +9,5 @@
 #include "ui/ui_label.h"
 #include "ui/ui_input.h"
 #include "ui/ui_button.h"
+#include "ui/ui_theme.h"
+#include "ui/ui_keycode.h"

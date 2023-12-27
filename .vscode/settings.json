@@ -32,5 +32,8 @@
         "thread": "c",
         "string": "c",
         "__locale": "c"
+    },
+    "cmake.debugConfig": {
+        "workingDirectory": "${workspaceRoot}/build"
     }
 }
