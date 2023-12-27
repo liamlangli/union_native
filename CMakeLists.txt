@@ -9,8 +9,9 @@ set(ENABLE_GLES ON CACHE BOOL "Enable gles/webgl2 render backend")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-set(THIRD_PARTY ${CMAKE_SOURCE_DIR}/third_party)
+include(${CMAKE_SOURCE_DIR}/cmake/Findlibuv.cmake)
 
+set(THIRD_PARTY ${CMAKE_SOURCE_DIR}/third_party)
 
 # collect source files
 aux_source_directory(src/foundation FOUNDATION_SOURCES)
@@ -24,6 +25,7 @@ source_group(main FILES ${MAIN_ENTRY})
 
 include_directories(src)
 include_directories(${THIRD_PARTY}/stb)
+include_directories(${LIBUV_INCLUDE_DIRS})
 
 if (ENABLE_RENDER_DOC)
     add_definitions(-DRENDER_DOC_CAPTURE)
@@ -82,9 +84,9 @@ set_source_files_properties(${FOUNDATION_SOURCES} PROPERTIES UNITY_GROUP "founda
 set_source_files_properties(${UI_SOURCES} PROPERTIES UNITY_GROUP "ui")
 
 if (WIN32)
-target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32)
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32 uv)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl)
+    target_link_libraries(${PROJECT_NAME} EGL GLESv2 quickjs glfw.3 m dl uv)
     add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${THIRD_PARTY}/angle/lib/macos $<TARGET_FILE_DIR:${PROJECT_NAME}>)

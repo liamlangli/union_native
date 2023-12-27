@@ -12,6 +12,8 @@
 #define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>
 
+#include <uv.h>
+
 static ui_renderer_t renderer;
 static ui_state_t state;
 static ui_input_t source_input;
@@ -241,6 +243,8 @@ int main(int argc, char** argv) {
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
 
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
@@ -305,5 +309,6 @@ int main(int argc, char** argv) {
 
     glfwDestroyWindow(window);
     glfwTerminate();
+    uv_loop_close(uv_default_loop());
     return 0;
 }
