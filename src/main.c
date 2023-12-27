@@ -300,7 +300,7 @@ int main(int argc, char** argv) {
     renderer_init(window, uri);
     script_init(window, uri);
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
 
