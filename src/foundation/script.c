@@ -361,11 +361,48 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
     return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
 }
 
+void script_listeners_cleanup() {
+    script_context_t *context = script_context_share();
+    JSContext *ctx = context->context;
+    js_listener_hm *window_event_listeners = context->window_event_listeners;
+    js_listener_hm *document_event_listeners = context->document_event_listeners;
+    js_listener_hm *canvas_event_listeners = context->canvas_event_listeners;
+
+    for (int i = 0, l = shlen(window_event_listeners); i < l; ++i) {
+        js_scope *scopes = window_event_listeners[i].value;
+        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
+        }
+        arrsetlen(scopes, 0);
+    }
+
+    for (int i = 0, l = shlen(document_event_listeners); i < l; ++i) {
+        js_scope *scopes = document_event_listeners[i].value;
+        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
+        }
+        arrsetlen(scopes, 0);
+    }
+
+    for (int i = 0, l = shlen(canvas_event_listeners); i < l; ++i) {
+        js_scope *scopes = canvas_event_listeners[i].value;
+        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
+        }
+        arrsetlen(scopes, 0);
+    }
+}
+
 int script_eval(ustring source, ustring_view filename) {
     JSValue val;
     int ret;
 
     JSContext *ctx = script_context_share()->context;
+    script_listeners_cleanup();
+
     val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 
     if (JS_IsException(val)) {
@@ -420,6 +457,7 @@ void script_window_resize(int width, int height) {
 void script_window_mouse_move(double x, double y) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     context->mouse_x = x;
     context->mouse_y = y;
 
@@ -434,6 +472,7 @@ void script_window_mouse_move(double x, double y) {
     js_scope *scopes = shared_context.window_event_listeners[i].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
+        assert(JS_IsLiveObject(rt, scope.func));
         if (JS_IsFunction(ctx, scope.func))
             JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -443,6 +482,7 @@ void script_window_mouse_move(double x, double y) {
 void script_window_mouse_down(int button) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     int i = (int)shgeti(shared_context.window_event_listeners, mousedown_event);
     if (i == -1)
         return;
@@ -455,6 +495,7 @@ void script_window_mouse_down(int button) {
     js_scope *scopes = shared_context.window_event_listeners[i].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
+        assert(JS_IsLiveObject(rt, scope.func));
         if (JS_IsFunction(ctx, scope.func))
             JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
@@ -464,6 +505,7 @@ void script_window_mouse_down(int button) {
 void script_window_mouse_up(int button) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     int i = (int)shgeti(shared_context.window_event_listeners, mouseup_event);
     if (i == -1)
         return;
@@ -484,6 +526,7 @@ void script_window_mouse_up(int button) {
 void script_window_mouse_scroll(double x, double y) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     int i = (int)shgeti(shared_context.window_event_listeners, wheel_event);
     if (i == -1)
         return;
@@ -495,6 +538,7 @@ void script_window_mouse_scroll(double x, double y) {
     js_scope *scopes = shared_context.window_event_listeners[i].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
+        assert(JS_IsLiveObject(rt, scope.func));
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
     JS_FreeValue(ctx, event);
@@ -503,6 +547,7 @@ void script_window_mouse_scroll(double x, double y) {
 void script_document_key_down(int key) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     int i = (int)shgeti(shared_context.document_event_listeners, keydown_event);
     if (i != -1)
         return;
@@ -513,6 +558,7 @@ void script_document_key_down(int key) {
     js_scope *scopes = shared_context.window_event_listeners[i].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
+        assert(JS_IsLiveObject(rt, scope.func));
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
     JS_FreeValue(ctx, event);
@@ -521,6 +567,7 @@ void script_document_key_down(int key) {
 void script_document_key_up(int key) {
     script_context_t *context = script_context_share();
     JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     int i = (int)shgeti(shared_context.document_event_listeners, keyup_event);
     if (i != -1)
         return;
@@ -531,14 +578,18 @@ void script_document_key_up(int key) {
     js_scope *scopes = shared_context.window_event_listeners[i].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
+        assert(JS_IsLiveObject(rt, scope.func));
         JS_Call(ctx, scope.func, scope.this, 1, &event);
     }
     JS_FreeValue(ctx, event);
 }
 
 void script_frame_tick(void) {
-    JSContext *ctx = script_context_share()->context;
+    script_context_t *context = script_context_share();
+    JSContext *ctx = context->context;
+    JSRuntime *rt = context->runtime;
     if (JS_IsFunction(ctx, _frame_callback)) {
+        assert(JS_IsLiveObject(rt, _frame_callback));
         JS_Call(ctx, _frame_callback, JS_UNDEFINED, 0, NULL);
     }
 }

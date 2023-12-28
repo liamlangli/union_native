@@ -109,6 +109,14 @@ ustring io_http_download(url_t url) {
         return file_data;
     }
 
+    // get Content-Length
+    int content_length = 0;
+    char *content_length_str = strstr(request, "Content-Length: ");
+    if (content_length_str) {
+        content_length_str += strlen("Content-Length: ");
+        content_length = atoi(content_length_str);
+    }
+
     // Receive file data
     ssize_t bytes_received;
     while ((bytes_received = recv(sockfd, file_content, BUFFER_SIZE, 0)) > 0) {
