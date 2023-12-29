@@ -42,7 +42,6 @@ void script_value_unref(JSValue value);
 
 void script_module_browser_register(void);
 int script_eval(ustring source, ustring_view filename);
-int script_eval_uri(ustring_view uri);
 
 void script_window_resize(int width, int height);
 void script_window_mouse_move(double x, double y);

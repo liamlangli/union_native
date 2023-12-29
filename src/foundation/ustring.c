@@ -48,10 +48,11 @@ ustring ustring_view_sub_ustring(ustring_view *v, u32 from, u32 to) {
     if (from >= to)
         return ustring_str("");
     ustring s;
-    s.data = v->base.data + v->start + from;
+    s.data = malloc(to - from + 1);
     s.length = to - from;
-    s.data[s.length] = 0;
     s.null_terminated = 1;
+    memcpy(s.data, v->base.data + v->start + from, to - from);
+    s.data[s.length] = 0;
     return s;
 }
 
@@ -125,5 +126,16 @@ u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b) {
     memmove((void *)a->base.data + a->start + index + b->length, (void *)a->base.data + a->start + index, a->length - index);
     memcpy((void *)a->base.data + a->start + index, (void *)b->data, b->length);
     a->length += b->length;
+    return new_size;
+}
+
+u32 ustring_view_append_STR(ustring_view *a, const char *b) {
+    u32 b_length = strlen(b);
+    if (b_length <= 0)
+        return a->length;
+    u32 new_size = a->start + a->length + b_length;
+    ustring_safe_growth(&a->base, new_size);
+    memcpy((void *)a->base.data + a->start + a->length, b, b_length);
+    a->length += b_length;
     return new_size;
 }

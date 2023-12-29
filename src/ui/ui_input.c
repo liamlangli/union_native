@@ -90,11 +90,10 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(state, KEY_C)) {
-            io_clipboard_set(ustring_view_to_ustring(&input->label.text));
+            io_clipboard_set(input->label.text);
         }
         if (ui_state_is_key_press(state, KEY_X)) {
-            ustring cuted = ustring_view_sub_ustring(&input->label.text, from, to);
-            io_clipboard_set(cuted);
+            io_clipboard_set(ustring_view_sub_view(&input->label.text, from, to));
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;
             input->label.start_index = from;

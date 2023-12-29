@@ -400,6 +400,11 @@ int script_eval(ustring source, ustring_view filename) {
     JSValue val;
     int ret;
 
+    if (source.length == 0) {
+        printf("source is empty\n");
+        return -1;
+    }
+
     JSContext *ctx = script_context_share()->context;
     script_listeners_cleanup();
 
@@ -414,20 +419,6 @@ int script_eval(ustring source, ustring_view filename) {
 
     JS_FreeValue(ctx, val);
     return ret;
-}
-
-int script_eval_uri(ustring_view uri) {
-    ustring content;
-    url_t url = url_parse(uri);
-    if (url.valid) {
-        printf("protocol: %s\n host: %s port: %d, path: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-        content = io_http_download(url);
-    } else {
-        printf("load file: %s\n", uri.base.data);
-        content = io_read_file(uri);
-    }
-
-    return script_eval(content, uri);
 }
 
 void script_window_resize(int width, int height) {

@@ -31,8 +31,6 @@ static GLFWcursor *text_input_cursor;
 static GLFWcursor *resize_hori_cursor;
 static GLFWcursor *resize_vert_cursor;
 
-static bool empty_launch = true;
-
 static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
@@ -107,26 +105,30 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
     if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
 }
 
+static void on_remote_script_download(url_t url, ustring script) {
+    script_eval(script, url.url);
+    ustring_free(&script);
+}
+
 static void script_init(GLFWwindow *window, ustring_view uri) {
     script_context_cleanup();
     script_context_t *ctx = script_context_share();
     ctx->window = window;
     script_module_browser_register();
     script_module_webgl2_register();
-    ustring content;
-    url_t url = url_parse(uri);
-    if (url.valid) {
-        printf("protocol: %s\nhost: %s\nport: %d\npath: %s\n", url.protocol.data, url.host.data, url.port, url.path.data);
-        content = io_http_download(url);
-        printf("content: %s\n", content.data);
+    if (strncasecmp(uri.base.data, "http", 4) == 0) {
+        url_t url = url_parse(uri);
+        if (!url.valid) {
+            printf("invalid url: %s\n", uri.base.data);
+            return;
+        }
+        printf("download remote script: %s\n", uri.base.data);
+        url_dump(url);
+        net_download_async(url, on_remote_script_download);
     } else {
-        printf("load file: %s\n", uri.base.data);
-        content = io_read_file(uri);
-    }
-    if (content.length > 0) {
+        ustring content = io_read_file(uri);
         script_eval(content, uri);
         ustring_free(&content);
-        empty_launch = false;
     }
 
     glfwGetWindowSize(window, &ctx->width, &ctx->height);
@@ -169,7 +171,7 @@ static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
-        printf("source_input: %s\n", source_input.label.text.base.data);
+        printf("try load script: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
@@ -246,8 +248,6 @@ int main(int argc, char** argv) {
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
 
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
@@ -291,16 +291,11 @@ int main(int argc, char** argv) {
     glfwSwapInterval(1);
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    while (!glfwWindowShouldClose(window))
-    {
-        if (empty_launch) {
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        } else {
-            script_frame_tick();
-        }
-
+    while (!glfwWindowShouldClose(window)) {
+        script_frame_tick();
         ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);
@@ -312,6 +307,7 @@ int main(int argc, char** argv) {
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
     uv_loop_close(uv_default_loop());
     return 0;
 }
