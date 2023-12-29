@@ -105,9 +105,9 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
     if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
 }
 
-static void on_remote_script_download(url_t url, ustring script) {
-    script_eval(script, url.url);
-    ustring_free(&script);
+static void on_remote_script_download(url_t url, net_response_t response) {
+    script_eval(ustring_view_to_ustring(&response.data), url.url);
+    ustring_view_free(&response.data);
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
@@ -299,6 +299,7 @@ int main(int argc, char** argv) {
         ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);
+        uv_run(uv_default_loop(), UV_RUN_NOWAIT);
         glfwPollEvents();
     }
 
@@ -308,6 +309,5 @@ int main(int argc, char** argv) {
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    uv_loop_close(uv_default_loop());
     return 0;
 }

@@ -46,8 +46,8 @@ typedef struct ustring_view {
     (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + 1), (v)->length++,                                             \
      (v)->base.data[(v)->start + (v)->length - 1] = (c)) // may allocate new memory
 #define ustring_view_free(v)                                                                                                   \
-    (free((void *)(v)->base.data), (v)->base.data = NULL, (v)->base.length = 0, (v)->base.null_terminated = 0, (v)->start = 0, \
-     (v)->length = 0)
+    ((v)->length > 0 ? (free((void *)(v)->base.data), (v)->base.data = NULL, (v)->base.length = 0, (v)->base.null_terminated = 0, (v)->start = 0, \
+     (v)->length = 0) : 0)
 #define ustring_view_set_null_terminated(v)                                                                                    \
     (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + 1), (v)->base.null_terminated = true,                          \
      (v)->base.data[(v)->start + (v)->length] = 0)
