@@ -291,11 +291,7 @@ int main(int argc, char** argv) {
     renderer_init(window, uri);
     script_init(window, uri);
 
-#if defined(OS_LINUX)
-    glfwSwapInterval(0);
-#else
     glfwSwapInterval(1);
-#endif
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -306,8 +302,8 @@ int main(int argc, char** argv) {
         ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);
-        uv_run(uv_default_loop(), UV_RUN_NOWAIT);
         glfwPollEvents();
+        //uv_run(uv_default_loop(), UV_RUN_NOWAIT);
     }
 
     script_context_destroy();
