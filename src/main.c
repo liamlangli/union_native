@@ -109,7 +109,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     printf("download remote script: %s\n", request.url.url.base.data);
     printf("status: %d\n", response.status);
     printf("content_length: %d\n", response.content_length);
-    printf("response: %.*s\n", response.body.length, (const char *)response.body.base.data);
+    //printf("response: %.*s\n", response.body.length, (const char *)response.body.base.data);
     script_eval(ustring_view_to_ustring(&response.body), request.url.url);
 }
 

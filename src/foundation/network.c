@@ -216,6 +216,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
             session->cb(session->request, session->response);
             uv_read_stop(stream);
             uv_close((uv_handle_t *)stream, on_close);
+            udata_free(&session->response.data);
         }
     }
 
