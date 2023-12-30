@@ -1,7 +1,10 @@
 #pragma once
 
 #include "foundation/global.h"
+#include "foundation/udata.h"
 #include "foundation/ustring.h"
+
+#include <uv.h>
 
 typedef struct url_t {
     bool valid;
@@ -13,13 +16,22 @@ typedef struct url_t {
     ustring_view query;
 } url_t;
 
+typedef struct net_request_t {
+    uv_tcp_t socket;
+    url_t url;
+} net_request_t;
+
 typedef struct net_response_t {
-    ustring_view data;
+    udata_t data;
+    u32 status;
+    u32 content_length, header_length;
+    bool headr_parsed;
+    ustring_view body, header;
     ustring_view error;
 } net_response_t;
 
 url_t url_parse(ustring_view url);
 void url_dump(url_t url);
 
-typedef void(*url_download_cb)(url_t url, net_response_t response);
-int net_download_async(url_t url, url_download_cb cb);
+typedef void(*url_session_cb)(net_request_t request, net_response_t response);
+int net_download_async(url_t url, url_session_cb cb);

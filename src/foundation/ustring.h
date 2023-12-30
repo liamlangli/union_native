@@ -1,6 +1,8 @@
 #pragma once
 
 #include "foundation/global.h"
+#include "foundation/udata.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,7 +19,7 @@ u32 ustring_safe_growth(ustring *s, u32 n);
 #define ustring_str(s) ((ustring){.data = (s), .length = s ? (u32)strlen(s) : 0, .null_terminated = true, .is_static = false})
 #define ustring_STR(s)                                                                                                         \
     ((ustring){.data = ("" s ""), .length = (u32)(sizeof("" s "") - 1), .null_terminated = 1, .is_static = 1})
-#define ustring_range(s, e) ((ustring){.data = (s), length = (u32)((e) - (s)), .is_static = true})
+#define ustring_range(s, n) ((ustring){.data = (s), .length = (u32)(n), .is_static = true})
 #define ustring_equals(a, b)                                                                                                   \
     (strcmp((a)->data, (b)->data) == 0 && (a)->length == (b)->length && (a)->null_terminated == (b)->null_terminated)
 #define ustring_free(s)                                                                                                        \

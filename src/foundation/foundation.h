@@ -8,3 +8,4 @@
 #include "foundation/sm.h"      // IWYU pragma: export
 #include "foundation/ustring.h" // IWYU pragma: export
 #include "foundation/webgl2.h"  // IWYU pragma: export
+#include "foundation/udata.h"   // IWYU pragma: export

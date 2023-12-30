@@ -105,9 +105,12 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
     if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
 }
 
-static void on_remote_script_download(url_t url, net_response_t response) {
-    script_eval(ustring_view_to_ustring(&response.data), url.url);
-    ustring_view_free(&response.data);
+static void on_remote_script_download(net_request_t request, net_response_t response) {
+    printf("download remote script: %s\n", request.url.url.base.data);
+    printf("status: %d\n", response.status);
+    printf("content_length: %d\n", response.content_length);
+    printf("response: %.*s\n", response.body.length, (const char *)response.body.base.data);
+    script_eval(ustring_view_to_ustring(&response.body), request.url.url);
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
@@ -288,7 +291,11 @@ int main(int argc, char** argv) {
     renderer_init(window, uri);
     script_init(window, uri);
 
+#if defined(OS_LINUX)
+    glfwSwapInterval(0);
+#else
     glfwSwapInterval(1);
+#endif
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

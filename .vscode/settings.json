@@ -1,12 +1,12 @@
 {
     "files.associations": {
+        "*.h": "c",
         "*.tmsl": "hlsl",
         "*.shader": "hlsl",
         "*.inc": "cpp",
         "*.und": "xml",
         "*.uss": "plaintext",
         "*.py": "python",
-        "*.h": "c",
         "*.c": "c",
         "typeinfo": "c",
         "chrono": "c",
@@ -31,7 +31,8 @@
         "span": "c",
         "thread": "c",
         "string": "c",
-        "__locale": "c"
+        "__locale": "c",
+        "initializer_list": "c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build"

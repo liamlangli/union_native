@@ -5,6 +5,12 @@
 
 #include <uv.h>
 
+typedef struct net_session_t {
+    net_request_t request;
+    net_response_t response;
+    url_session_cb cb;
+} net_session_t;
+
 url_t url_parse(ustring_view url) {
     url_t body = {0};
     body.url = url;
@@ -103,11 +109,6 @@ void url_dump(url_t url) {
     printf("}\n");
 }
 
-typedef struct net_download_request_t {
-    uv_tcp_t socket;
-    url_t url;
-} net_download_request_t;
-
 static ustring_view net_url_to_req_body(url_t url) {
     ustring_view body = ustring_view_STR("");
     ustring_view_append_STR(&body, "GET ");
@@ -127,7 +128,7 @@ static ustring_view net_url_to_req_body(url_t url) {
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
     printf("%.*s\n", body.length, body.base.data);
-    return body;
+    return body; 
 }
 
 static void on_write(uv_write_t *write, int status) {
@@ -144,16 +145,78 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 
 static void on_close(uv_handle_t *handle) {
     free(handle);
+    printf("closed.\n");
+}
+
+static bool try_parse_response_header(net_response_t *response, ustring header) {
+    if (header.length < 12) return false;
+    if (strncmp(header.data, "HTTP/1.1 ", 9) != 0) return false;
+
+    ustring status_code = ustring_range(header.data + 9, 3);
+    response->status = atoi(status_code.data);
+
+    // find content length length
+    const char *length = strstr(header.data, "Content-Length: ");
+    if (length == NULL) return false;
+    length += 16;
+
+    // find content length end
+    const char *end = strstr(length, "\r\n");
+    if (end == NULL) return false;
+
+    // fined the end of header
+    const char *header_end = strstr(header.data, "\r\n\r\n");
+    if (header_end == NULL) return false;
+
+    u32 header_length = header_end - header.data + 4;
+    response->header_length = header_length;
+
+    // parse content length
+    ustring content_length = ustring_range((i8*)header.data + (length - header.data), end - length);
+    response->content_length = atoi(content_length.data);
+    response->headr_parsed = true;
+    return true;
+}
+
+static void parse_response(net_response_t *response) {
+    response->header = (ustring_view) {
+        .base = ustring_range(response->data.data, response->header_length),
+        .start = 0,
+        .length = response->header_length
+    };
+    response->body = (ustring_view) {
+        .base = ustring_range(response->data.data + response->header_length, response->content_length),
+        .start = 0,
+        .length = response->content_length
+    };
+}
+
+static bool body_read_end(net_response_t *response) {
+    return response->data.length >= response->content_length + response->header_length;
 }
 
 static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+    net_session_t *session = stream->data;
     if (nread < 0) {
         if (nread != UV_EOF) {
             fprintf(stderr, "read error %s\n", uv_err_name(nread));
         }
+        session->cb(session->request, session->response);
         uv_close((uv_handle_t *)stream, on_close);
     } else if (nread > 0) {
-        printf("read %ld bytes\n", nread);
+        if (!session->response.headr_parsed) {
+            ustring header = ustring_range(buf->base, nread);
+            try_parse_response_header(&session->response, header);
+        }
+
+        udata_append_raw(&session->response.data, buf->base, nread);
+
+        if (body_read_end(&session->response)) {
+            parse_response(&session->response);
+            session->cb(session->request, session->response);
+            uv_read_stop(stream);
+            uv_close((uv_handle_t *)stream, on_close);
+        }
     }
 
     free(buf->base);
@@ -166,19 +229,20 @@ static void on_connect(uv_connect_t *conn, int status) {
     }
     printf("connected to server.\n");
 
+    net_session_t *session = conn->data;
     uv_stream_t *stream = conn->handle;
-    net_download_request_t *request = conn->data;
+    stream->data = session;
 
     uv_write_t *write_req = malloc(sizeof(uv_write_t));
-    write_req->data = request;
+    write_req->data = session;
 
-    ustring_view body = net_url_to_req_body(request->url);
+    ustring_view body = net_url_to_req_body(session->request.url);
     uv_buf_t buf = uv_buf_init((char *)body.base.data, body.base.length);
     uv_write(write_req, stream, &buf, 1, on_write);
     uv_read_start(stream, on_alloc, on_read);
 }
 
-int net_download_async(url_t url, url_download_cb cb) {
+int net_download_async(url_t url, url_session_cb cb) {
     uv_getaddrinfo_t resolver;
     ustring host = ustring_view_to_new_ustring(&url.host);
     ustring port = ustring_view_to_new_ustring(&url.port);
@@ -195,12 +259,17 @@ int net_download_async(url_t url, url_download_cb cb) {
     struct sockaddr_in addr = *((struct sockaddr_in *)resolver.addrinfo->ai_addr);
     uv_freeaddrinfo(resolver.addrinfo);
 
-    net_download_request_t *request = malloc(sizeof(net_download_request_t));
-    uv_tcp_init(uv_default_loop(), &request->socket);
-    request->url = url;
+    net_session_t *session = malloc(sizeof(net_session_t));
+    session->response.data = (udata_t){.data = NULL, .length = 0};
+    session->response.error = ustring_view_STR("");
+    session->response.headr_parsed = false;
+    session->cb = cb;
+
+    uv_tcp_init(uv_default_loop(), &session->request.socket);
+    session->request.url = url;
 
     uv_connect_t *connect = malloc(sizeof(uv_connect_t));
-    connect->data = request;
-    uv_tcp_connect(connect, &request->socket, (const struct sockaddr *)&addr, on_connect);
+    connect->data = session;
+    uv_tcp_connect(connect, &session->request.socket, (const struct sockaddr *)&addr, on_connect);
     return 0;
 }
