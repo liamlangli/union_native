@@ -286,7 +286,6 @@ int main(int argc, char** argv) {
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
-    logger_init();
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
     renderer_init(window, uri);
     script_init(window, uri);
