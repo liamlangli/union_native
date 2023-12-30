@@ -3,6 +3,9 @@
 #define KEY_LOWER_CASE_A 97
 #define KEY_SPACE_MACOS 9
 
+#include "foundation/ustring.h"
+#include "ui/ui_type.h"
+
 enum KEYCODE {
     KEY_SPACE = 32,
     KEY_APOSTROPHE = 39 /* ' */,
@@ -125,3 +128,5 @@ enum KEYCODE {
     KEY_RIGHT_SUPER = 347,
     KEY_MENU = 348,
 };
+
+u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift);

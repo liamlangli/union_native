@@ -36,7 +36,7 @@ static void error_callback(int error, const char* description) {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
+    printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {

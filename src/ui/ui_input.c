@@ -126,7 +126,8 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             }
         }
 
-        u32 count = ui_state_parse_char(state);
+        const bool shift = hmgeti(state->key_pressed, KEY_LEFT_SHIFT) != -1 || hmgeti(state->key_pressed, KEY_RIGHT_SHIFT) != -1;
+        u32 count = ui_keycode_parse(&state->edit_str, state->key_press, shift);
         if (count > 0 && from != to) {
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;

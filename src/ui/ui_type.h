@@ -31,6 +31,11 @@ typedef struct ui_constraint {
     u32 alignment;
 } ui_constraint;
 
+typedef struct ui_key_map_t {
+    int key;
+    f64 value; // last active time
+} ui_key_map_t;
+
 typedef struct ui_element {
     u32 id;
     ui_constraint constraint;

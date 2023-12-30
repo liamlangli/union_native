@@ -13,11 +13,6 @@ enum CURSOR_TYPE {
     CURSOR_ResizeVert = 0x00036006
 };
 
-typedef struct ui_key_map_t {
-    int key;
-    f64 value; // last active time
-} ui_key_map_t;
-
 typedef struct ui_state_t {
     ui_rect window_rect;
 
@@ -68,5 +63,3 @@ bool ui_state_is_key_release(ui_state_t *state, int key);
 
 bool ui_state_update(ui_state_t *state);
 bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index);
-
-u32 ui_state_parse_char(ui_state_t *state);
