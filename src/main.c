@@ -303,7 +303,7 @@ int main(int argc, char** argv) {
         state_update(window);
         glfwSwapBuffers(window);
         glfwPollEvents();
-        //uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+        uv_run(uv_default_loop(), UV_RUN_NOWAIT);
     }
 
     script_context_destroy();
