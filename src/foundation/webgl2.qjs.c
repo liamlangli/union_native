@@ -688,10 +688,10 @@ static JSValue js_gl_front_face(JSContext *ctx, JSValueConst this_val, int argc,
 }
 
 static JSValue js_gl_polygon_offset(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    GLuint factor, units;
-    JS_ToUint32(ctx, &factor, argv[0]);
-    JS_ToUint32(ctx, &units, argv[1]);
-    glPolygonOffset(factor, units);
+    f64 factor, units;
+    JS_ToFloat64(ctx, &factor, argv[0]);
+    JS_ToFloat64(ctx, &units, argv[1]);
+    glPolygonOffset((f32)factor, (f32)units);
     return JS_UNDEFINED;
 }
 
@@ -705,7 +705,7 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
 }
 
 void script_module_webgl2_register() {
-    JSContext *ctx = script_context_share()->context;
+    JSContext *ctx = (JSContext*)script_context_internal();
     JSValue global = JS_GetGlobalObject(ctx);
     static JSCFunctionListEntry gl_proto_funcs[] = {
         JS_CFUNC_DEF("getExtension", 1, js_gl_get_extension),

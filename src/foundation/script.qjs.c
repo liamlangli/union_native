@@ -1,12 +1,30 @@
 #include "foundation/script.h"
-#include "foundation/io.h"
 
 #include <GLFW/glfw3.h>
 #include <assert.h>
 #include <quickjs/quickjs.h>
+#include <quickjs/quickjs-libc.h>
 #include <stb_ds.h>
 
+typedef struct js_scope {
+    JSValue this, func;
+} js_scope;
+
+typedef struct js_listener_hm {
+    const char *key;
+    js_scope *value;
+} js_listener_hm;
+
+typedef struct qjs_module {
+    JSRuntime  *runtime;
+    JSContext  *context;
+    js_listener_hm *window_event_listeners;
+    js_listener_hm *document_event_listeners;
+    js_listener_hm *canvas_event_listeners;
+} qjs_module;
+
 static script_context_t shared_context = {0};
+static qjs_module shared_module = {0};
 
 static const char *resize_event = "resize";
 static const char *mousedown_event = "mousedown";
@@ -20,13 +38,28 @@ typedef struct JSGCObjectHeader {
     int ref_count; /* must come first, 32-bit */
 } JSGCObjectHeader;
 
-static void js_value_ref(JSRuntime *rt, JSGCObjectHeader *p) { p->ref_count++; }
+static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count++; }
 
-static void js_value_deref(JSRuntime *rt, JSGCObjectHeader *p) { p->ref_count--; }
+static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count--; }
 
-void script_value_ref(JSValue value) { JS_MarkValue(script_context_share()->runtime, value, js_value_ref); }
+void script_value_ref(JSValue value) { JS_MarkValue(shared_module.runtime, value, js_value_ref); }
 
-void script_value_unref(JSValue value) { JS_MarkValue(script_context_share()->runtime, value, js_value_deref); }
+void script_value_unref(JSValue value) { JS_MarkValue(shared_module.runtime, value, js_value_deref); }
+
+void script_context_init(GLFWwindow *window) {
+    shared_context.module = (void*)&shared_module;
+    shared_context.ui_scale = 2.0f;
+    shared_module.runtime = JS_NewRuntime();
+    shared_module.context = JS_NewContext(shared_module.runtime);
+}
+
+script_context_t *script_context_share(void) {
+    return &shared_context;
+}
+
+void* script_context_internal(void) {
+    return shared_module.context;
+}
 
 JSValue js_window_add_event_listener(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
     if (argc < 2)
@@ -40,19 +73,19 @@ JSValue js_window_add_event_listener(JSContext *context, JSValueConst this_val, 
     assert(JS_IsFunction(context, handler));
     script_value_ref(handler);
 
-    js_scope *scopes = shget(shared_context.window_event_listeners, name);
+    js_scope *scopes = shget(shared_module.window_event_listeners, name);
     js_scope scope = {.this = this_val, .func = handler};
     arrpush(scopes, scope);
-    shput(shared_context.window_event_listeners, name, scopes);
+    shput(shared_module.window_event_listeners, name, scopes);
 
     return JS_UNDEFINED;
 }
 
-JSValue js_window_remove_event_listener(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
+JSValue js_window_remove_event_listener(JSContext *context, JSValueConst _, int argc, JSValueConst *argv) {
     if (argc < 2)
         return JS_UNDEFINED;
     const char *event_name = JS_ToCString(context, argv[0]);
-    js_scope *scopes = shget(shared_context.window_event_listeners, event_name);
+    js_scope *scopes = shget(shared_module.window_event_listeners, event_name);
     JS_FreeCString(context, event_name);
 
     JSValue handler = argv[1];
@@ -61,6 +94,7 @@ JSValue js_window_remove_event_listener(JSContext *context, JSValueConst this_va
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
+            script_value_unref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -81,10 +115,10 @@ JSValue js_document_add_event_listener(JSContext *context, JSValueConst this_val
     assert(JS_IsFunction(context, handler));
     script_value_ref(handler);
 
-    js_scope *scopes = shget(shared_context.document_event_listeners, name);
+    js_scope *scopes = shget(shared_module.document_event_listeners, name);
     js_scope scope = {.this = this_val, .func = handler};
     arrpush(scopes, scope);
-    shput(shared_context.document_event_listeners, name, scopes);
+    shput(shared_module.document_event_listeners, name, scopes);
 
     return JS_UNDEFINED;
 }
@@ -93,7 +127,7 @@ JSValue js_document_remove_event_listener(JSContext *context, JSValueConst this_
     if (argc < 2)
         return JS_UNDEFINED;
     const char *event_name = JS_ToCString(context, argv[0]);
-    js_scope *scopes = shget(shared_context.document_event_listeners, event_name);
+    js_scope *scopes = shget(shared_module.document_event_listeners, event_name);
     JS_FreeCString(context, event_name);
 
     JSValue handler = argv[1];
@@ -102,6 +136,7 @@ JSValue js_document_remove_event_listener(JSContext *context, JSValueConst this_
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
+            script_value_unref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -122,19 +157,19 @@ JSValue js_canvas_add_event_listener(JSContext *context, JSValueConst this_val, 
     assert(JS_IsFunction(context, handler));
     script_value_ref(handler);
 
-    js_scope *scopes = shget(shared_context.canvas_event_listeners, name);
+    js_scope *scopes = shget(shared_module.canvas_event_listeners, name);
     js_scope scope = {.this = this_val, .func = handler};
     arrpush(scopes, scope);
-    shput(shared_context.canvas_event_listeners, name, scopes);
+    shput(shared_module.canvas_event_listeners, name, scopes);
 
     return JS_UNDEFINED;
 }
 
-JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
+JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst _, int argc, JSValueConst *argv) {
     if (argc < 2)
         return JS_UNDEFINED;
     const char *event_name = JS_ToCString(context, argv[0]);
-    js_scope *scopes = shget(shared_context.canvas_event_listeners, event_name);
+    js_scope *scopes = shget(shared_module.canvas_event_listeners, event_name);
     JS_FreeCString(context, event_name);
 
     JSValue handler = argv[1];
@@ -143,6 +178,7 @@ JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst this_va
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
+            script_value_unref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -158,8 +194,6 @@ JSValue js_get_context(JSContext *context, JSValueConst this_val, int argc, JSVa
     JSValue gl = JS_GetPropertyStr(context, global, "gl");
     JS_FreeValue(context, global);
     return gl;
-
-    return JS_UNDEFINED;
 }
 
 JSValue js_document_create_element(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -185,19 +219,19 @@ JSValue js_get_elements_by_tag_name(JSContext *context, JSValueConst this_val, i
     return arr;
 }
 
-static JSValue _frame_callback;
+static JSValue frame_callback = JS_NULL;
 JSValue js_request_animation_frame(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
     if (argc >= 1) {
         JSValue callback = argv[0];
         if (JS_IsFunction(context, callback)) {
-            _frame_callback = callback;
+            frame_callback = callback;
         }
     }
 
     return JS_UNDEFINED;
 }
 
-static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
         fprintf(stdout, "%s\n", str);
@@ -206,7 +240,7 @@ static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
         fprintf(stdout, "%s\n", str);
@@ -215,7 +249,7 @@ static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+static JSValue js_console_error(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
         fprintf(stdout, "%s\n", str);
@@ -224,46 +258,33 @@ static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_performance_now(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) {
+static JSValue js_performance_now(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     return JS_NewFloat64(ctx, glfwGetTime());
 }
 
-script_context_t *script_context_share(void) {
-    static int _initialized = 0;
-    if (_initialized) {
-        return &shared_context;
-    }
-
-    shared_context.runtime = JS_NewRuntime();
-    shared_context.context = JS_NewContext(shared_context.runtime);
-    shared_context.ui_scale = 2.0f;
-    _initialized = 1;
-    return &shared_context;
-}
-
-static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst this_val) {
+static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst _) {
     return JS_NewInt32(ctx, shared_context.width);
 }
 
-static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst this_val) {
+static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst _) {
     return JS_NewInt32(ctx, shared_context.height);
 }
 
-static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst _, JSValueConst val) {
     JS_ToInt32(ctx, &shared_context.width, val);
     return JS_UNDEFINED;
 }
 
-static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst _, JSValueConst val) {
     JS_ToInt32(ctx, &shared_context.height, val);
     return JS_UNDEFINED;
 }
 
-static JSValue js_get_window_device_pixel_ratio(JSContext *ctx, JSValueConst this_val) {
+static JSValue js_get_window_device_pixel_ratio(JSContext *ctx, JSValueConst _) {
     return JS_NewFloat64(ctx, shared_context.display_ratio);
 }
 
-static JSValue js_set_window_device_pixel_ratio(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+static JSValue js_set_window_device_pixel_ratio(JSContext *ctx, JSValueConst _, JSValueConst val) {
     JS_ToFloat64(ctx, &shared_context.display_ratio, val);
     return JS_UNDEFINED;
 }
@@ -329,7 +350,7 @@ static JSClassDef js_unreal_class = {
     "TextDecoder", .finalizer = NULL, .gc_mark = NULL, .call = NULL, .exotic = NULL,
 };
 
-static JSValue js_text_decoder_decode(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+static JSValue js_text_decoder_decode(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     if (argc >= 1) {
         const char *str = JS_ToCString(ctx, argv[0]);
         fprintf(stdout, "text_decoder_decode: %s\n", str);
@@ -362,33 +383,32 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
 }
 
 void script_listeners_cleanup() {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    js_listener_hm *window_event_listeners = context->window_event_listeners;
-    js_listener_hm *document_event_listeners = context->document_event_listeners;
-    js_listener_hm *canvas_event_listeners = context->canvas_event_listeners;
+    JSContext *ctx = shared_module.context;
+    js_listener_hm *window_event_listeners = shared_module.window_event_listeners;
+    js_listener_hm *document_event_listeners = shared_module.document_event_listeners;
+    js_listener_hm *canvas_event_listeners = shared_module.canvas_event_listeners;
 
-    for (int i = 0, l = shlen(window_event_listeners); i < l; ++i) {
+    for (int i = 0, il = shlen(window_event_listeners); i < il; ++i) {
         js_scope *scopes = window_event_listeners[i].value;
-        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
             js_scope scope = scopes[j];
             JS_FreeValue(ctx, scope.func);
         }
         arrsetlen(scopes, 0);
     }
 
-    for (int i = 0, l = shlen(document_event_listeners); i < l; ++i) {
+    for (int i = 0, il = shlen(document_event_listeners); i < il; ++i) {
         js_scope *scopes = document_event_listeners[i].value;
-        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
             js_scope scope = scopes[j];
             JS_FreeValue(ctx, scope.func);
         }
         arrsetlen(scopes, 0);
     }
 
-    for (int i = 0, l = shlen(canvas_event_listeners); i < l; ++i) {
+    for (int i = 0, il = shlen(canvas_event_listeners); i < il; ++i) {
         js_scope *scopes = canvas_event_listeners[i].value;
-        for (int j = 0, l = (int)arrlen(scopes); j < l; ++j) {
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
             js_scope scope = scopes[j];
             JS_FreeValue(ctx, scope.func);
         }
@@ -397,7 +417,6 @@ void script_listeners_cleanup() {
 }
 
 int script_eval(ustring source, ustring_view filename) {
-    JSValue val;
     int ret;
 
     if (source.length == 0) {
@@ -405,10 +424,9 @@ int script_eval(ustring source, ustring_view filename) {
         return -1;
     }
 
-    JSContext *ctx = script_context_share()->context;
     script_listeners_cleanup();
-
-    val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
+    JSContext *ctx = shared_module.context;
+    JSValue val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 
     if (JS_IsException(val)) {
         js_std_dump_error(ctx);
@@ -422,21 +440,20 @@ int script_eval(ustring source, ustring_view filename) {
 }
 
 void script_window_resize(int width, int height) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    context->width = width;
-    context->height = height;
-    context->framebuffer_width = width * context->display_ratio;
-    context->framebuffer_height = height * context->display_ratio;
-    int i = (int)shgeti(context->window_event_listeners, resize_event);
-    if (i == -1)
+    JSContext *ctx = shared_module.context;
+    shared_context.width = width;
+    shared_context.height = height;
+    shared_context.framebuffer_width = (int)(width * shared_context.display_ratio);
+    shared_context.framebuffer_height = (int)(height * shared_context.display_ratio);
+    int index = (int)shgeti(shared_module.window_event_listeners, resize_event);
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, resize_event));
     JS_SetPropertyStr(ctx, event, "width", JS_NewInt32(ctx, width));
     JS_SetPropertyStr(ctx, event, "height", JS_NewInt32(ctx, height));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_IsFunction(ctx, scope.func))
@@ -446,21 +463,21 @@ void script_window_resize(int width, int height) {
 }
 
 void script_window_mouse_move(double x, double y) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    context->mouse_x = x;
-    context->mouse_y = y;
+    shared_context.mouse_x = x;
+    shared_context.mouse_y = y;
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
 
-    int i = (int)shgeti(shared_context.window_event_listeners, mousemove_event);
-    if (i == -1)
+    int index = (int)shgeti(shared_module.window_event_listeners, mousemove_event);
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mousemove_event));
     JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, x));
     JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, y));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
+
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -471,19 +488,19 @@ void script_window_mouse_move(double x, double y) {
 }
 
 void script_window_mouse_down(int button) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    int i = (int)shgeti(shared_context.window_event_listeners, mousedown_event);
-    if (i == -1)
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+
+    int index = (int)shgeti(shared_module.window_event_listeners, mousedown_event);
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mousedown_event));
     JS_SetPropertyStr(ctx, event, "button", JS_NewInt32(ctx, button));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, shared_context.mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, shared_context.mouse_y));
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -494,19 +511,18 @@ void script_window_mouse_down(int button) {
 }
 
 void script_window_mouse_up(int button) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    int i = (int)shgeti(shared_context.window_event_listeners, mouseup_event);
-    if (i == -1)
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+    int index = (int)shgeti(shared_module.window_event_listeners, mouseup_event);
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mouseup_event));
     JS_SetPropertyStr(ctx, event, "button", JS_NewInt32(ctx, button));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, shared_context.mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, shared_context.mouse_y));
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         JS_Call(ctx, scope.func, scope.this, 1, &event);
@@ -515,18 +531,18 @@ void script_window_mouse_up(int button) {
 }
 
 void script_window_mouse_scroll(double x, double y) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    int i = (int)shgeti(shared_context.window_event_listeners, wheel_event);
-    if (i == -1)
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+
+    int index = (int)shgeti(shared_module.window_event_listeners, wheel_event);
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, wheel_event));
     JS_SetPropertyStr(ctx, event, "deltaX", JS_NewFloat64(ctx, x));
     JS_SetPropertyStr(ctx, event, "deltaY", JS_NewFloat64(ctx, y));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -536,17 +552,17 @@ void script_window_mouse_scroll(double x, double y) {
 }
 
 void script_document_key_down(int key) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    int i = (int)shgeti(shared_context.document_event_listeners, keydown_event);
-    if (i != -1)
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+
+    int index = (int)shgeti(shared_module.document_event_listeners, keydown_event);
+    if (index != -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keydown_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -556,17 +572,16 @@ void script_document_key_down(int key) {
 }
 
 void script_document_key_up(int key) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    int i = (int)shgeti(shared_context.document_event_listeners, keyup_event);
-    if (i != -1)
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+    int index = (int)shgeti(shared_module.document_event_listeners, keyup_event);
+    if (index != -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keyup_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
-    js_scope *scopes = shared_context.window_event_listeners[i].value;
+    js_scope *scopes = shared_module.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -576,35 +591,34 @@ void script_document_key_up(int key) {
 }
 
 void script_frame_tick(void) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
-    if (JS_IsFunction(ctx, _frame_callback)) {
-        assert(JS_IsLiveObject(rt, _frame_callback));
-        JS_Call(ctx, _frame_callback, JS_UNDEFINED, 0, NULL);
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
+
+    if (JS_IsFunction(ctx, frame_callback)) {
+        assert(JS_IsLiveObject(rt, frame_callback));
+        JS_Call(ctx, frame_callback, JS_UNDEFINED, 0, NULL);
     }
 }
 
 void script_context_destroy(void) {
-    script_context_t *context = script_context_share();
-    JS_FreeContext(context->context);
-    JS_RunGC(context->runtime);
+    if (shared_module.context == NULL) return;
+    JS_FreeContext(shared_module.context);
+    shared_module.context = NULL;
+    JS_RunGC(shared_module.runtime);
     // JS_FreeRuntime(context->runtime);
 }
 
 void script_context_cleanup(void) {
-    script_context_t *context = script_context_share();
-    if (context->context != NULL) {
-        JS_FreeContext(context->context);
-        JS_RunGC(context->runtime);
-        context->context = JS_NewContext(context->runtime);
-    }
+    script_context_share();
+    if (shared_module.context == NULL) return;
+    JS_FreeContext(shared_module.context);
+    JS_RunGC(shared_module.runtime);
+    shared_module.context = JS_NewContext(shared_module.runtime);
 }
 
 void script_module_browser_register(void) {
-    script_context_t *context = script_context_share();
-    JSContext *ctx = context->context;
-    JSRuntime *rt = context->runtime;
+    JSContext *ctx = shared_module.context;
+    JSRuntime *rt = shared_module.runtime;
     JSValue global = JS_GetGlobalObject(ctx);
 
     JS_SetPropertyStr(
@@ -636,4 +650,16 @@ void script_module_browser_register(void) {
     JS_SetPropertyStr(ctx, global, "WeakRef", weak_ref_ctor);
 
     JS_FreeValue(ctx, global);
+}
+
+void script_loop_tick() {
+    if (shared_module.context == NULL) return;
+    int finished;
+    JSContext *ctx;
+    while((finished = JS_ExecutePendingJob(shared_module.runtime, &ctx)) != 0) {
+        if (finished < 0) {
+            js_std_dump_error(shared_module.context);
+            break;
+        }
+    }
 }

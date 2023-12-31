@@ -20,6 +20,7 @@ static ui_input_t source_input;
 static ui_label_t copyright;
 static ui_label_t fps_label;
 static ui_label_t status_label;
+static ui_scroll_view_t log_view;
 
 static ustring_view fps_str;
 #define MAX_FPX_BITS 16
@@ -28,11 +29,12 @@ static ustring_view status_str;
 
 static GLFWcursor *default_cursor;
 static GLFWcursor *text_input_cursor;
-static GLFWcursor *resize_hori_cursor;
-static GLFWcursor *resize_vert_cursor;
+static GLFWcursor *resize_h_cursor;
+static GLFWcursor *resize_v_cursor;
+static bool invalid_script = false;
 
 static void error_callback(int error, const char* description) {
-    fprintf(stderr, "Error: %s\n", description);
+    LOG_ERROR_FMT("Error: %s\n", description);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -58,6 +60,7 @@ static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
             state.left_mouse_press = true;
             state.left_mouse_is_pressed = true;
             script_window_mouse_down(0);
+            state.pointer_start = state.pointer_location;
         } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             state.right_mouse_press = true;
             state.right_mouse_is_pressed = true;
@@ -88,8 +91,8 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
     script_context_t *ctx = script_context_share();
     glfwGetFramebufferSize(window, &ctx->framebuffer_width, &ctx->framebuffer_height);
     ctx->display_ratio = (f64)ctx->framebuffer_height / (f64)ctx->height;
-    f32 ui_width = (f32)width / ctx->ui_scale * ctx->display_ratio;
-    f32 ui_height = (f32)height / ctx->ui_scale * ctx->display_ratio;
+    f32 ui_width = (f32)(width / ctx->ui_scale * ctx->display_ratio);
+    f32 ui_height = (f32)(height / ctx->ui_scale * ctx->display_ratio);
     renderer.window_size.x = ui_width;
     renderer.window_size.y = ui_height;
     state.window_rect = (ui_rect){
@@ -101,16 +104,19 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
     script_window_resize(width, height);
 }
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(xoffset, yoffset);
+static void scroll_callback(GLFWwindow* window, double offset_x, double offset_y) {
+    if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(offset_x, offset_y);
+    const bool shift = ui_state_is_key_pressed(&state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(&state, KEY_RIGHT_SHIFT);
+    state.pointer_scroll.x = (f32)offset_x * (shift ? state.smooth_factor : 1.f);
+    state.pointer_scroll.y = (f32)offset_y * (shift ? state.smooth_factor : 1.f);
 }
 
 static void on_remote_script_download(net_request_t request, net_response_t response) {
-    printf("download remote script: %s\n", request.url.url.base.data);
-    printf("status: %d\n", response.status);
-    printf("content_length: %d\n", response.content_length);
+    LOG_INFO_FMT("download remote script: %s\n", request.url.url.base.data);
+    LOG_INFO_FMT("status: %d\n", response.status);
+    LOG_INFO_FMT("content_length: %d\n", response.content_length);
     //printf("response: %.*s\n", response.body.length, (const char *)response.body.base.data);
-    script_eval(ustring_view_to_ustring(&response.body), request.url.url);
+    invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
@@ -122,15 +128,15 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
     if (strncasecmp(uri.base.data, "http", 4) == 0) {
         url_t url = url_parse(uri);
         if (!url.valid) {
-            printf("invalid url: %s\n", uri.base.data);
+            LOG_WARNING_FMT("invalid url: %s\n", uri.base.data);
             return;
         }
-        printf("download remote script: %s\n", uri.base.data);
+        LOG_INFO_FMT("download remote script: %s\n", uri.base.data);
         url_dump(url);
         net_download_async(url, on_remote_script_download);
     } else {
         ustring content = io_read_file(uri);
-        script_eval(content, uri);
+        invalid_script = script_eval(content, uri) != 0;
         ustring_free(&content);
     }
 
@@ -143,6 +149,7 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     ui_state_init(&state, &renderer);
     ui_input_init(&source_input, uri);
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
+    ui_scroll_view_init(&log_view, 20);
     copyright.element.constraint.alignment = CENTER;
     copyright.element.constraint.margin.top = 10;
     copyright.scale = 0.7f;
@@ -167,15 +174,15 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
 
     default_cursor = glfwCreateStandardCursor(CURSOR_Default);
     text_input_cursor = glfwCreateStandardCursor(CURSOR_Text);
-    resize_hori_cursor = glfwCreateStandardCursor(CURSOR_ResizeHori);
-    resize_vert_cursor = glfwCreateStandardCursor(CURSOR_ResizeVert);
+    resize_h_cursor = glfwCreateStandardCursor(CURSOR_ResizeH);
+    resize_v_cursor = glfwCreateStandardCursor(CURSOR_ResizeV);
 }
 
 static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
-        printf("try load script: %s\n", source_input.label.text.base.data);
+        LOG_INFO_FMT("try load script: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
@@ -185,6 +192,9 @@ static void ui_render(GLFWwindow *window) {
 
     ui_label(&state, &fps_label, ui_theme_share()->transform_y, state.window_rect, 0, 0);
     ui_label(&state, &status_label, ui_theme_share()->text, state.window_rect, 0, 0);
+
+    // rect = (ui_rect){.x = 0, .y = 46.f, .w = state.window_rect.w, .h = state.window_rect.h - 46.f - 22.f};
+    // ui_scroll_view(&state, &log_view, (ui_rect){.x = 0, .y = 46.f, .w = state.window_rect.w, .h = state.window_rect.h - 46.f - 22.f}, 0, 0);
 }
 
 #define FPS_MA 10
@@ -199,9 +209,9 @@ static void state_update(GLFWwindow *window) {
     mouse_x = mouse_x * ctx->display_ratio;
     mouse_y = mouse_y * ctx->display_ratio;
 
-    if (state.mouse_location.x != mouse_x || state.mouse_location.y != mouse_y) {
+    if (state.pointer_location.x != mouse_x || state.pointer_location.y != mouse_y) {
         if (state.active == -1 && state.hover == -1) script_window_mouse_move(mouse_x, mouse_y);
-        state.mouse_location = (float2){.x = (f32)mouse_x / ctx->ui_scale, .y = (f32)mouse_y / ctx->ui_scale};
+        state.pointer_location = (float2){.x = (f32)(mouse_x / ctx->ui_scale), .y = (f32)(mouse_y / ctx->ui_scale)};
     }
  
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
@@ -221,11 +231,11 @@ static void state_update(GLFWwindow *window) {
         case CURSOR_Text:
         glfwSetCursor(window, text_input_cursor);
         break;
-            case CURSOR_ResizeHori:
-        glfwSetCursor(window, resize_hori_cursor);
+            case CURSOR_ResizeH:
+        glfwSetCursor(window, resize_h_cursor);
         break;
-            case CURSOR_ResizeVert:
-        glfwSetCursor(window, resize_vert_cursor);
+            case CURSOR_ResizeV:
+        glfwSetCursor(window, resize_v_cursor);
         break;
     default:
         break;
@@ -284,9 +294,11 @@ int main(int argc, char** argv) {
     glfwSetMouseButtonCallback(window, mouse_button);
     glfwMakeContextCurrent(window);
 
-    printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
-    printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+    LOG_INFO_FMT("GL_VERSION: %s\n", glGetString(GL_VERSION));
+    LOG_INFO_FMT("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+    LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
+    script_context_init(window);
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
     renderer_init(window, uri);
     script_init(window, uri);
@@ -298,7 +310,14 @@ int main(int argc, char** argv) {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     while (!glfwWindowShouldClose(window)) {
-        script_frame_tick();
+        if (invalid_script) {
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        } else {
+            script_frame_tick();
+            script_loop_tick();
+        }
+
         ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);

@@ -9,7 +9,10 @@ typedef struct ui_theme_t {
     ui_style panel_3;
     ui_style text;
     ui_style text_selected;
+    ui_style transform_x;
     ui_style transform_y;
+    ui_style transform_z;
+    ui_style scroll_bar;
 } ui_theme_t;
 
 ui_theme_t *ui_theme_share();

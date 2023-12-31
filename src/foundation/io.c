@@ -1,7 +1,7 @@
 #include "foundation/io.h"
 #include "foundation/network.h"
-#include "foundation/ustring.h"
 #include "foundation/script.h"
+#include "foundation/ustring.h"
 
 #include <stdio.h>
 #include <stdlib.h>

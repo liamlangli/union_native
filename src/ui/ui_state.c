@@ -14,6 +14,7 @@ void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->hover = -1;
     state->focus = -1;
     state->time = glfwGetTime();
+    state->smooth_factor = 0.1;
 
     ustring_view_reserve(&state->edit_str, 32);
 }
@@ -36,6 +37,9 @@ bool ui_state_update(ui_state_t *state) {
     state->hover_layer = state->next_hover_layer_index;
     state->next_hover = -1;
     state->next_hover_layer_index = -1;
+
+    state->pointer_delta = float2_sub(state->pointer_location, state->pointer_start);
+    state->pointer_scroll = float2_zero();
 
     ui_state_reset_mouse_state(state);
     for (int i = 0, l = (int)hmlen(state->key_press); i < l; i++) {
@@ -67,17 +71,19 @@ bool ui_state_update(ui_state_t *state) {
 bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index) {
     if (layer_index < state->next_hover_layer_index || layer_index < state->hover_layer)
         return false;
-    return ui_rect_contains(rect, state->mouse_location);
+    return ui_rect_contains(rect, state->pointer_location);
 }
 
 void ui_state_key_press(ui_state_t *state, int key) {
     hmput(state->key_press, key, state->time);
     hmput(state->key_pressed, key, state->time);
+    script_document_key_down(key);
 }
 
 void ui_state_key_release(ui_state_t *state, int key) {
     hmput(state->key_release, key, state->time);
     hmdel(state->key_pressed, key);
+    script_document_key_up(key);
 }
 
 bool ui_state_is_key_press(ui_state_t *state, int key) { return hmgeti(state->key_press, key) != -1; }
@@ -89,15 +95,10 @@ bool ui_state_is_key_release(ui_state_t *state, int key) { return hmgeti(state->
 bool ui_state_set_active(ui_state_t *state, u32 id) {
     if (state->active == -1) {
         state->last_active = state->active;
-        state->active = id;
+        state->active = (int)id;
         return true;
     }
     return false;
-}
-
-void ui_state_set_active_force(ui_state_t *state, u32 id) {
-    state->last_active = state->active;
-    state->active = id;
 }
 
 void ui_state_clear_active(ui_state_t *state) {
@@ -108,7 +109,7 @@ void ui_state_clear_active(ui_state_t *state) {
 }
 
 bool ui_state_set_focus(ui_state_t *state, u32 id) {
-    state->focus = id;
+    state->focus = (int)id;
     return true;
 }
 

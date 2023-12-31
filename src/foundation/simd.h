@@ -8,6 +8,8 @@ typedef struct float2 {
     f32 x, y;
 } float2;
 
+static inline float2 float2_zero() { return (float2){.x = 0.f, .y = 0.f}; }
+
 static inline float2 float2_sub(float2 a, float2 b) { return (float2){.x = a.x - b.x, .y = a.y - b.y}; }
 
 static inline f32 float2_length(float2 a) { return sqrtf(a.x * a.x + a.y * a.y); }

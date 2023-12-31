@@ -1,6 +1,6 @@
-#include "foundation/ustring.h"
-#include "foundation/script.h"
 #include "foundation/io.h"
+#include "foundation/script.h"
+#include "foundation/ustring.h"
 
 #include "ui/ui_input.h"
 #include "ui/ui_draw.h"
@@ -206,12 +206,12 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
     }
 
     if (active && state->left_mouse_press) {
-        input->label.start_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
+        input->label.start_index = ui_label_locate_cursor(&input->label, rect, state->pointer_location);
     }
 
     if (active) {
         if (state->left_mouse_is_pressed) {
-            input->label.cursor_index = ui_label_locate_cursor(&input->label, rect, state->mouse_location);
+            input->label.cursor_index = ui_label_locate_cursor(&input->label, rect, state->pointer_location);
             input->label.render_selected = true;
         }
 

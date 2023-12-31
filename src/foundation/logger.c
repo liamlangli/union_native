@@ -30,15 +30,15 @@ logger_t *logger_global(void) {
     return &global_logger;
 }
 
-void logger_info(logger_t *logger, const char* message) {
+void logger_input(logger_t *logger, int type, const char* message) {
     if (logger->config.std_out) {
-        printf("[INFO] %s\n", message);
+        printf("[INPUT] %s\n", message);
     }
 
     u32 count = (u32)arrlen(logger->lines);
     if (logger->config.write_to_file) {
         FILE *file = fopen(logger->config.file_path.data, "a");
-        fprintf(file, "[INFO] %s\n", message);
+        fprintf(file, "[INPUT] %s\n", message);
         fclose(file);
         logger->new_line_count = 0;
     } else {
@@ -50,5 +50,5 @@ void logger_info(logger_t *logger, const char* message) {
     }
 }
 
-void logger_warning(logger_t *logger, const char* message);
-void logger_error(logger_t *logger, const char* message);
+void logger_format_input(logger_t *logger, int type, const char* fmt, ...) {
+}

@@ -4,22 +4,9 @@
 #include "foundation/ustring.h"
 
 #include <GLFW/glfw3.h>
-#include <quickjs/quickjs-libc.h>
-#include <quickjs/quickjs.h>
 #include <stb_ds.h>
 
-typedef struct js_scope {
-    JSValue this, func;
-} js_scope;
-
-typedef struct js_listener_hm {
-    const char *key;
-    js_scope *value;
-} js_listener_hm;
-
 typedef struct script_context_t {
-    JSRuntime *runtime;
-    JSContext *context;
     int width;
     int height;
     int framebuffer_width;
@@ -27,18 +14,14 @@ typedef struct script_context_t {
     f64 display_ratio, ui_scale;
     f64 mouse_x, mouse_y;
     GLFWwindow *window;
-
-    js_listener_hm *window_event_listeners;
-    js_listener_hm *document_event_listeners;
-    js_listener_hm *canvas_event_listeners;
+    void *module;
 } script_context_t;
 
+void script_context_init(GLFWwindow *window);
 script_context_t *script_context_share(void);
+void* script_context_internal(void);
 void script_context_cleanup(void);
 void script_context_destroy(void);
-
-void script_value_ref(JSValue value);
-void script_value_unref(JSValue value);
 
 void script_module_browser_register(void);
 int script_eval(ustring source, ustring_view filename);
@@ -52,3 +35,4 @@ void script_document_key_down(int key);
 void script_document_key_up(int key);
 
 void script_frame_tick();
+void script_loop_tick();
