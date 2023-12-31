@@ -144,7 +144,8 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     ui_input_init(&source_input, uri);
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     copyright.element.constraint.alignment = CENTER;
-    copyright.scale = 0.5;
+    copyright.element.constraint.margin.top = 10;
+    copyright.scale = 0.7f;
 
     fps_str.base.data = malloc(MAX_FPX_BITS);
     memset((void*)fps_str.base.data, 0, MAX_FPX_BITS);
