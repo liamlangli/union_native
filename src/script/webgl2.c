@@ -315,7 +315,7 @@ static JSValue js_gl_uniform1fv(JSContext *ctx, JSValueConst this_val, int argc,
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[1], "buffer"));
     glUniform1fv(location, (GLsizei)length >> 2, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
@@ -324,7 +324,7 @@ static JSValue js_gl_uniform2fv(JSContext *ctx, JSValueConst this_val, int argc,
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[1], "buffer"));
     glUniform2fv(location, (GLsizei)(length >> 3), (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
@@ -333,7 +333,7 @@ static JSValue js_gl_uniform3fv(JSContext *ctx, JSValueConst this_val, int argc,
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[1], "buffer"));
     glUniform3fv(location, (GLsizei)(length >> 2) / 3, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
@@ -342,7 +342,7 @@ static JSValue js_gl_uniform4fv(JSContext *ctx, JSValueConst this_val, int argc,
     GLuint location;
     size_t length;
     JS_ToUint32(ctx, &location, argv[0]);
-    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[2], "buffer"));
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, JS_GetPropertyStr(ctx, argv[1], "buffer"));
     glUniform4fv(location, (GLsizei)length >> 4, (GLfloat *)data_buffer);
     return JS_UNDEFINED;
 }
@@ -873,6 +873,7 @@ void script_module_webgl2_register() {
         JS_PROP_INT32_DEF("UNSIGNED_INT", GL_UNSIGNED_INT, JS_PROP_CONFIGURABLE),
 
         JS_PROP_INT32_DEF("TEXTURE_2D", GL_TEXTURE_2D, JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("TEXTURE0", GL_TEXTURE0, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("TEXTURE_CUBE_MAP", GL_TEXTURE_CUBE_MAP, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("TEXTURE_CUBE_MAP_POSITIVE_X", GL_TEXTURE_CUBE_MAP_POSITIVE_X, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("TEXTURE_2D_ARRAY", GL_TEXTURE_2D_ARRAY, JS_PROP_CONFIGURABLE),
