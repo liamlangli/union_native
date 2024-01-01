@@ -1,8 +1,10 @@
 #include "script/webgl2.h"
 
 #include "foundation/global.h"
+#include "foundation/logger.h"
 #include "script/script.h"
 
+#include <GL/gl.h>
 #include <GLES3/gl3.h>
 #include <quickjs/quickjs.h>
 #include <stdlib.h>
@@ -489,6 +491,13 @@ static JSValue js_gl_bind_texture(JSContext *ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_active_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    GLuint texture;
+    JS_ToUint32(ctx, &texture, argv[0]);
+    glActiveTexture(texture);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, level, internalformat, width, height, border, format, type;
     JS_ToUint32(ctx, &target, argv[0]);
@@ -505,6 +514,26 @@ static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc
     size_t length;
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
     glTexImage2D(target, level, internalformat, width, height, border, format, type, data_buffer);
+
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_tex_sub_image2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    GLuint target, level, xoffset, yoffset, width, height, format, type;
+    JS_ToUint32(ctx, &target, argv[0]);
+    JS_ToUint32(ctx, &level, argv[1]);
+    JS_ToUint32(ctx, &xoffset, argv[2]);
+    JS_ToUint32(ctx, &yoffset, argv[3]);
+    JS_ToUint32(ctx, &width, argv[4]);
+    JS_ToUint32(ctx, &height, argv[5]);
+    JS_ToUint32(ctx, &format, argv[6]);
+    JS_ToUint32(ctx, &type, argv[7]);
+    JSValue data = argv[8];
+
+    JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
+    size_t length;
+    u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
+    glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, data_buffer);
 
     return JS_UNDEFINED;
 }
@@ -559,6 +588,20 @@ static JSValue js_gl_bind_framebuffer(JSContext *ctx, JSValueConst this_val, int
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &framebuffer, argv[1]);
     glBindFramebuffer(target, framebuffer);
+    return JS_UNDEFINED;
+}
+
+static GLenum draw_buffers[4] = {
+    GL_COLOR_ATTACHMENT0,
+    GL_COLOR_ATTACHMENT1,
+    GL_COLOR_ATTACHMENT2,
+    GL_COLOR_ATTACHMENT3,
+};
+static JSValue js_gl_draw_buffers(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    GLuint n;
+    JSValue arr = argv[0];
+    JS_ToUint32(ctx, &n, JS_GetPropertyStr(ctx, arr, "length"));
+    glDrawBuffers(n, draw_buffers);
     return JS_UNDEFINED;
 }
 
@@ -764,11 +807,14 @@ void script_module_webgl2_register() {
 
         JS_CFUNC_DEF("getAttribLocation", 2, js_gl_get_attrib_location),
         JS_CFUNC_DEF("vertexAttribPointer", 6, js_gl_vertex_attrib_pointer),
+        JS_CFUNC_DEF("vertexAttribIPointer", 5, js_gl_vertex_attribi_pointer),
         JS_CFUNC_DEF("enableVertexAttribArray", 1, js_gl_enable_vertex_attrib_array),
         JS_CFUNC_DEF("drawArrays", 3, js_gl_draw_arrays),
         JS_CFUNC_DEF("createTexture", 0, js_gl_create_texture),
         JS_CFUNC_DEF("bindTexture", 2, js_gl_bind_texture),
+        JS_CFUNC_DEF("activeTexture", 1, js_gl_active_texture),
         JS_CFUNC_DEF("texImage2D", 9, js_gl_tex_image2d),
+        JS_CFUNC_DEF("texSubImage2D", 9, js_gl_tex_sub_image2d),
         JS_CFUNC_DEF("texStorage2D", 5, js_gl_tex_storage2d),
         JS_CFUNC_DEF("texStorage3D", 6, js_gl_tex_storage3d),
         JS_CFUNC_DEF("texParameteri", 3, js_gl_tex_parameteri),
@@ -777,6 +823,7 @@ void script_module_webgl2_register() {
         JS_CFUNC_DEF("createFramebuffer", 0, js_gl_create_framebuffer),
         JS_CFUNC_DEF("bindFramebuffer", 2, js_gl_bind_framebuffer),
         JS_CFUNC_DEF("framebufferTexture2D", 5, js_gl_framebuffer_texture2d),
+        JS_CFUNC_DEF("drawBuffers", 1, js_gl_draw_buffers),
         JS_CFUNC_DEF("checkFramebufferStatus", 1, js_gl_check_framebuffer_status),
         JS_CFUNC_DEF("deleteFramebuffer", 1, js_gl_delete_framebuffer),
 

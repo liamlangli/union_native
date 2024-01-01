@@ -1,4 +1,5 @@
 #include "foundation/foundation.h"
+#include "foundation/ustring.h"
 #include "ui/ui.h"
 #include "script/script.h"
 
@@ -23,10 +24,13 @@ static ui_label_t fps_label;
 static ui_label_t status_label;
 static ui_scroll_view_t log_view;
 
+static uv_fs_poll_t file_watcher;
+
 static ustring_view fps_str;
 #define MAX_FPX_BITS 16
 static ustring_view status_str;
 #define MAX_STATUS_BITS 256
+static ustring_view watched_file;
 
 static GLFWcursor *default_cursor;
 static GLFWcursor *text_input_cursor;
@@ -112,6 +116,12 @@ static void scroll_callback(GLFWwindow* window, double offset_x, double offset_y
     state.pointer_scroll.y = (f32)offset_y * (shift ? state.smooth_factor : 1.f);
 }
 
+static void script_init(GLFWwindow *window, ustring_view uri);
+static void on_local_script_changed(uv_fs_poll_t* handle, int status, const uv_stat_t* prev, const uv_stat_t* curr) {
+    ustring_view uri = *(ustring_view *)handle->data;
+    script_init(script_context_share()->window, uri);
+}
+
 static void on_remote_script_download(net_request_t request, net_response_t response) {
     LOG_INFO_FMT("download remote script: %s\n", request.url.url.base.data);
     LOG_INFO_FMT("status: %d\n", response.status);
@@ -123,6 +133,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
 static void script_init(GLFWwindow *window, ustring_view uri) {
     script_context_t *ctx = script_context_share();
     ctx->window = window;
+
     if (strncasecmp(uri.base.data, "http", 4) == 0) {
         url_t url = url_parse(uri);
         if (!url.valid) {
@@ -136,6 +147,18 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
         ustring content = io_read_file(uri);
         invalid_script = script_eval(content, uri) != 0;
         ustring_free(&content);
+
+        // watch file change
+        if (!ustring_view_equals(&watched_file, &uri)) {
+            if (watched_file.base.data != NULL) {
+                uv_fs_poll_stop(&file_watcher);
+                ustring_view_free(&watched_file);
+            }
+            watched_file = ustring_view_sub_view(&uri, 0, uri.length);
+            uv_fs_poll_init(uv_default_loop(), &file_watcher);
+            file_watcher.data = &watched_file;
+            uv_fs_poll_start(&file_watcher, on_local_script_changed, watched_file.base.data, 1000);
+        }
     }
 
     glfwGetWindowSize(window, &ctx->width, &ctx->height);

@@ -233,7 +233,7 @@ JSValue js_cancel_animation_frame(JSContext *context, JSValueConst this_val, int
 static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "%s\n", str);
+        fprintf(stdout, "\x1b[32m[INFO]\x1b[0m %s\n", str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -242,7 +242,7 @@ static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueC
 static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "%s\n", str);
+        fprintf(stdout, "\x1b[33m[WARN]\x1b[0m %s\n", str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -251,7 +251,7 @@ static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValue
 static JSValue js_console_error(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "%s\n", str);
+        fprintf(stdout, "\x1b[31m[ERROR]\x1b[0m %s\n", str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -407,6 +407,13 @@ static const JSCFunctionListEntry js_image_proto_funcs[] = {
 
 static const JSCFunctionListEntry js_image_funcs[] = {
     JS_OBJECT_DEF("Image", js_image_proto_funcs, countof(js_image_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
+static JSValue js_local_storage_set_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) { return JS_UNDEFINED; }
+static JSValue js_local_storage_get_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) { return JS_UNDEFINED; }
+static const JSCFunctionListEntry js_local_storage_proto_funcs[] = {
+    JS_CFUNC_DEF("setItem", 2, js_local_storage_set_item),
+    JS_CFUNC_DEF("getItem", 1, js_local_storage_get_item),
 };
 
 static const JSCFunctionListEntry js_window_proto_funcs[] = {
@@ -711,8 +718,13 @@ void script_module_browser_register(void) {
     JS_SetConstructor(ctx, weak_ref_ctor, weak_ref_proto);
     JS_SetPropertyStr(ctx, global, "WeakRef", weak_ref_ctor);
 
-    JS_SetPropertyStr(ctx, global, "HTMLCanvasElement", JS_NewObject(ctx));
-    JS_SetPropertyStr(ctx, global, "HTMLVideoElement", JS_NewObject(ctx));
+    JSValue navigator = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, navigator, "userAgent", JS_NewString(ctx, USER_AGENT));
+    JS_SetPropertyStr(ctx, global, "navigator", navigator);
+
+    JSValue localStorage = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, localStorage, js_local_storage_proto_funcs, countof(js_local_storage_proto_funcs));
+    JS_SetPropertyStr(ctx, global, "localStorage", localStorage);
 
     JS_FreeValue(ctx, global);
 }

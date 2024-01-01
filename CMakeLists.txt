@@ -4,6 +4,7 @@ project(un)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+include(${CMAKE_SOURCE_DIR}/cmake/Platform.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Options.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Findlibuv.cmake)
 
