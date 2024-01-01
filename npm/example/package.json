@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "node dev.js",
-    "build": "node build.js"
+    "prod": "node build.js"
   },
   "devDependencies": {
     "esbuild": "^0.19.8",

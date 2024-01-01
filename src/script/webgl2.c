@@ -4,18 +4,45 @@
 #include "foundation/logger.h"
 #include "script/script.h"
 
-#include <GL/gl.h>
 #include <GLES3/gl3.h>
 #include <quickjs/quickjs.h>
 #include <stdlib.h>
 
+const char * gl_err_msg(GLenum err) {
+        switch (err) {
+        case GL_INVALID_ENUM:
+                return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE:
+                return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION:
+                return "GL_INVALID_OPERATION";
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+                return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        case GL_OUT_OF_MEMORY:
+                return "GL_OUT_OF_MEMORY";
+        default:
+                return "UNKNOWN";
+        }
+}
+
 static int gl_check_error(const char *msg, int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        fprintf(stderr, "gl error: %d, %s, %d\n", err, msg, line);
+        fprintf(stderr, "gl error: %s, %s, %d\n", gl_err_msg(err), msg, line);
         return 1;
     }
     return 0;
+}
+
+static int gl_get_shader_info_log(GLuint shader) {
+    GLint length = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    if (length > 0) {
+        char *info_log = (char *)malloc(length);
+        glGetShaderInfoLog(shader, length, NULL, info_log);
+        printf("shader info log: %s\n", info_log);
+        free(info_log);
+    }
 }
 
 static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -146,6 +173,7 @@ static JSValue js_gl_create_shader(JSContext *ctx, JSValueConst this_val, int ar
     GLuint shader;
     JS_ToUint32(ctx, &shader, argv[0]);
     shader = glCreateShader(shader);
+    gl_check_error("glCreateShader", __LINE__);
     return JS_NewInt32(ctx, shader);
 }
 
@@ -156,8 +184,11 @@ static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int ar
     if (JS_IsString(source)) {
         const char *str = JS_ToCString(ctx, source);
         glShaderSource(shader, 1, &str, NULL);
+        if (gl_check_error("glShaderSource", __LINE__) != 0) {
+            // printf("glShaderSource error: %s\n", str);
+            gl_get_shader_info_log(shader);
+        }
         JS_FreeCString(ctx, str);
-        gl_check_error("glShaderSource", __LINE__);
     } else {
         JSValue buffer = JS_GetPropertyStr(ctx, source, "buffer");
         size_t length;

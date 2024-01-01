@@ -37,10 +37,10 @@ ustring_view ustring_view_STR(const char *src) {
     size_t new_size = MACRO_MAX(len + 1, MIN_CAPACITY);
     view.base.data = malloc(new_size);
     memcpy(view.base.data, src, strlen(src) + 1);
-    view.base.length = new_size;
+    view.base.length = (u32)new_size;
     view.base.null_terminated = 1;
     view.start = 0;
-    view.length = len;
+    view.length = (u32)len;
     return view;
 }
 
@@ -130,7 +130,7 @@ u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b) {
 }
 
 u32 ustring_view_append_STR(ustring_view *a, const char *b) {
-    u32 b_length = strlen(b);
+    u32 b_length = (u32)strlen(b);
     if (b_length <= 0)
         return a->length;
     u32 new_size = a->start + a->length + b_length;

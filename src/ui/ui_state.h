@@ -6,7 +6,6 @@
 enum CURSOR_TYPE {
     CURSOR_Default = 0x00036001,
     CURSOR_Text = 0x00036002,
-    CURSOR_Hand = 0x00036004,
     CURSOR_ResizeH = 0x00036005,
     CURSOR_ResizeV = 0x00036006
 };

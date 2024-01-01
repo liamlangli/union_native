@@ -61,8 +61,8 @@ static inline void ui_element_init(ui_element *element) {
     element->id = ui_id_create();
 }
 
-static inline ui_rect ui_rect_shrink(ui_rect a, f32 hori, f32 vert) {
-    return (ui_rect){.x = a.x + hori, .y = a.y + vert, .w = a.w - hori * 2.f, .h = a.h - vert * 2.f};
+static inline ui_rect ui_rect_shrink(ui_rect a, f32 h, f32 v) {
+    return (ui_rect){.x = a.x + h, .y = a.y + v, .w = a.w - v * 2.f, .h = a.h - v * 2.f};
 }
 
 static inline bool ui_rect_contains(ui_rect rect, float2 point) {

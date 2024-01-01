@@ -1,22 +1,24 @@
-#include "foundation/logger.h"
 #include "foundation/io.h"
+#include "foundation/logger.h"
 #include "script/script.h"
 
 #include <GLFW/glfw3.h>
 #include <assert.h>
-#include <quickjs/quickjs.h>
 #include <quickjs/quickjs-libc.h>
+#include <quickjs/quickjs.h>
 #include <stb_ds.h>
 
 typedef struct JSGCObjectHeader {
     int ref_count; /* must come first, 32-bit */
 } JSGCObjectHeader;
 
-static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count++; }
-static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count--; }
-void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime*)script_runtime_internal(), value, js_value_ref); }
-void script_value_deref(JSValue value) { JS_MarkValue((JSRuntime*)script_runtime_internal(), value, js_value_deref); }
+static int ref_count = 0;
+static int deref_count = 0;
 
+static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count++; ref_count++; }
+static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count--; deref_count++; }
+void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_ref); }
+void script_value_deref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_deref); }
 
 typedef struct js_scope {
     JSValue this, func;
@@ -27,7 +29,7 @@ typedef struct js_listener_hm {
     js_scope *value;
 } js_listener_hm;
 
-typedef struct js_frame_callback_hm {
+typedef struct js_frame_callback {
     JSValue key;
     js_scope value;
 } js_frame_callback;
@@ -208,14 +210,18 @@ JSValue js_get_elements_by_tag_name(JSContext *context, JSValueConst this_val, i
 }
 
 JSValue js_request_animation_frame(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
-    if (argc >= 1) {
-        JSValue callback = argv[0];
-        js_scope scope = {.this = this_val, .func = callback};
-        hmput(browser.frame_callbacks, callback, scope);
-        size_t index = hmgeti(browser.frame_callbacks, callback);
+    if (argc < 1)
+        return JS_UNDEFINED;
+    JSValue fn = argv[0];
+    size_t index = hmgeti(browser.frame_callbacks, fn);
+    if (index != -1)
         return JS_NewInt64(context, index);
-    }
-    return JS_UNDEFINED;
+
+    js_scope scope = {.this = this_val, .func = fn};
+    script_value_ref(fn);
+    hmput(browser.frame_callbacks, fn, scope);
+    index = hmgeti(browser.frame_callbacks, fn);
+    return JS_NewInt64(context, index);
 }
 
 JSValue js_cancel_animation_frame(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -300,7 +306,8 @@ static JSClassID js_image_class_id;
 
 static void js_image_finalizer(JSRuntime *rt, JSValue val) {
     js_image *image = JS_GetOpaque(val, js_image_class_id);
-    if (!image) return;
+    if (!image)
+        return;
     if (image->data)
         free(image->data);
     js_free_rt(rt, image);
@@ -329,10 +336,10 @@ static JSValue js_image_ctor(JSContext *ctx, JSValueConst new_target, int argc, 
     JS_SetOpaque(obj, image);
     return obj;
 
-    fail:
-        js_free(ctx, image);
-        JS_FreeValue(ctx, obj);
-        return JS_EXCEPTION;
+fail:
+    js_free(ctx, image);
+    JS_FreeValue(ctx, obj);
+    return JS_EXCEPTION;
 }
 
 static JSClassDef js_image_class = {
@@ -348,16 +355,16 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     JS_ToCStringLen(ctx, &len, val);
     const char *path = JS_ToCString(ctx, val);
     int width, height, channel;
-    
+
     // check base64 header
     ustring base64;
     udata data;
     bool is_base64 = false;
     if (strncmp(path, "data:image/png;base64,", 22) == 0) {
-        base64 = ustring_range((i8*)path + 22, len);
+        base64 = ustring_range((i8 *)path + 22, len);
         is_base64 = true;
     } else if (strncmp(path, "data:image/jpeg;base64,", 23) == 0) {
-        base64 = ustring_range((i8*)path + 23, len);
+        base64 = ustring_range((i8 *)path + 23, len);
         is_base64 = true;
     }
 
@@ -379,9 +386,7 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     return JS_UNDEFINED;
 }
 
-static JSValue js_get_image_src(JSContext *ctx, JSValueConst this_val) {
-    return JS_UNDEFINED;
-}
+static JSValue js_get_image_src(JSContext *ctx, JSValueConst this_val) { return JS_UNDEFINED; }
 
 static JSValue js_set_image_onload(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
     js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
@@ -400,6 +405,18 @@ static JSValue js_get_image_onload(JSContext *ctx, JSValueConst this_val) {
     return image->onload.func;
 }
 
+static JSValue js_set_style_cursor(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+    return JS_UNDEFINED;
+}
+
+static JSValue js_get_style_cursor(JSContext *ctx, JSValueConst this_val) {
+    return JS_UNDEFINED;
+}
+
+static const JSCFunctionListEntry js_style_proto_funcs[] = {
+    JS_CGETSET_DEF("cursor", js_get_style_cursor, js_set_style_cursor),
+};
+
 static const JSCFunctionListEntry js_image_proto_funcs[] = {
     JS_CGETSET_DEF("src", js_get_image_src, js_set_image_src),
     JS_CGETSET_DEF("onload", js_get_image_onload, js_set_image_onload),
@@ -409,8 +426,13 @@ static const JSCFunctionListEntry js_image_funcs[] = {
     JS_OBJECT_DEF("Image", js_image_proto_funcs, countof(js_image_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
-static JSValue js_local_storage_set_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) { return JS_UNDEFINED; }
-static JSValue js_local_storage_get_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) { return JS_UNDEFINED; }
+static JSValue js_local_storage_set_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    return JS_UNDEFINED;
+}
+static JSValue js_local_storage_get_item(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_local_storage_proto_funcs[] = {
     JS_CFUNC_DEF("setItem", 2, js_local_storage_set_item),
     JS_CFUNC_DEF("getItem", 1, js_local_storage_get_item),
@@ -438,8 +460,8 @@ static const JSCFunctionListEntry js_document_proto_funcs[] = {
 };
 
 static const JSCFunctionListEntry js_document_funcs[] = {
-    JS_OBJECT_DEF(
-        "document", js_document_proto_funcs, countof(js_document_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+    JS_OBJECT_DEF("document", js_document_proto_funcs, countof(js_document_proto_funcs),
+                  JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
 static const JSCFunctionListEntry js_console_proto_funcs[] = {
@@ -457,15 +479,15 @@ static const JSCFunctionListEntry js_performance_proto_funcs[] = {
 };
 
 static const JSCFunctionListEntry js_performance_funcs[] = {
-    JS_OBJECT_DEF(
-        "performance", js_performance_proto_funcs, countof(js_performance_proto_funcs),
-        JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+    JS_OBJECT_DEF("performance", js_performance_proto_funcs, countof(js_performance_proto_funcs),
+                  JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
 static const JSCFunctionListEntry js_canvas_proto_funcs[] = {
     JS_CFUNC_DEF("addEventListener", 3, js_canvas_add_event_listener),
     JS_CFUNC_DEF("removeEventListener", 2, js_canvas_remove_event_listener),
     JS_CFUNC_DEF("getContext", 1, js_get_context),
+    JS_OBJECT_DEF("style", js_style_proto_funcs, countof(js_style_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
 static const JSCFunctionListEntry js_canvas_funcs[] = {
@@ -473,7 +495,7 @@ static const JSCFunctionListEntry js_canvas_funcs[] = {
 };
 
 static JSClassID js_text_decoder_class_id;
-static JSClassDef js_unreal_class = {
+static JSClassDef js_text_decode_class = {
     "TextDecoder", .finalizer = NULL, .gc_mark = NULL, .call = NULL, .exotic = NULL,
 };
 
@@ -508,7 +530,6 @@ static const JSCFunctionListEntry js_weak_ref_proto_funcs[] = {
 static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int argc, JSValueConst *argv) {
     return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
 }
-
 
 void script_window_resize(int width, int height) {
     JSContext *ctx = script_context_internal();
@@ -665,23 +686,47 @@ void script_frame_tick(void) {
     JSContext *ctx = script_context_internal();
     JSRuntime *rt = script_runtime_internal();
 
+    JSValue ret;
     for (int i = 0, l = (int)hmlen(browser.frame_callbacks); i < l; ++i) {
-        js_frame_callback callback = browser.frame_callbacks[i];
-        if (!JS_IsFunction(ctx, callback.key)) continue;
-        assert(JS_IsLiveObject(rt, callback.value.func));
-        JS_Call(ctx, callback.value.func, callback.value.this, 0, NULL);
+        js_frame_callback cb = browser.frame_callbacks[i];
+        if (!JS_IsFunction(ctx, cb.key))
+            continue;
+        assert(JS_IsLiveObject(rt, cb.value.func));
+        ret = JS_Call(ctx, cb.value.func, cb.value.this, 0, NULL);
+        if (JS_IsException(ret)) {
+            js_std_dump_error(ctx);
+            break;
+        }
     }
+}
+
+void create_classes(JSRuntime *rt) {
+    static bool class_created = false;
+    if (class_created) return;
+    class_created = true;
+    
+    JS_NewClassID(&js_image_class_id);
+    JS_NewClass(rt, js_image_class_id, &js_image_class);
+    
+    JS_NewClassID(&js_text_decoder_class_id);
+    JS_NewClass(rt, js_text_decoder_class_id, &js_text_decode_class);
+    
+    JS_NewClassID(&js_weak_ref_class_id);
+    JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }
 
 void script_module_browser_register(void) {
     JSContext *ctx = script_context_internal();
     JSRuntime *rt = script_runtime_internal();
     JSValue global = JS_GetGlobalObject(ctx);
-
-    JS_SetPropertyStr(
-        ctx, global, "requestAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
-    JS_SetPropertyStr(ctx, global, "cancelAnimationFrame", JS_NewCFunction(ctx, js_request_animation_frame, "cancelAnimationFrame", 1));
     
+    create_classes(rt);
+
+    JS_SetPropertyStr(ctx, global, "requestAnimationFrame",
+                      JS_NewCFunction(ctx, js_request_animation_frame, "requestAnimationFrame", 1));
+    JS_SetPropertyStr(ctx, global, "cancelAnimationFrame",
+                      JS_NewCFunction(ctx, js_request_animation_frame, "cancelAnimationFrame", 1));
+
     JS_SetPropertyFunctionList(ctx, global, js_document_funcs, countof(js_document_funcs));
     JS_SetPropertyFunctionList(ctx, global, js_window_funcs, countof(js_window_funcs));
     JS_SetPropertyFunctionList(ctx, global, js_canvas_funcs, countof(js_canvas_funcs));
@@ -690,8 +735,6 @@ void script_module_browser_register(void) {
     JS_SetPropertyStr(ctx, global, "self", JS_NewObject(ctx));
 
     // Image class
-    JS_NewClassID(&js_image_class_id);
-    JS_NewClass(rt, js_image_class_id, &js_image_class);
     JSValue image_proto = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, image_proto, js_image_proto_funcs, countof(js_image_proto_funcs));
     JSValue image_class = JS_NewCFunction2(ctx, js_image_ctor, "Image", 0, JS_CFUNC_constructor, 0);
@@ -700,8 +743,6 @@ void script_module_browser_register(void) {
     JS_SetPropertyStr(ctx, global, "Image", image_class);
 
     // class defined
-    JS_NewClassID(&js_text_decoder_class_id);
-    JS_NewClass(rt, js_text_decoder_class_id, &js_unreal_class);
     JSValue text_decoder_proto = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, text_decoder_proto, js_text_decoder_proto_funcs, countof(js_text_decoder_proto_funcs));
     JS_SetClassProto(ctx, js_text_decoder_class_id, text_decoder_proto);
@@ -709,8 +750,6 @@ void script_module_browser_register(void) {
     JS_SetConstructor(ctx, text_decoder_ctor, text_decoder_proto);
     JS_SetPropertyStr(ctx, global, "TextDecoder", text_decoder_ctor);
 
-    JS_NewClassID(&js_weak_ref_class_id);
-    JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
     JSValue weak_ref_proto = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, weak_ref_proto, js_weak_ref_proto_funcs, countof(js_weak_ref_proto_funcs));
     JS_SetClassProto(ctx, js_weak_ref_class_id, weak_ref_proto);
@@ -729,40 +768,32 @@ void script_module_browser_register(void) {
     JS_FreeValue(ctx, global);
 }
 
+#define LISTENER_CLR(listeners)                                                                                                \
+    for (int i = 0, il = (int)shlen((listeners)); i < il; ++i) {                                                               \
+        js_scope *scopes = (listeners)[i].value;                                                                               \
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {                                                               \
+            js_scope scope = scopes[j];                                                                                        \
+            JS_FreeValue(ctx, scope.func);                                                                                     \
+        }                                                                                                                      \
+        arrsetlen(scopes, 0);                                                                                                  \
+    }
+
 void script_listeners_cleanup() {
     JSContext *ctx = script_context_internal();
     js_listener_hm *window_event_listeners = browser.window_event_listeners;
     js_listener_hm *document_event_listeners = browser.document_event_listeners;
     js_listener_hm *canvas_event_listeners = browser.canvas_event_listeners;
+    js_frame_callback *frame_callbacks = browser.frame_callbacks;
 
-    for (int i = 0, il = shlen(window_event_listeners); i < il; ++i) {
-        js_scope *scopes = window_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
-    }
+    LISTENER_CLR(window_event_listeners);
+    LISTENER_CLR(document_event_listeners);
+    LISTENER_CLR(canvas_event_listeners);
 
-    for (int i = 0, il = shlen(document_event_listeners); i < il; ++i) {
-        js_scope *scopes = document_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
-    }
-
-    for (int i = 0, il = shlen(canvas_event_listeners); i < il; ++i) {
-        js_scope *scopes = canvas_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
+    for (int i = 0, il = (int)hmlen(frame_callbacks); i < il; ++i) {
+        js_frame_callback cb = frame_callbacks[i];
+        script_value_deref(cb.value.func);
+        JS_FreeValue(ctx, cb.key);
     }
 }
 
-void script_module_browser_cleanup(void) {
-    script_listeners_cleanup();
-}
+void script_module_browser_cleanup(void) { script_listeners_cleanup(); }

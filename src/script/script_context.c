@@ -35,7 +35,9 @@ void script_context_cleanup(void) {
     if (shared_module.context == NULL)
         return;
     JS_FreeContext(shared_module.context);
-    JS_RunGC(shared_module.runtime);
+    JS_FreeRuntime(shared_module.runtime);
+
+    shared_module.runtime = JS_NewRuntime();
     shared_module.context = JS_NewContext(shared_module.runtime);
 }
 

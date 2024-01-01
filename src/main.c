@@ -24,7 +24,7 @@ static ui_label_t fps_label;
 static ui_label_t status_label;
 static ui_scroll_view_t log_view;
 
-static uv_fs_poll_t file_watcher;
+static uv_fs_poll_t *file_watcher;
 
 static ustring_view fps_str;
 #define MAX_FPX_BITS 16
@@ -37,6 +37,7 @@ static GLFWcursor *text_input_cursor;
 static GLFWcursor *resize_h_cursor;
 static GLFWcursor *resize_v_cursor;
 static bool invalid_script = false;
+static bool ui_visible = true;
 
 static void error_callback(int error, const char* description) {
     LOG_ERROR_FMT("Error: %s\n", description);
@@ -44,6 +45,10 @@ static void error_callback(int error, const char* description) {
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
+    if (key == KEY_GRAVE_ACCENT && action == GLFW_RELEASE) {
+        ui_visible = !ui_visible;
+    }
+
     if (action == GLFW_PRESS) {
         ui_state_key_press(&state, key);
     } else if (action == GLFW_RELEASE) {
@@ -112,8 +117,8 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
 static void scroll_callback(GLFWwindow* window, double offset_x, double offset_y) {
     if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(offset_x, offset_y);
     const bool shift = ui_state_is_key_pressed(&state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(&state, KEY_RIGHT_SHIFT);
-    state.pointer_scroll.x = (f32)offset_x * (shift ? state.smooth_factor : 1.f);
-    state.pointer_scroll.y = (f32)offset_y * (shift ? state.smooth_factor : 1.f);
+    state.pointer_scroll.x = (f32)(offset_x * (shift ? state.smooth_factor : 1.f));
+    state.pointer_scroll.y = (f32)(offset_y * (shift ? state.smooth_factor : 1.f));
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri);
@@ -149,15 +154,19 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
         ustring_free(&content);
 
         // watch file change
-        if (!ustring_view_equals(&watched_file, &uri)) {
-            if (watched_file.base.data != NULL) {
-                uv_fs_poll_stop(&file_watcher);
-                ustring_view_free(&watched_file);
+        if (!ustring_view_equals(&watched_file, &uri) && !invalid_script) {
+#if defined(OS_WINDOWS)
+            if (file_watcher != NULL) {
+                uv_fs_poll_stop(file_watcher);
+                uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+                free(file_watcher);
             }
             watched_file = ustring_view_sub_view(&uri, 0, uri.length);
-            uv_fs_poll_init(uv_default_loop(), &file_watcher);
-            file_watcher.data = &watched_file;
-            uv_fs_poll_start(&file_watcher, on_local_script_changed, watched_file.base.data, 1000);
+            file_watcher = malloc(sizeof(uv_fs_poll_t));
+            uv_fs_poll_init(uv_default_loop(), file_watcher);
+            file_watcher->data = &watched_file;
+            uv_fs_poll_start(file_watcher, on_local_script_changed, watched_file.base.data, 1000);
+#endif
         }
     }
 
@@ -179,18 +188,18 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     memset((void*)fps_str.base.data, 0, MAX_FPX_BITS);
     fps_str.length = MAX_FPX_BITS;
     ui_label_init(&fps_label, fps_str);
-    fps_label.element.constraint.alignment = BOTTOM | RIGHT;
-    fps_label.element.constraint.margin.right = 32.f;
-    fps_label.element.constraint.margin.bottom = 10.f;
+    fps_label.element.constraint.alignment = TOP | LEFT;
+    fps_label.element.constraint.margin.left = 4.f;
+    fps_label.element.constraint.margin.top = 24.f;
     fps_label.scale = 0.7f;
 
     status_str.base.data = malloc(MAX_STATUS_BITS);
     memset((void*)status_str.base.data, 0, MAX_STATUS_BITS);
     status_str.length = MAX_STATUS_BITS;
     ui_label_init(&status_label, status_str);
-    status_label.element.constraint.alignment = BOTTOM | LEFT;
-    status_label.element.constraint.margin.left = 10.f;
-    status_label.element.constraint.margin.bottom = 10.f;
+    status_label.element.constraint.alignment = TOP | LEFT;
+    status_label.element.constraint.margin.left = 4.f;
+    status_label.element.constraint.margin.top = 4.f;
     status_label.scale = 0.7f;
 
     default_cursor = glfwCreateStandardCursor(CURSOR_Default);
@@ -199,23 +208,26 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     resize_v_cursor = glfwCreateStandardCursor(CURSOR_ResizeV);
 }
 
+#define STATUS_WIDTH 100.f
+#define STATUS_HEIGHT 32.f
+
 static void ui_render(GLFWwindow *window) {
     state.cursor_type = CURSOR_Default;
-    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0, .y = 0, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
+    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0.f, .y = state.window_rect.h - 48.f, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
     if (ui_input(&state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
         LOG_INFO_FMT("try load script: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
-    rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 22.f, .w = state.window_rect.w, .h = 22.f}, 8.0f, 8.0f);
-    ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
+    // rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 22.f, .w = state.window_rect.w, .h = 22.f}, 8.0f, 8.0f);
+    // ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
+
+    ui_rect status_rect = (ui_rect){.x = state.window_rect.w - STATUS_WIDTH - 8.f, .y = 8.f, .w = STATUS_WIDTH, .h = STATUS_HEIGHT };
+    fill_round_rect(&renderer, 0, ui_theme_share()->panel_0, status_rect, 4.f, 0, TRIANGLE_SOLID);
+    ui_label(&state, &fps_label, ui_theme_share()->transform_y, status_rect, 0, 0);
+    ui_label(&state, &status_label, ui_theme_share()->text, status_rect, 0, 0);
+
     ui_renderer_render(&renderer);
-
-    ui_label(&state, &fps_label, ui_theme_share()->transform_y, state.window_rect, 0, 0);
-    ui_label(&state, &status_label, ui_theme_share()->text, state.window_rect, 0, 0);
-
-    // rect = (ui_rect){.x = 0, .y = 46.f, .w = state.window_rect.w, .h = state.window_rect.h - 46.f - 22.f};
-    // ui_scroll_view(&state, &log_view, (ui_rect){.x = 0, .y = 46.f, .w = state.window_rect.w, .h = state.window_rect.h - 46.f - 22.f}, 0, 0);
 }
 
 #define FPS_MA 10
@@ -264,7 +276,6 @@ static void state_update(GLFWwindow *window) {
 
     // compute fps
     double current_time = glfwGetTime();
-    double delta_time = current_time - last_time[nb_frames % FPS_MA];
     last_time[nb_frames % FPS_MA] = current_time;
     nb_frames++;
 
@@ -320,7 +331,7 @@ int main(int argc, char** argv) {
     LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
     script_context_init(window);
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/index.js");
     renderer_init(window, uri);
     script_init(window, uri);
 
@@ -339,7 +350,7 @@ int main(int argc, char** argv) {
             script_loop_tick();
         }
 
-        ui_render(window);
+        if (ui_visible) ui_render(window);
         state_update(window);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -348,6 +359,7 @@ int main(int argc, char** argv) {
 
     script_context_destroy();
     ui_renderer_free(&renderer);
+    logger_destroy(logger_global());
 
     glfwDestroyWindow(window);
     glfwTerminate();

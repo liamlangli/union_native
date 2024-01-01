@@ -12,7 +12,7 @@ void ui_label_init(ui_label_t *label, ustring_view text) {
     label->render_selected = false;
     memset(label->char_offsets, 0, MAX_CHAR_LENGTH);
     ui_label_update_text(label, text);
-    label->cursor_index = label->text.length;
+    label->cursor_index = (int)label->text.length;
 }
 
 void ui_label_update_text(ui_label_t *label, ustring_view text) {
@@ -49,7 +49,7 @@ u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location) {
 
 f32 ui_label_offset_at(ui_label_t *label, int index) {
     if (index <= 0) return 0.f;
-    int text_length = label->text.length;
+    int text_length = (int)label->text.length;
     index = MACRO_CLAMP(index - 1, 0, text_length);
     return label->char_offsets[index] * label->scale;
 }

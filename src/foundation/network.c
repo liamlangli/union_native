@@ -168,7 +168,7 @@ static bool try_parse_response_header(net_response_t *response, ustring header) 
     const char *header_end = strstr(header.data, "\r\n\r\n");
     if (header_end == NULL) return false;
 
-    u32 header_length = header_end - header.data + 4;
+    u32 header_length = (u32)(header_end - header.data + 4);
     response->header_length = header_length;
 
     // parse content length
@@ -199,7 +199,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     net_session_t *session = stream->data;
     if (nread < 0) {
         if (nread != UV_EOF) {
-            fprintf(stderr, "read error %s\n", uv_err_name(nread));
+            fprintf(stderr, "read error %s\n", uv_err_name((int)nread));
         }
         session->cb(session->request, session->response);
         uv_close((uv_handle_t *)stream, on_close);
@@ -209,7 +209,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
             try_parse_response_header(&session->response, header);
         }
 
-        udata_append_raw(&session->response.data, buf->base, nread);
+        udata_append_raw(&session->response.data, buf->base, (int)nread);
 
         if (body_read_end(&session->response)) {
             parse_response(&session->response);
