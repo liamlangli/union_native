@@ -220,8 +220,8 @@ JSValue js_request_animation_frame(JSContext *context, JSValueConst this_val, in
 
 JSValue js_cancel_animation_frame(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
     if (argc >= 1) {
-        long index;
-        JS_ToInt64(context, &index, argv[0]);
+        int64_t index;
+        JS_ToInt64(context, (int64_t *)&index, argv[0]);
         if (index == -1)
             return JS_UNDEFINED;
         JSValue callback = browser.frame_callbacks[index].key;
