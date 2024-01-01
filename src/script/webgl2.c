@@ -509,6 +509,29 @@ static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
+static JSValue js_gl_tex_storage2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    GLuint target, levels, internalformat, width, height;
+    JS_ToUint32(ctx, &target, argv[0]);
+    JS_ToUint32(ctx, &levels, argv[1]);
+    JS_ToUint32(ctx, &internalformat, argv[2]);
+    JS_ToUint32(ctx, &width, argv[3]);
+    JS_ToUint32(ctx, &height, argv[4]);
+    glTexStorage2D(target, levels, internalformat, width, height);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gl_tex_storage3d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    GLuint target, levels, internalformat, width, height, depth;
+    JS_ToUint32(ctx, &target, argv[0]);
+    JS_ToUint32(ctx, &levels, argv[1]);
+    JS_ToUint32(ctx, &internalformat, argv[2]);
+    JS_ToUint32(ctx, &width, argv[3]);
+    JS_ToUint32(ctx, &height, argv[4]);
+    JS_ToUint32(ctx, &depth, argv[5]);
+    glTexStorage3D(target, levels, internalformat, width, height, depth);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gl_tex_parameteri(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     GLuint target, pname, param;
     JS_ToUint32(ctx, &target, argv[0]);
@@ -746,6 +769,8 @@ void script_module_webgl2_register() {
         JS_CFUNC_DEF("createTexture", 0, js_gl_create_texture),
         JS_CFUNC_DEF("bindTexture", 2, js_gl_bind_texture),
         JS_CFUNC_DEF("texImage2D", 9, js_gl_tex_image2d),
+        JS_CFUNC_DEF("texStorage2D", 5, js_gl_tex_storage2d),
+        JS_CFUNC_DEF("texStorage3D", 6, js_gl_tex_storage3d),
         JS_CFUNC_DEF("texParameteri", 3, js_gl_tex_parameteri),
         JS_CFUNC_DEF("deleteTexture", 1, js_gl_delete_texture),
 

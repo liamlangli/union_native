@@ -121,11 +121,8 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
-    script_context_cleanup();
     script_context_t *ctx = script_context_share();
     ctx->window = window;
-    script_module_browser_register();
-    script_module_webgl2_register();
     if (strncasecmp(uri.base.data, "http", 4) == 0) {
         url_t url = url_parse(uri);
         if (!url.valid) {
@@ -300,7 +297,7 @@ int main(int argc, char** argv) {
     LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
     script_context_init(window);
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
     script_init(window, uri);
 

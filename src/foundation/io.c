@@ -56,8 +56,8 @@ u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int 
     return stbi_load(path.base.data, width, height, channel, request_channel);
 }
 
-u8 *io_load_image_memory(u8 *data, size_t length, int *width, int *height, int *channel, int request_channel) {
-    return stbi_load_from_memory(data, (int)length, width, height, channel, request_channel);
+u8 *io_load_image_memory(udata data, int *width, int *height, int *channel, int request_channel) {
+    return stbi_load_from_memory((const u8*)data.data, data.length, width, height, channel, request_channel);
 }
 
 int io_save_png(ustring_view path, int width, int height, int channel, u8 *data) {
@@ -125,8 +125,13 @@ udata io_base64_decode(ustring data) {
     }
     ustring decoded = ustring_str("");
     u32 length = data.length;
-    if (length % 4 != 0)
-        return (udata){.data = NULL, .length = 0};
+    if (length % 4 != 0) {
+        // append '=' until length % 4 == 0
+        u32 new_length = length + (4 - length % 4);
+        ustring_safe_growth(&data, new_length);
+        for (u32 i = length; i < new_length; i++)
+            data.data[i] = '=';
+    }
     u32 decoded_length = length / 4 * 3;
     if (data.data[length - 1] == '=')
         decoded_length--;

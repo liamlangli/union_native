@@ -1,5 +1,6 @@
-#include "script/script.h"
 #include "foundation/logger.h"
+#include "foundation/io.h"
+#include "script/script.h"
 
 #include <GLFW/glfw3.h>
 #include <assert.h>
@@ -14,7 +15,7 @@ typedef struct JSGCObjectHeader {
 static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count++; }
 static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count--; }
 void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime*)script_runtime_internal(), value, js_value_ref); }
-void script_value_unref(JSValue value) { JS_MarkValue((JSRuntime*)script_runtime_internal(), value, js_value_deref); }
+void script_value_deref(JSValue value) { JS_MarkValue((JSRuntime*)script_runtime_internal(), value, js_value_deref); }
 
 
 typedef struct js_scope {
@@ -81,7 +82,7 @@ JSValue js_window_remove_event_listener(JSContext *context, JSValueConst _, int 
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
-            script_value_unref(handler);
+            script_value_deref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -123,7 +124,7 @@ JSValue js_document_remove_event_listener(JSContext *context, JSValueConst this_
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
-            script_value_unref(handler);
+            script_value_deref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -165,7 +166,7 @@ JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst _, int 
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
-            script_value_unref(handler);
+            script_value_deref(handler);
             arrdel(scopes, i);
             break;
         }
@@ -299,10 +300,14 @@ static JSClassID js_image_class_id;
 
 static void js_image_finalizer(JSRuntime *rt, JSValue val) {
     js_image *image = JS_GetOpaque(val, js_image_class_id);
-    if (image) {
-        if (image->data)
-            free(image->data);
-        js_free_rt(rt, image);
+    if (!image) return;
+    if (image->data)
+        free(image->data);
+    js_free_rt(rt, image);
+    js_scope scope = image->onload;
+    if (JS_IsFunction(script_context_internal(), scope.func)) {
+        script_value_deref(scope.func);
+        JS_FreeValue(script_context_internal(), scope.func);
     }
 }
 
@@ -339,20 +344,39 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     if (image == NULL)
         return JS_EXCEPTION;
 
+    size_t len;
+    JS_ToCStringLen(ctx, &len, val);
     const char *path = JS_ToCString(ctx, val);
     int width, height, channel;
     
     // check base64 header
     ustring base64;
+    udata data;
+    bool is_base64 = false;
     if (strncmp(path, "data:image/png;base64,", 22) == 0) {
-
+        base64 = ustring_range((i8*)path + 22, len);
+        is_base64 = true;
     } else if (strncmp(path, "data:image/jpeg;base64,", 23) == 0) {
+        base64 = ustring_range((i8*)path + 23, len);
+        is_base64 = true;
+    }
 
-    } else {
-        LOG_ERROR("invalid image src format");
+    if (is_base64) {
+        data = io_base64_decode(base64);
     }
 
     // u8 *data = io_load_image(ustring_view_str(path), &width, &height, &channel, 0);
+    image->data = io_load_image_memory(data, &image->width, &image->height, &image->channel, 4);
+    JS_FreeCString(ctx, path);
+    if (image->data == NULL) {
+        return JS_EXCEPTION;
+    }
+
+    js_scope scope = image->onload;
+    if (JS_IsFunction(script_context_internal(), scope.func))
+        JS_Call(script_context_internal(), scope.func, this_val, 1, &this_val);
+
+    return JS_UNDEFINED;
 }
 
 static JSValue js_get_image_src(JSContext *ctx, JSValueConst this_val) {
@@ -364,6 +388,7 @@ static JSValue js_set_image_onload(JSContext *ctx, JSValueConst this_val, JSValu
     if (image == NULL)
         return JS_EXCEPTION;
     js_scope scope = {.this = this_val, .func = val};
+    script_value_ref(val);
     image->onload = scope;
     return JS_UNDEFINED;
 }
@@ -372,6 +397,7 @@ static JSValue js_get_image_onload(JSContext *ctx, JSValueConst this_val) {
     js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
     if (image == NULL)
         return JS_EXCEPTION;
+    return image->onload.func;
 }
 
 static const JSCFunctionListEntry js_image_proto_funcs[] = {
@@ -476,62 +502,6 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
     return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
 }
 
-void script_listeners_cleanup() {
-    JSContext *ctx = script_context_internal();
-    js_listener_hm *window_event_listeners = browser.window_event_listeners;
-    js_listener_hm *document_event_listeners = browser.document_event_listeners;
-    js_listener_hm *canvas_event_listeners = browser.canvas_event_listeners;
-
-    for (int i = 0, il = shlen(window_event_listeners); i < il; ++i) {
-        js_scope *scopes = window_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
-    }
-
-    for (int i = 0, il = shlen(document_event_listeners); i < il; ++i) {
-        js_scope *scopes = document_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
-    }
-
-    for (int i = 0, il = shlen(canvas_event_listeners); i < il; ++i) {
-        js_scope *scopes = canvas_event_listeners[i].value;
-        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
-            js_scope scope = scopes[j];
-            JS_FreeValue(ctx, scope.func);
-        }
-        arrsetlen(scopes, 0);
-    }
-}
-
-int script_eval(ustring source, ustring_view filename) {
-    int ret;
-
-    if (source.length == 0) {
-        printf("source is empty\n");
-        return -1;
-    }
-
-    script_listeners_cleanup();
-    JSContext *ctx = script_context_internal();
-    JSValue val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
-
-    if (JS_IsException(val)) {
-        js_std_dump_error(ctx);
-        ret = -1;
-    } else {
-        ret = 0;
-    }
-
-    JS_FreeValue(ctx, val);
-    return ret;
-}
 
 void script_window_resize(int width, int height) {
     JSContext *ctx = script_context_internal();
@@ -710,8 +680,17 @@ void script_module_browser_register(void) {
     JS_SetPropertyFunctionList(ctx, global, js_canvas_funcs, countof(js_canvas_funcs));
     JS_SetPropertyFunctionList(ctx, global, js_performance_funcs, countof(js_performance_funcs));
     JS_SetPropertyFunctionList(ctx, global, js_console_funcs, countof(js_console_funcs));
-    // JS_SetPropertyFunctionList(ctx, global, js_image_funcs, countof(js_image_funcs));
     JS_SetPropertyStr(ctx, global, "self", JS_NewObject(ctx));
+
+    // Image class
+    JS_NewClassID(&js_image_class_id);
+    JS_NewClass(rt, js_image_class_id, &js_image_class);
+    JSValue image_proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, image_proto, js_image_proto_funcs, countof(js_image_proto_funcs));
+    JSValue image_class = JS_NewCFunction2(ctx, js_image_ctor, "Image", 0, JS_CFUNC_constructor, 0);
+    JS_SetConstructor(ctx, image_class, image_proto);
+    JS_SetClassProto(ctx, js_image_class_id, image_proto);
+    JS_SetPropertyStr(ctx, global, "Image", image_class);
 
     // class defined
     JS_NewClassID(&js_text_decoder_class_id);
@@ -732,17 +711,46 @@ void script_module_browser_register(void) {
     JS_SetConstructor(ctx, weak_ref_ctor, weak_ref_proto);
     JS_SetPropertyStr(ctx, global, "WeakRef", weak_ref_ctor);
 
+    JS_SetPropertyStr(ctx, global, "HTMLCanvasElement", JS_NewObject(ctx));
+    JS_SetPropertyStr(ctx, global, "HTMLVideoElement", JS_NewObject(ctx));
+
     JS_FreeValue(ctx, global);
 }
 
-void script_loop_tick() {
-    if (script_context_internal() == NULL) return;
-    int finished;
-    JSContext *ctx;
-    while((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
-        if (finished < 0) {
-            js_std_dump_error(script_context_internal());
-            break;
+void script_listeners_cleanup() {
+    JSContext *ctx = script_context_internal();
+    js_listener_hm *window_event_listeners = browser.window_event_listeners;
+    js_listener_hm *document_event_listeners = browser.document_event_listeners;
+    js_listener_hm *canvas_event_listeners = browser.canvas_event_listeners;
+
+    for (int i = 0, il = shlen(window_event_listeners); i < il; ++i) {
+        js_scope *scopes = window_event_listeners[i].value;
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
         }
+        arrsetlen(scopes, 0);
     }
+
+    for (int i = 0, il = shlen(document_event_listeners); i < il; ++i) {
+        js_scope *scopes = document_event_listeners[i].value;
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
+        }
+        arrsetlen(scopes, 0);
+    }
+
+    for (int i = 0, il = shlen(canvas_event_listeners); i < il; ++i) {
+        js_scope *scopes = canvas_event_listeners[i].value;
+        for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {
+            js_scope scope = scopes[j];
+            JS_FreeValue(ctx, scope.func);
+        }
+        arrsetlen(scopes, 0);
+    }
+}
+
+void script_module_browser_cleanup(void) {
+    script_listeners_cleanup();
 }

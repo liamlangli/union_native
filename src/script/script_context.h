@@ -26,7 +26,6 @@ void* script_runtime_internal(void);
 void script_context_cleanup(void);
 void script_context_destroy(void);
 
-void script_module_browser_register(void);
 int script_eval(ustring source, ustring_view filename);
 
 void script_window_resize(int width, int height);

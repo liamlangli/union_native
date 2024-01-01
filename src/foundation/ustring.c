@@ -23,7 +23,7 @@ u32 ustring_safe_growth(ustring *s, u32 n) {
             new_length *= 2;
         char *new_data = malloc(new_length);
         memcpy(new_data, s->data, s->length);
-        if (!s->is_static)
+        if (!s->is_static && s->length > 0)
             free((void *)s->data);
         s->data = new_data;
         s->length = new_length;
