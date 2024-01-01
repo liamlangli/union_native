@@ -261,7 +261,7 @@ int net_download_async(url_t url, url_session_cb cb) {
     uv_freeaddrinfo(resolver.addrinfo);
 
     net_session_t *session = malloc(sizeof(net_session_t));
-    session->response.data = (udata_t){.data = NULL, .length = 0};
+    session->response.data = (udata){.data = NULL, .length = 0};
     session->response.error = ustring_view_STR("");
     session->response.headr_parsed = false;
     session->cb = cb;

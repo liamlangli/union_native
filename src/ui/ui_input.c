@@ -1,7 +1,6 @@
 #include "foundation/io.h"
-#include "foundation/script.h"
 #include "foundation/ustring.h"
-
+#include "script/script.h"
 #include "ui/ui_input.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
@@ -80,6 +79,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.cursor_index = 0;
             input->label.start_index = input->label.text.length;
             input->label.render_selected = true;
+            hmdel(state->key_press, KEY_A);
         }
         if (ui_state_is_key_press(state, KEY_LEFT)) {
             input->label.cursor_index = 0;
@@ -91,6 +91,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         }
         if (ui_state_is_key_press(state, KEY_C)) {
             io_clipboard_set(input->label.text);
+            hmdel(state->key_press, KEY_C);
         }
         if (ui_state_is_key_press(state, KEY_X)) {
             io_clipboard_set(ustring_view_sub_view(&input->label.text, from, to));
@@ -99,6 +100,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.start_index = from;
             input->label.render_selected = false;
             ui_label_update_text(&input->label, input->label.text);
+            hmdel(state->key_press, KEY_X);
         }
         if (ui_state_is_key_press(state, KEY_V)) {
             if (from != to)
@@ -109,6 +111,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.start_index = from + io_clipboard_get().length;
             input->label.render_selected = false;
             ui_label_update_text(&input->label, input->label.text);
+            hmdel(state->key_press, KEY_V);
         }
 
     } else {

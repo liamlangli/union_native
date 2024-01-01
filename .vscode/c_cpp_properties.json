@@ -11,6 +11,7 @@
             ],
             "defines": [
                 "OS_LINUX",
+                "RENDER_BACKEND_GLES",
                 "_DEFAULT_SOURCE"
             ],
             "compilerPath": "/usr/bin/gcc",

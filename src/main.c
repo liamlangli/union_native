@@ -1,5 +1,6 @@
 #include "foundation/foundation.h"
 #include "ui/ui.h"
+#include "script/script.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -310,10 +311,10 @@ int main(int argc, char** argv) {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     while (!glfwWindowShouldClose(window)) {
-        if (invalid_script) {
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        } else {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        if (!invalid_script) {
             script_frame_tick();
             script_loop_tick();
         }

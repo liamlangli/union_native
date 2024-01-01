@@ -22,7 +22,7 @@ typedef struct net_request_t {
 } net_request_t;
 
 typedef struct net_response_t {
-    udata_t data;
+    udata data;
     u32 status;
     u32 content_length, header_length;
     bool headr_parsed;

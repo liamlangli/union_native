@@ -32,7 +32,10 @@
         "thread": "c",
         "string": "c",
         "__locale": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "vector": "c",
+        "memory": "c",
+        "system_error": "c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build"

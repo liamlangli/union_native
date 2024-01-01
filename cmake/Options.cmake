@@ -1,6 +1,5 @@
 set(ENABLE_RENDER_DOC OFF CACHE BOOL "Enable renderdoc support")
 set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable group based unity build")
-set(ENABLE_GLES ON CACHE BOOL "Enable gles/webgl2 render backend")
 
 set(SCRIPT_BACKEND "QuickJS" CACHE STRING "Script backend")
 set_property(CACHE SCRIPT_BACKEND PROPERTY STRINGS "QuickJS" "JavaScriptCore")

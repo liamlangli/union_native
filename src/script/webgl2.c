@@ -1,12 +1,11 @@
-#include "foundation/webgl2.h"
+#include "script/webgl2.h"
 
-#if defined(RENDER_BACKEND_GLES)
-    #include "foundation/global.h"
-    #include "foundation/script.h"
+#include "foundation/global.h"
+#include "script/script.h"
 
-    #include <GLES3/gl3.h>
-    #include <quickjs/quickjs.h>
-    #include <stdlib.h>
+#include <GLES3/gl3.h>
+#include <quickjs/quickjs.h>
+#include <stdlib.h>
 
 static int gl_check_error(const char *msg, int line) {
     GLenum err = glGetError();
@@ -705,7 +704,7 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
 }
 
 void script_module_webgl2_register() {
-    JSContext *ctx = (JSContext*)script_context_internal();
+    JSContext *ctx = (JSContext *)script_context_internal();
     JSValue global = JS_GetGlobalObject(ctx);
     static JSCFunctionListEntry gl_proto_funcs[] = {
         JS_CFUNC_DEF("getExtension", 1, js_gl_get_extension),
@@ -972,13 +971,12 @@ void script_module_webgl2_register() {
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_BINDING", GL_UNIFORM_BLOCK_BINDING, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_DATA_SIZE", GL_UNIFORM_BLOCK_DATA_SIZE, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORMS", GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF(
-            "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF(
-            "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF(
-            "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER,
-            JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
+                          JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER,
+                          JS_PROP_CONFIGURABLE),
+        JS_PROP_INT32_DEF("UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER,
+                          JS_PROP_CONFIGURABLE),
 
         JS_PROP_INT32_DEF("RENDERER", GL_RENDERER, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("VENDOR", GL_VENDOR, JS_PROP_CONFIGURABLE),
@@ -990,5 +988,3 @@ void script_module_webgl2_register() {
 
     JS_SetPropertyFunctionList(ctx, global, gl_funcs, countof(gl_funcs));
 }
-
-#endif
