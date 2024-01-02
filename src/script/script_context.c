@@ -11,6 +11,7 @@ static script_context_t shared_context = {0};
 static qjs_module shared_module = {0};
 
 void script_context_init(GLFWwindow *window) {
+    shared_module.runtime = JS_NewRuntime();
     shared_context.module = (void *)&shared_module;
     shared_context.ui_scale = 2.0f;
     shared_context.window = window;
@@ -23,11 +24,8 @@ void *script_runtime_internal(void) { return shared_module.runtime; }
 void script_context_destroy(void) {
     if (shared_module.context == NULL)
         return;
-    JS_RunGC(shared_module.runtime);
     JS_FreeContext(shared_module.context);
     shared_module.context = NULL;
-    JS_FreeRuntime(shared_module.runtime);
-    shared_module.runtime = NULL;
 }
 
 void script_context_cleanup(void) {
@@ -36,7 +34,6 @@ void script_context_cleanup(void) {
 }
 
 void script_context_setup(void) {
-    shared_module.runtime = JS_NewRuntime();
     shared_module.context = JS_NewContext(shared_module.runtime);
     script_module_browser_register();
     script_module_webgl2_register();
@@ -66,12 +63,12 @@ int script_eval(ustring source, ustring_view filename) {
     return ret;
 }
 
-
 void script_loop_tick() {
-    if (script_context_internal() == NULL) return;
+    if (script_context_internal() == NULL)
+        return;
     int finished;
     JSContext *ctx;
-    while((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
+    while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
         if (finished < 0) {
             js_std_dump_error(script_context_internal());
             break;

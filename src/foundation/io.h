@@ -1,6 +1,5 @@
 #pragma once
 
-#include "foundation/network.h"
 #include "foundation/ustring.h"
 #include "foundation/udata.h"
 

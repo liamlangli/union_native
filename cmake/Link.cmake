@@ -9,7 +9,7 @@ elseif (APPLE)
     endif()
 
     target_link_libraries(${PROJECT_NAME} "-framework JavaScriptCore")
-else()
+else() # LINUX
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv)
     if (ENABLE_RENDER_DOC)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

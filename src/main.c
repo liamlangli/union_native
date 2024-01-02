@@ -308,7 +308,7 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
-    //glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
     int window_width = 1080;
     int window_height = 720;
@@ -361,6 +361,10 @@ int main(int argc, char** argv) {
     logger_destroy(logger_global());
     script_context_cleanup();
 
+    glfwDestroyCursor(default_cursor);
+    glfwDestroyCursor(text_input_cursor);
+    glfwDestroyCursor(resize_h_cursor);
+    glfwDestroyCursor(resize_v_cursor);
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

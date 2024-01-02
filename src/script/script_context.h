@@ -20,8 +20,8 @@ typedef struct script_context_t {
 void script_context_init(GLFWwindow *window);
 script_context_t *script_context_share(void);
 
-void* script_context_internal(void);
-void* script_runtime_internal(void);
+void *script_context_internal(void);
+void *script_runtime_internal(void);
 
 void script_context_cleanup(void);
 void script_context_setup(void);

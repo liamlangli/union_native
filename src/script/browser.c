@@ -21,7 +21,7 @@ static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) {
 }
 
 static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) {
-    p->ref_count = MACRO_MAX(1, p->ref_count - 1);
+    // p->ref_count = MACRO_MAX(1, p->ref_count - 1);
     deref_count++;
 }
 void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_ref); }
@@ -709,16 +709,13 @@ void script_frame_tick(void) {
 
 void create_classes(JSRuntime *rt) {
     static bool class_created = false;
-    if (class_created)
-        return;
+    if (class_created) return;
     class_created = true;
 
     JS_NewClassID(&js_image_class_id);
     JS_NewClass(rt, js_image_class_id, &js_image_class);
-
     JS_NewClassID(&js_text_decoder_class_id);
     JS_NewClass(rt, js_text_decoder_class_id, &js_text_decode_class);
-
     JS_NewClassID(&js_weak_ref_class_id);
     JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }

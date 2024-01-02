@@ -1,35 +1,11 @@
 #include "foundation/io.h"
-#include "foundation/network.h"
-#include "foundation/ustring.h"
 #include "script/script.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-
-#if defined(OS_WINDOWS)
-    int betriebssystem = 1;
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
-    #include <iphlpapi.h>
-    #include <ws2def.h>
-    #pragma comment(lib, "Ws2_32.lib")
-    #include <windows.h>
-    #include <io.h>
-#else
-    #include <netdb.h>
-    #include <netinet/in.h>
-    #include <string.h>
-    #include <sys/socket.h>
-#endif
-#include <sys/types.h>
-#include <unistd.h>
 
 ustring io_read_file(ustring_view path) {
     ustring_view_set_null_terminated(&path);
@@ -57,7 +33,7 @@ u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int 
 }
 
 u8 *io_load_image_memory(udata data, int *width, int *height, int *channel, int request_channel) {
-    return stbi_load_from_memory((const u8*)data.data, data.length, width, height, channel, request_channel);
+    return stbi_load_from_memory((const u8 *)data.data, data.length, width, height, channel, request_channel);
 }
 
 int io_save_png(ustring_view path, int width, int height, int channel, u8 *data) {
@@ -80,24 +56,19 @@ void io_clipboard_set(ustring_view text) {
 ustring io_clipboard_get(void) {
     script_context_t *ctx = script_context_share();
     const char *text = glfwGetClipboardString(ctx->window);
-    return ustring_str((i8*)text);
+    return ustring_str((i8 *)text);
 }
 
-
-static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-                                'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-                                'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-                                'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-                                'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                                'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                                'w', 'x', 'y', 'z', '0', '1', '2', '3',
-                                '4', '5', '6', '7', '8', '9', '+', '/'};
+static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                                       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+                                       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                       'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 static char *base64_decoding_table = NULL;
 static int base64_mod_table[] = {0, 2, 1};
 
 ustring io_base64_encode(udata data) {
     ustring encoded = ustring_str("");
-    u8 *bytes = (u8*)data.data;
+    u8 *bytes = (u8 *)data.data;
     u32 length = data.length;
     u32 encoded_length = (length + 2) / 3 * 4;
     ustring_safe_growth(&encoded, encoded_length);

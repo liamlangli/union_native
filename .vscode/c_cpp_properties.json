@@ -7,6 +7,7 @@
                 "/usr/local/include",
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/third_party/stb",
+                "${workspaceFolder}/third_party/mimalloc/include",
                 "${workspaceFolder}/third_party/renderdoc/include"
             ],
             "defines": [

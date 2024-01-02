@@ -2,23 +2,24 @@ include_directories(src)
 include_directories(${THIRD_PARTY}/stb)
 include_directories(${LIBUV_INCLUDE_DIRS})
 
+set(LINK_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
 if (ENABLE_RENDER_DOC)
     add_definitions(-DRENDER_DOC_CAPTURE)
     include_directories(${THIRD_PARTY}/renderdoc/include)
-endif()
-
-if (ENABLE_GLES)
-    add_definitions(-DRENDER_BACKEND_GLES)
 endif()
 
 if (WIN32)
     include_directories(
         /usr/include
         ${THIRD_PARTY}/glfw/include
-        ${THIRD_PARTY}/quickjs/include)
-    link_directories(
+        ${THIRD_PARTY}/quickjs/include
+    )
+
+    list(APPEND LINK_DIR
         /usr/lib
-        ${THIRD_PARTY}/quickjs/lib/mingw64)
+        ${THIRD_PARTY}/quickjs/lib/mingw64
+    )
     add_definitions(-DOS_WINDOWS)
 elseif (APPLE)
     include_directories(
@@ -26,8 +27,7 @@ elseif (APPLE)
         ${THIRD_PARTY}/glfw/include
         ${THIRD_PARTY}/quickjs/include
     )
-
-    link_directories(
+    list(APPEND LINK_DIR
         ${THIRD_PARTY}/angle/lib/macos
         ${THIRD_PARTY}/glfw/lib/macos
         ${THIRD_PARTY}/quickjs/lib/macos
@@ -39,16 +39,27 @@ elseif (APPLE)
 else() # LINUX
     include_directories(
         /usr/include
-        /usr/local/include)
-        # ${THIRD_PARTY}/glfw/include)
-
-    link_directories(
+        /usr/local/include
+        ${THIRD_PARTY}/mimalloc/include
+        ${THIRD_PARTY}/glfw/include
+    )
+    list(APPEND LINK_DIR
+        /usr/lib
         /usr/local/lib
         /usr/local/lib/quickjs
-        # ${THIRD_PARTY}/glfw/lib/linux
+        ${THIRD_PARTY}/glfw/lib/linux
     )
-    add_definitions(-DOS_LINUX)
-    if (ENABLE_RENDER_DOC)
-        link_directories(${THIRD_PARTY}/renderdoc/lib/linux)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        list(APPEND LINK_DIR
+            ${THIRD_PARTY}/mimalloc/lib/linux/debug
+        )
+    else()
+        list(APPEND LINK_DIR
+            ${THIRD_PARTY}/mimalloc/lib/linux/release
+        )
     endif()
+    
+    add_definitions(-DOS_LINUX)
 endif()
+
+link_directories(${LINK_DIR})

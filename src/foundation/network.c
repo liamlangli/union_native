@@ -115,8 +115,8 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_ustring_view(&body, &url.path);
     ustring_view_append_ustring_view(&body, &url.query);
     ustring_view_append_STR(&body, " HTTP/1.1\r\n");
-    ustring_view_append_STR(&body, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/" \
-        "webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n");
+    ustring_view_append_STR(&body, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"
+                                   "webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n");
     ustring_view_append_STR(&body, "Accept-Encoding: gzip, deflate, br\r\n");
     ustring_view_append_STR(&body, "Accept-Language: en,zh-CN;q=0.9,zh;q=0.8\r\n");
     ustring_view_append_STR(&body, "Host: ");
@@ -124,11 +124,11 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_STR(&body, "\r\n");
     ustring_view_append_STR(&body, "Connection: keep-alive\r\n");
     ustring_view_append_STR(&body, "Upgrade-Insecure-Requests: 1\r\n");
-    ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) " \
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
+    ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
     printf("%.*s\n", body.length, body.base.data);
-    return body; 
+    return body;
 }
 
 static void on_write(uv_write_t *write, int status) {
@@ -149,46 +149,47 @@ static void on_close(uv_handle_t *handle) {
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
-    if (header.length < 12) return false;
-    if (strncmp(header.data, "HTTP/1.1 ", 9) != 0) return false;
+    if (header.length < 12)
+        return false;
+    if (strncmp(header.data, "HTTP/1.1 ", 9) != 0)
+        return false;
 
     ustring status_code = ustring_range(header.data + 9, 3);
     response->status = atoi(status_code.data);
 
     // find content length length
     const char *length = strstr(header.data, "Content-Length: ");
-    if (length == NULL) return false;
+    if (length == NULL)
+        return false;
     length += 16;
 
     // find content length end
     const char *end = strstr(length, "\r\n");
-    if (end == NULL) return false;
+    if (end == NULL)
+        return false;
 
     // fined the end of header
     const char *header_end = strstr(header.data, "\r\n\r\n");
-    if (header_end == NULL) return false;
+    if (header_end == NULL)
+        return false;
 
     u32 header_length = (u32)(header_end - header.data + 4);
     response->header_length = header_length;
 
     // parse content length
-    ustring content_length = ustring_range((i8*)header.data + (length - header.data), end - length);
+    ustring content_length = ustring_range((i8 *)header.data + (length - header.data), end - length);
     response->content_length = atoi(content_length.data);
     response->headr_parsed = true;
     return true;
 }
 
 static void parse_response(net_response_t *response) {
-    response->header = (ustring_view) {
-        .base = ustring_range(response->data.data, response->header_length),
-        .start = 0,
-        .length = response->header_length
-    };
-    response->body = (ustring_view) {
-        .base = ustring_range(response->data.data + response->header_length, response->content_length),
-        .start = 0,
-        .length = response->content_length
-    };
+    response->header = (ustring_view){
+        .base = ustring_range(response->data.data, response->header_length), .start = 0, .length = response->header_length};
+    response->body =
+        (ustring_view){.base = ustring_range(response->data.data + response->header_length, response->content_length),
+                       .start = 0,
+                       .length = response->content_length};
 }
 
 static bool body_read_end(net_response_t *response) {
