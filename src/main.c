@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
     LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
     script_context_init(window);
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
     script_init(window, uri);
 

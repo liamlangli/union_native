@@ -571,8 +571,9 @@ void script_window_resize(int width, int height) {
 void script_window_mouse_move(double x, double y) {
     CHECK_SCOPE
 
-    script_context_share()->mouse_x = x;
-    script_context_share()->mouse_y = y;
+    script_context_t *context = script_context_share();
+    context->mouse_x = x / context->display_ratio;
+    context->mouse_y = y / context->display_ratio;
 
     int index = (int)shgeti(browser.window_event_listeners, mousemove_event);
     if (index == -1)
@@ -580,8 +581,8 @@ void script_window_mouse_move(double x, double y) {
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mousemove_event));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, y));
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
     js_scope *scopes = browser.window_event_listeners[index].value;
 
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
