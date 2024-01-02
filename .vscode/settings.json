@@ -40,6 +40,5 @@
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",
-    },
-    "cmake.generator": "Ninja"
+    }
 }

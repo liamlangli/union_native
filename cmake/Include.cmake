@@ -23,17 +23,17 @@ if (WIN32)
     add_definitions(-DOS_WINDOWS)
 elseif (APPLE)
     include_directories(
+        /usr/local/include
+        /opt/homebrew/include
         ${THIRD_PARTY}/angle/include
         ${THIRD_PARTY}/glfw/include
         ${THIRD_PARTY}/quickjs/include
     )
     list(APPEND LINK_DIR
-        ${THIRD_PARTY}/angle/lib/macos
+        ${THIRD_PARTY}/angle/lib/macos/${PROC_ARCH}
         ${THIRD_PARTY}/glfw/lib/macos
-        ${THIRD_PARTY}/quickjs/lib/macos
+        ${THIRD_PARTY}/quickjs/lib/macos/${PROC_ARCH}
     )
-    set(CMAKE_INSTALL_RPATH "/usr/local/lib")
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     add_definitions(-DOS_MACOS)
     add_definitions(-DGL_SILENCE_DEPRECATION)
 else() # LINUX
