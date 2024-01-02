@@ -326,6 +326,7 @@ int main(int argc, char** argv) {
     glfwSetMouseButtonCallback(window, mouse_button);
     glfwMakeContextCurrent(window);
 
+    printf("USER_AGENT: %s\n", USER_AGENT);
     LOG_INFO_FMT("GL_VERSION: %s\n", glGetString(GL_VERSION));
     LOG_INFO_FMT("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
     LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
