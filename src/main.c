@@ -357,9 +357,9 @@ int main(int argc, char** argv) {
         uv_run(uv_default_loop(), UV_RUN_NOWAIT);
     }
 
-    script_context_destroy();
     ui_renderer_free(&renderer);
     logger_destroy(logger_global());
+    script_context_destroy();
 
     glfwDestroyWindow(window);
     glfwTerminate();

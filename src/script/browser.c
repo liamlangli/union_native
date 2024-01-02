@@ -764,7 +764,6 @@ void script_module_browser_register(void) {
     JSValue localStorage = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, localStorage, js_local_storage_proto_funcs, countof(js_local_storage_proto_funcs));
     JS_SetPropertyStr(ctx, global, "localStorage", localStorage);
-    JS_FreeValue(ctx, localStorage);
 
     JS_FreeValue(ctx, global);
 }
@@ -782,6 +781,8 @@ void script_module_browser_register(void) {
 
 void script_listeners_cleanup() {
     JSContext *ctx = script_context_internal();
+    if (ctx == NULL) return;
+
     js_listener_hm *window_event_listeners = browser.window_event_listeners;
     js_listener_hm *document_event_listeners = browser.document_event_listeners;
     js_listener_hm *canvas_event_listeners = browser.canvas_event_listeners;
