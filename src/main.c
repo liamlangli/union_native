@@ -308,7 +308,7 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+    //glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
     int window_width = 1080;
     int window_height = 720;
@@ -331,7 +331,7 @@ int main(int argc, char** argv) {
     LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
     script_context_init(window);
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/index.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
     renderer_init(window, uri);
     script_init(window, uri);
 
@@ -359,10 +359,9 @@ int main(int argc, char** argv) {
 
     ui_renderer_free(&renderer);
     logger_destroy(logger_global());
-    script_context_destroy();
+    script_context_cleanup();
 
     glfwDestroyWindow(window);
     glfwTerminate();
-
     return 0;
 }

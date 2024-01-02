@@ -15,8 +15,15 @@ typedef struct JSGCObjectHeader {
 static int ref_count = 0;
 static int deref_count = 0;
 
-static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count++; ref_count++; }
-static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) { p->ref_count--; deref_count++; }
+static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) {
+    p->ref_count++;
+    ref_count++;
+}
+
+static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) {
+    p->ref_count = MACRO_MAX(1, p->ref_count - 1);
+    deref_count++;
+}
 void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_ref); }
 void script_value_deref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_deref); }
 
@@ -50,6 +57,10 @@ static const char *mousemove_event = "mousemove";
 static const char *wheel_event = "mousewheel";
 static const char *keydown_event = "keydown";
 static const char *keyup_event = "keyup";
+static const char *touch_start_event = "touchstart";
+static const char *touch_move_event = "touchmove";
+static const char *touch_end_event = "touchend";
+static const char *touch_cancel_event = "touchcancel";
 
 JSValue js_window_add_event_listener(JSContext *context, JSValueConst this_val, int argc, JSValueConst *argv) {
     if (argc < 2)
@@ -405,13 +416,9 @@ static JSValue js_get_image_onload(JSContext *ctx, JSValueConst this_val) {
     return image->onload.func;
 }
 
-static JSValue js_set_style_cursor(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
-    return JS_UNDEFINED;
-}
+static JSValue js_set_style_cursor(JSContext *ctx, JSValueConst this_val, JSValueConst val) { return JS_UNDEFINED; }
 
-static JSValue js_get_style_cursor(JSContext *ctx, JSValueConst this_val) {
-    return JS_UNDEFINED;
-}
+static JSValue js_get_style_cursor(JSContext *ctx, JSValueConst this_val) { return JS_UNDEFINED; }
 
 static const JSCFunctionListEntry js_style_proto_funcs[] = {
     JS_CGETSET_DEF("cursor", js_get_style_cursor, js_set_style_cursor),
@@ -702,15 +709,16 @@ void script_frame_tick(void) {
 
 void create_classes(JSRuntime *rt) {
     static bool class_created = false;
-    if (class_created) return;
+    if (class_created)
+        return;
     class_created = true;
-    
+
     JS_NewClassID(&js_image_class_id);
     JS_NewClass(rt, js_image_class_id, &js_image_class);
-    
+
     JS_NewClassID(&js_text_decoder_class_id);
     JS_NewClass(rt, js_text_decoder_class_id, &js_text_decode_class);
-    
+
     JS_NewClassID(&js_weak_ref_class_id);
     JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }
@@ -719,7 +727,7 @@ void script_module_browser_register(void) {
     JSContext *ctx = script_context_internal();
     JSRuntime *rt = script_runtime_internal();
     JSValue global = JS_GetGlobalObject(ctx);
-    
+
     create_classes(rt);
 
     JS_SetPropertyStr(ctx, global, "requestAnimationFrame",
@@ -781,7 +789,8 @@ void script_module_browser_register(void) {
 
 void script_listeners_cleanup() {
     JSContext *ctx = script_context_internal();
-    if (ctx == NULL) return;
+    if (ctx == NULL)
+        return;
 
     js_listener_hm *window_event_listeners = browser.window_event_listeners;
     js_listener_hm *document_event_listeners = browser.document_event_listeners;

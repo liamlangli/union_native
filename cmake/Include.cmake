@@ -39,13 +39,13 @@ elseif (APPLE)
 else() # LINUX
     include_directories(
         /usr/include
-        /usr/local/include
-        ${THIRD_PARTY}/glfw/include)
+        /usr/local/include)
+        # ${THIRD_PARTY}/glfw/include)
 
     link_directories(
         /usr/local/lib
         /usr/local/lib/quickjs
-        ${THIRD_PARTY}/glfw/lib/linux
+        # ${THIRD_PARTY}/glfw/lib/linux
     )
     add_definitions(-DOS_LINUX)
     if (ENABLE_RENDER_DOC)

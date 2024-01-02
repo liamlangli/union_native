@@ -23,18 +23,23 @@ void *script_runtime_internal(void) { return shared_module.runtime; }
 void script_context_destroy(void) {
     if (shared_module.context == NULL)
         return;
+    JS_RunGC(shared_module.runtime);
     JS_FreeContext(shared_module.context);
     shared_module.context = NULL;
-    JS_RunGC(shared_module.runtime);
     JS_FreeRuntime(shared_module.runtime);
+    shared_module.runtime = NULL;
 }
 
 void script_context_cleanup(void) {
-    script_context_share();
+    script_module_browser_cleanup();
     script_context_destroy();
+}
 
+void script_context_setup(void) {
     shared_module.runtime = JS_NewRuntime();
     shared_module.context = JS_NewContext(shared_module.runtime);
+    script_module_browser_register();
+    script_module_webgl2_register();
 }
 
 int script_eval(ustring source, ustring_view filename) {
@@ -45,10 +50,8 @@ int script_eval(ustring source, ustring_view filename) {
         return -1;
     }
 
-    script_module_browser_cleanup();
     script_context_cleanup();
-    script_module_browser_register();
-    script_module_webgl2_register();
+    script_context_setup();
     JSContext *ctx = script_context_internal();
     JSValue val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 

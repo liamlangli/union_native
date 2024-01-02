@@ -1093,4 +1093,5 @@ void script_module_webgl2_register() {
     };
 
     JS_SetPropertyFunctionList(ctx, global, gl_funcs, countof(gl_funcs));
+    JS_FreeValue(ctx, global);
 }

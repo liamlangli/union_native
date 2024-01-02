@@ -24,7 +24,7 @@ void* script_context_internal(void);
 void* script_runtime_internal(void);
 
 void script_context_cleanup(void);
-void script_context_destroy(void);
+void script_context_setup(void);
 
 int script_eval(ustring source, ustring_view filename);
 
