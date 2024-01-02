@@ -133,6 +133,10 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     LOG_INFO_FMT("content_length: %d\n", response.content_length);
     //printf("response: %.*s\n", response.body.length, (const char *)response.body.base.data);
     invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
+    script_context_t *ctx = script_context_share();
+    GLFWwindow *window = ctx->window;
+    glfwGetWindowSize(window, &ctx->width, &ctx->height);
+    resize_callback(window, ctx->width, ctx->height);
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri) {
