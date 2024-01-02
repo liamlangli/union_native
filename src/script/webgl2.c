@@ -42,7 +42,9 @@ static int gl_get_shader_info_log(GLuint shader) {
         glGetShaderInfoLog(shader, length, NULL, info_log);
         printf("shader info log: %s\n", info_log);
         free(info_log);
+        return -1;
     }
+    return 0;
 }
 
 static JSValue js_gl_get_extension(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {

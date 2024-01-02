@@ -764,6 +764,7 @@ void script_module_browser_register(void) {
     JSValue localStorage = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, localStorage, js_local_storage_proto_funcs, countof(js_local_storage_proto_funcs));
     JS_SetPropertyStr(ctx, global, "localStorage", localStorage);
+    JS_FreeValue(ctx, localStorage);
 
     JS_FreeValue(ctx, global);
 }
@@ -773,6 +774,7 @@ void script_module_browser_register(void) {
         js_scope *scopes = (listeners)[i].value;                                                                               \
         for (int j = 0, jl = (int)arrlen(scopes); j < jl; ++j) {                                                               \
             js_scope scope = scopes[j];                                                                                        \
+            script_value_deref(scope.func);                                                                                    \
             JS_FreeValue(ctx, scope.func);                                                                                     \
         }                                                                                                                      \
         arrsetlen(scopes, 0);                                                                                                  \

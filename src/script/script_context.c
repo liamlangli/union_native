@@ -32,10 +32,7 @@ void script_context_destroy(void) {
 
 void script_context_cleanup(void) {
     script_context_share();
-    if (shared_module.context == NULL)
-        return;
-    JS_FreeContext(shared_module.context);
-    JS_FreeRuntime(shared_module.runtime);
+    script_context_destroy();
 
     shared_module.runtime = JS_NewRuntime();
     shared_module.context = JS_NewContext(shared_module.runtime);

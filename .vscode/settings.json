@@ -39,6 +39,7 @@
         "cstdint": "c"
     },
     "cmake.debugConfig": {
-        "workingDirectory": "${workspaceRoot}/build"
-    }
+        "workingDirectory": "${workspaceRoot}/build",
+    },
+    "cmake.generator": "Ninja"
 }
