@@ -21,7 +21,7 @@ static void js_value_ref(JSRuntime *_, JSGCObjectHeader *p) {
 }
 
 static void js_value_deref(JSRuntime *_, JSGCObjectHeader *p) {
-    // p->ref_count = MACRO_MAX(1, p->ref_count - 1);
+    // p->ref_count = MACRO_MAX(0, p->ref_count - 1);
     deref_count++;
 }
 void script_value_ref(JSValue value) { JS_MarkValue((JSRuntime *)script_runtime_internal(), value, js_value_ref); }
@@ -538,8 +538,15 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
     return JS_NewObjectProtoClass(ctx, new_target, js_weak_ref_class_id);
 }
 
+#define CHECK_SCOPE                                                                                                            \
+    JSContext *ctx = script_context_internal();                                                                                \
+    JSRuntime *rt = script_runtime_internal();                                                                                 \
+    if (ctx == NULL || rt == NULL)                                                                                             \
+        return;
+
 void script_window_resize(int width, int height) {
-    JSContext *ctx = script_context_internal();
+    CHECK_SCOPE
+
     script_context_share()->width = width;
     script_context_share()->height = height;
     script_context_share()->framebuffer_width = (int)(width * script_context_share()->display_ratio);
@@ -562,10 +569,10 @@ void script_window_resize(int width, int height) {
 }
 
 void script_window_mouse_move(double x, double y) {
+    CHECK_SCOPE
+
     script_context_share()->mouse_x = x;
     script_context_share()->mouse_y = y;
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
 
     int index = (int)shgeti(browser.window_event_listeners, mousemove_event);
     if (index == -1)
@@ -587,8 +594,7 @@ void script_window_mouse_move(double x, double y) {
 }
 
 void script_window_mouse_down(int button) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
 
     int index = (int)shgeti(browser.window_event_listeners, mousedown_event);
     if (index == -1)
@@ -610,8 +616,8 @@ void script_window_mouse_down(int button) {
 }
 
 void script_window_mouse_up(int button) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
+
     int index = (int)shgeti(browser.window_event_listeners, mouseup_event);
     if (index == -1)
         return;
@@ -630,8 +636,7 @@ void script_window_mouse_up(int button) {
 }
 
 void script_window_mouse_scroll(double x, double y) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
 
     int index = (int)shgeti(browser.window_event_listeners, wheel_event);
     if (index == -1)
@@ -651,8 +656,7 @@ void script_window_mouse_scroll(double x, double y) {
 }
 
 void script_document_key_down(int key) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
 
     int index = (int)shgeti(browser.document_event_listeners, keydown_event);
     if (index != -1)
@@ -671,8 +675,8 @@ void script_document_key_down(int key) {
 }
 
 void script_document_key_up(int key) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
+
     int index = (int)shgeti(browser.document_event_listeners, keyup_event);
     if (index != -1)
         return;
@@ -690,8 +694,7 @@ void script_document_key_up(int key) {
 }
 
 void script_frame_tick(void) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
+    CHECK_SCOPE
 
     JSValue ret;
     for (int i = 0, l = (int)hmlen(browser.frame_callbacks); i < l; ++i) {
@@ -708,23 +711,20 @@ void script_frame_tick(void) {
 }
 
 void create_classes(JSRuntime *rt) {
-    static bool class_created = false;
-    if (class_created) return;
-    class_created = true;
-
     JS_NewClassID(&js_image_class_id);
     JS_NewClass(rt, js_image_class_id, &js_image_class);
+
     JS_NewClassID(&js_text_decoder_class_id);
     JS_NewClass(rt, js_text_decoder_class_id, &js_text_decode_class);
+
     JS_NewClassID(&js_weak_ref_class_id);
     JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }
 
 void script_module_browser_register(void) {
-    JSContext *ctx = script_context_internal();
-    JSRuntime *rt = script_runtime_internal();
-    JSValue global = JS_GetGlobalObject(ctx);
+    CHECK_SCOPE
 
+    JSValue global = JS_GetGlobalObject(ctx);
     create_classes(rt);
 
     JS_SetPropertyStr(ctx, global, "requestAnimationFrame",
