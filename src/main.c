@@ -294,6 +294,22 @@ static void state_update(GLFWwindow *window) {
     ui_label_update_text(&status_label, status_str);
 }
 
+void tick(GLFWwindow *window) {
+    if (invalid_script) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    } else {
+        script_frame_tick();
+        script_loop_tick();
+    }
+
+    if (ui_visible) ui_render(window);
+    state_update(window);
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+    uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+}
+
 int main(int argc, char** argv) {
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
@@ -329,6 +345,11 @@ int main(int argc, char** argv) {
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button);
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+    glFrontFace(GL_CCW);
+    glDepthRangef(0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     printf("USER_AGENT: %s\n", USER_AGENT);
     LOG_INFO_FMT("GL_VERSION: %s\n", glGetString(GL_VERSION));
@@ -338,28 +359,11 @@ int main(int argc, char** argv) {
     script_context_init(window);
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
+    tick(window);
+
     script_init(window, uri);
-
-    glfwSwapInterval(1);
-    glFrontFace(GL_CCW);
-    glDepthRangef(0.0f, 1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
     while (!glfwWindowShouldClose(window)) {
-        if (invalid_script) {
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        } else {
-            script_frame_tick();
-            script_loop_tick();
-        }
-
-        if (ui_visible) ui_render(window);
-        state_update(window);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+        tick(window);
     }
 
     ui_renderer_free(&renderer);
