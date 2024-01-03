@@ -226,6 +226,12 @@ int main(int argc, char** argv) {
     glfwSetWindowSizeCallback(window, resize_callback);
 
     script_context_init(window);
+    // db_put(script_context_share()->db, ustring_STR("app_name"), (udata){.data = "hello", .length = 5});
+    db_load_dump_file(script_context_share()->db, ustring_STR("dump.bin"));
+    udata value = db_get(script_context_share()->db, ustring_STR("app_name"));
+    printf("app_name: %.*s\n", value.length, value.data);
+    db_save_dump_file(script_context_share()->db, ustring_STR("dump.bin"));
+
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
     tick(window);

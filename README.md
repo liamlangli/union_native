@@ -7,6 +7,7 @@ union_native
 - Native window management. [`GLFW3`]
 - Render system. [`OpenGL`/`WebGPU`/`Metal`]
 - Event loop [`libuv`]
+- Data Storage [`leveldb`]
 
 ## Graphics API
 |Platform/GraphicsAPI|GLES3/WebGL2|WebGPU|Metal|

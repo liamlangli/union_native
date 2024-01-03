@@ -2,20 +2,21 @@
 
 #include "foundation/global.h" // IWYU pragma: export
 #include "foundation/ustring.h"
+#include "foundation/udata.h"
 
-#include <leveldb/c.h>
-
+typedef struct db_o db_o;
 typedef struct db_t {
-    leveldb_t *db;
-    leveldb_options_t *o;
-    leveldb_writeoptions_t *ow;
-    leveldb_readoptions_t *or;
     bool opened;
+    ustring name;
+    db_o *conn;
 } db_t;
 
 db_t db_open(ustring name);
 void db_close(db_t db);
 
-ustring db_read(db_t db, ustring key);
-bool db_write(db_t db, ustring key, ustring value);
+udata db_get(db_t db, ustring key);
+bool db_put(db_t db, ustring key, udata value);
+bool db_delete(db_t db, ustring key);
 
+bool db_save_dump_file(db_t db, ustring path);
+bool db_load_dump_file(db_t db, ustring path);
