@@ -175,15 +175,10 @@ void ui_renderer_init(ui_renderer_t *renderer) {
 void ui_renderer_free(ui_renderer_t *renderer) { free(renderer->primitive_data); }
 
 void ui_renderer_clear(ui_renderer_t *renderer) {
-    ui_layer *layer = &renderer->layers[0];
-    layer->last_primitive_offset = layer->primitive_offset;
-    layer->last_index_offset = layer->index_offset;
-    layer->primitive_offset = renderer->preserved_primitive_offset;
-    layer->index_offset = 0;
-
-    for (int i = 1; i < MAX_UI_LAYERS; ++i) {
+    for (int i = 0; i < MAX_UI_LAYERS; ++i) {
         ui_layer_clear(&renderer->layers[i]);
     }
+    renderer->layers[0].primitive_offset = renderer->preserved_primitive_offset;
 }
 
 void ui_renderer_merge_layers(ui_renderer_t *renderer) {

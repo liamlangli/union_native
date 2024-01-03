@@ -141,7 +141,7 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
 static void ui_render(GLFWwindow *window) {
     script_context_t *ctx = script_context_share();
     ui_state_t *state = &ctx->state;
-    ui_renderer_t renderer = ctx->renderer;
+    ui_renderer_t *renderer = &ctx->renderer;
 
     state->cursor_type = CURSOR_Default;
     ui_rect rect = ui_rect_shrink((ui_rect){.x = 0.f, .y = state->window_rect.h - 48.f, .w = state->window_rect.w, .h = 46.f}, 8.0f, 8.0f);
@@ -154,11 +154,11 @@ static void ui_render(GLFWwindow *window) {
     // ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
 
     ui_rect status_rect = (ui_rect){.x = state->window_rect.w - STATUS_WIDTH - 8.f, .y = 8.f, .w = STATUS_WIDTH, .h = STATUS_HEIGHT };
-    fill_round_rect(&renderer, 0, ui_theme_share()->panel_0, status_rect, 4.f, 0, TRIANGLE_SOLID);
+    fill_round_rect(renderer, 0, ui_theme_share()->panel_0, status_rect, 4.f, 0, TRIANGLE_SOLID);
     ui_label(state, &fps_label, ui_theme_share()->transform_y, status_rect, 0, 0);
     ui_label(state, &status_label, ui_theme_share()->text, status_rect, 0, 0);
 
-    ui_renderer_render(&renderer);
+    ui_renderer_render(renderer);
 }
 
 #define FPS_MA 10
@@ -213,8 +213,11 @@ void tick(GLFWwindow *window) {
         script_loop_tick();
     }
 
-    if (ui_visible) ui_render(window);
-    state_update(window);
+    if (ui_visible) {
+        ui_render(window);
+        state_update(window);
+    }
+
     uv_run(uv_default_loop(), UV_RUN_NOWAIT);
 }
 
@@ -228,16 +231,21 @@ int main(int argc, char** argv) {
     script_context_init(window);
     // db_put(script_context_share()->db, ustring_STR("app_name"), (udata){.data = "hello", .length = 5});
     // db_load_dump_file(script_context_share()->db, ustring_STR("dump.bin"));
-    udata value = db_get(script_context_share()->db, ustring_STR("app_name"));
-    printf("app_name: %.*s\n", value.length, value.data);
+    // udata value = db_get(script_context_share()->db, ustring_STR("app_name"));
+    // printf("app_name: %.*s\n", value.length, value.data);
     // db_save_dump_file(script_context_share()->db, ustring_STR("dump.bin"));
 
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
-    tick(window);
+    // tick(window);
 
     script_init(window, uri);
-    os_run_window_loop(window, tick); // loop
+    // os_run_window_loop(window, tick); // loop
+    while (!glfwWindowShouldClose(window)) {
+        tick(window);
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
 
     logger_destroy(logger_global());
     script_context_cleanup();

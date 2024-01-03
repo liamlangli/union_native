@@ -22,6 +22,7 @@ if (WIN32)
     add_definitions(-DOS_WINDOWS)
 elseif (APPLE)
     list(APPEND LINK_DIR
+        /usr/local/lib
         ${THIRD_PARTY}/angle/lib/macos/${PROC_ARCH}
         ${THIRD_PARTY}/glfw/lib/macos
         ${THIRD_PARTY}/quickjs/lib/macos/${PROC_ARCH}

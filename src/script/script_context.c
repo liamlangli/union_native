@@ -16,9 +16,9 @@ void script_context_init(GLFWwindow *window) {
     shared_context.module = (void *)&shared_module;
     shared_context.ui_scale = 2.0f;
     shared_context.window = window;
+    shared_context.db = db_open(ustring_STR("union"));
     ui_renderer_init(&shared_context.renderer);
     ui_state_init(&shared_context.state, &shared_context.renderer);
-    shared_context.db = db_open(ustring_STR("union"));
 }
 
 void script_context_terminate(void) {
