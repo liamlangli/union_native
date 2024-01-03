@@ -1,4 +1,5 @@
 #include "foundation/foundation.h"
+#include "foundation/os.h"
 #include "foundation/ustring.h"
 #include "ui/ui.h"
 #include "script/script.h"
@@ -16,8 +17,6 @@
 
 #include <uv.h>
 
-static ui_renderer_t renderer;
-static ui_state_t state;
 static ui_input_t source_input;
 static ui_label_t copyright;
 static ui_label_t fps_label;
@@ -32,70 +31,8 @@ static ustring_view status_str;
 #define MAX_STATUS_BITS 256
 static ustring_view watched_file;
 
-static GLFWcursor *default_cursor;
-static GLFWcursor *text_input_cursor;
-static GLFWcursor *resize_h_cursor;
-static GLFWcursor *resize_v_cursor;
 static bool invalid_script = false;
 static bool ui_visible = true;
-
-static void error_callback(int error, const char* description) {
-    LOG_ERROR_FMT("Error: %s\n", description);
-}
-
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
-    if (key == KEY_GRAVE_ACCENT && action == GLFW_RELEASE) {
-        ui_visible = !ui_visible;
-    }
-
-    if (action == GLFW_PRESS) {
-        ui_state_key_press(&state, key);
-    } else if (action == GLFW_RELEASE) {
-        ui_state_key_release(&state, key);
-    }
-    
-    const bool control_pressed = ui_state_is_key_pressed(&state, KEY_LEFT_CONTROL) ||
-        ui_state_is_key_pressed(&state, KEY_RIGHT_CONTROL) ||
-        ui_state_is_key_pressed(&state, KEY_LEFT_SUPER) ||
-        ui_state_is_key_pressed(&state, KEY_RIGHT_SUPER);
-    if (control_pressed && ui_state_is_key_pressed(&state, KEY_Q)) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
-}
-
-static void mouse_button(GLFWwindow* window, int button, int action, int mods) {
-    if (action == GLFW_PRESS) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            state.left_mouse_press = true;
-            state.left_mouse_is_pressed = true;
-            script_window_mouse_down(0);
-            state.pointer_start = state.pointer_location;
-        } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            state.right_mouse_press = true;
-            state.right_mouse_is_pressed = true;
-            script_window_mouse_down(1);
-        } else {
-            state.middle_mouse_press = true;
-            state.middle_mouse_is_pressed = true;
-            script_window_mouse_down(2);
-        }
-    } else if (action == GLFW_RELEASE) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            state.left_mouse_release = true;
-            state.left_mouse_is_pressed = false;
-            script_window_mouse_up(0);
-        } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            state.right_mouse_release = true;
-            state.right_mouse_is_pressed = false;
-            script_window_mouse_up(1);
-        } else {
-            state.middle_mouse_release = true;
-            state.middle_mouse_is_pressed = false;
-            script_window_mouse_up(2);
-        }
-    }
-}
 
 static void resize_callback(GLFWwindow *window, int width, int height) {
     script_context_t *ctx = script_context_share();
@@ -103,22 +40,15 @@ static void resize_callback(GLFWwindow *window, int width, int height) {
     ctx->display_ratio = (f64)ctx->framebuffer_height / (f64)ctx->height;
     f32 ui_width = (f32)(width / ctx->ui_scale * ctx->display_ratio);
     f32 ui_height = (f32)(height / ctx->ui_scale * ctx->display_ratio);
-    renderer.window_size.x = ui_width;
-    renderer.window_size.y = ui_height;
-    state.window_rect = (ui_rect){
+    ctx->renderer.window_size.x = ui_width;
+    ctx->renderer.window_size.y = ui_height;
+    ctx->state.window_rect = (ui_rect){
         .x = 0.f,
         .y = 0.f,
         .w = ui_width,
         .h = ui_height
     };
     script_window_resize(width, height);
-}
-
-static void scroll_callback(GLFWwindow* window, double offset_x, double offset_y) {
-    if (state.active == -1 && state.hover == -1) script_window_mouse_scroll(offset_x, offset_y);
-    const bool shift = ui_state_is_key_pressed(&state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(&state, KEY_RIGHT_SHIFT);
-    state.pointer_scroll.x = (f32)(offset_x * (shift ? state.smooth_factor : 1.f));
-    state.pointer_scroll.y = (f32)(offset_y * (shift ? state.smooth_factor : 1.f));
 }
 
 static void script_init(GLFWwindow *window, ustring_view uri);
@@ -179,8 +109,6 @@ static void script_init(GLFWwindow *window, ustring_view uri) {
 }
 
 static void renderer_init(GLFWwindow* window, ustring_view uri) {
-    ui_renderer_init(&renderer);
-    ui_state_init(&state, &renderer);
     ui_input_init(&source_input, uri);
     ui_label_init(&copyright, ustring_view_STR("@2023 union native"));
     ui_scroll_view_init(&log_view, 20);
@@ -205,31 +133,30 @@ static void renderer_init(GLFWwindow* window, ustring_view uri) {
     status_label.element.constraint.margin.left = 4.f;
     status_label.element.constraint.margin.top = 4.f;
     status_label.scale = 0.7f;
-
-    default_cursor = glfwCreateStandardCursor(CURSOR_Default);
-    text_input_cursor = glfwCreateStandardCursor(CURSOR_Text);
-    resize_h_cursor = glfwCreateStandardCursor(CURSOR_ResizeH);
-    resize_v_cursor = glfwCreateStandardCursor(CURSOR_ResizeV);
 }
 
 #define STATUS_WIDTH 100.f
 #define STATUS_HEIGHT 32.f
 
 static void ui_render(GLFWwindow *window) {
-    state.cursor_type = CURSOR_Default;
-    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0.f, .y = state.window_rect.h - 48.f, .w = state.window_rect.w, .h = 46.f}, 8.0f, 8.0f);
-    if (ui_input(&state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
+    script_context_t *ctx = script_context_share();
+    ui_state_t *state = &ctx->state;
+    ui_renderer_t renderer = ctx->renderer;
+
+    state->cursor_type = CURSOR_Default;
+    ui_rect rect = ui_rect_shrink((ui_rect){.x = 0.f, .y = state->window_rect.h - 48.f, .w = state->window_rect.w, .h = 46.f}, 8.0f, 8.0f);
+    if (ui_input(state, &source_input, ui_theme_share()->panel_0, rect, 0, 0)) {
         LOG_INFO_FMT("try load script: %s\n", source_input.label.text.base.data);
         script_init(window, source_input.label.text);
     }
 
-    // rect = ui_rect_shrink((ui_rect){.x = 0, .y = state.window_rect.h - 22.f, .w = state.window_rect.w, .h = 22.f}, 8.0f, 8.0f);
+    // rect = ui_rect_shrink((ui_rect){.x = 0, .y = state->window_rect.h - 22.f, .w = state->window_rect.w, .h = 22.f}, 8.0f, 8.0f);
     // ui_label(&state, &copyright, ui_theme_share()->text, rect, 0, 0);
 
-    ui_rect status_rect = (ui_rect){.x = state.window_rect.w - STATUS_WIDTH - 8.f, .y = 8.f, .w = STATUS_WIDTH, .h = STATUS_HEIGHT };
+    ui_rect status_rect = (ui_rect){.x = state->window_rect.w - STATUS_WIDTH - 8.f, .y = 8.f, .w = STATUS_WIDTH, .h = STATUS_HEIGHT };
     fill_round_rect(&renderer, 0, ui_theme_share()->panel_0, status_rect, 4.f, 0, TRIANGLE_SOLID);
-    ui_label(&state, &fps_label, ui_theme_share()->transform_y, status_rect, 0, 0);
-    ui_label(&state, &status_label, ui_theme_share()->text, status_rect, 0, 0);
+    ui_label(state, &fps_label, ui_theme_share()->transform_y, status_rect, 0, 0);
+    ui_label(state, &status_label, ui_theme_share()->text, status_rect, 0, 0);
 
     ui_renderer_render(&renderer);
 }
@@ -240,15 +167,16 @@ static int nb_frames = 0;
 static void state_update(GLFWwindow *window) {
     int width, height, framebuffer_width, framebuffer_height;
     double mouse_x, mouse_y;
-
     script_context_t *ctx = script_context_share();
+    ui_state_t *state = &ctx->state;
+
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
     mouse_x = mouse_x * ctx->display_ratio;
     mouse_y = mouse_y * ctx->display_ratio;
 
-    if (state.pointer_location.x != mouse_x || state.pointer_location.y != mouse_y) {
-        if (state.active == -1 && state.hover == -1) script_window_mouse_move(mouse_x, mouse_y);
-        state.pointer_location = (float2){.x = (f32)(mouse_x / ctx->ui_scale), .y = (f32)(mouse_y / ctx->ui_scale)};
+    if (state->pointer_location.x != mouse_x || state->pointer_location.y != mouse_y) {
+        if (state->active == -1 && state->hover == -1) script_window_mouse_move(mouse_x, mouse_y);
+        state->pointer_location = (float2){.x = (f32)(mouse_x / ctx->ui_scale), .y = (f32)(mouse_y / ctx->ui_scale)};
     }
  
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
@@ -257,26 +185,8 @@ static void state_update(GLFWwindow *window) {
         resize_callback(window, width, height);
     }
 
-    ui_state_update(&state);
-
-    // set cursor
-    switch (state.cursor_type)
-    {
-    case CURSOR_Default:
-        glfwSetCursor(window, default_cursor);
-        break;
-        case CURSOR_Text:
-        glfwSetCursor(window, text_input_cursor);
-        break;
-            case CURSOR_ResizeH:
-        glfwSetCursor(window, resize_h_cursor);
-        break;
-            case CURSOR_ResizeV:
-        glfwSetCursor(window, resize_v_cursor);
-        break;
-    default:
-        break;
-    }
+    ui_state_update(state);
+    os_set_window_cursor(window, state->cursor_type);
 
     // compute fps
     double current_time = glfwGetTime();
@@ -290,7 +200,7 @@ static void state_update(GLFWwindow *window) {
     }
 
     // update status label
-    sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d, l: %d", state.hover, state.active, state.focus, state.left_mouse_is_pressed);
+    sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d, l: %d", state->hover, state->active, state->focus, state->left_mouse_is_pressed);
     ui_label_update_text(&status_label, status_str);
 }
 
@@ -305,56 +215,15 @@ void tick(GLFWwindow *window) {
 
     if (ui_visible) ui_render(window);
     state_update(window);
-    glfwSwapBuffers(window);
-    glfwPollEvents();
     uv_run(uv_default_loop(), UV_RUN_NOWAIT);
 }
 
 int main(int argc, char** argv) {
-    GLFWwindow* window;
-    glfwSetErrorCallback(error_callback);
-
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
-
-#if defined(OS_MACOS) || defined(OS_WINDOWS)
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-#elif defined(OS_LINUX)
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_FALSE);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-#endif
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-
     int window_width = 1080;
     int window_height = 720;
+    GLFWwindow* window = os_create_window(ustring_STR("union_native"), window_width, window_height);
 
-    window = glfwCreateWindow(window_width, window_height, "union_native", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
-
-    glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowSizeCallback(window, resize_callback);
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_button);
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    glFrontFace(GL_CCW);
-    glDepthRangef(0.0f, 1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-    printf("USER_AGENT: %s\n", USER_AGENT);
-    LOG_INFO_FMT("GL_VERSION: %s\n", glGetString(GL_VERSION));
-    LOG_INFO_FMT("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-    LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 
     script_context_init(window);
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
@@ -362,19 +231,12 @@ int main(int argc, char** argv) {
     tick(window);
 
     script_init(window, uri);
-    while (!glfwWindowShouldClose(window)) {
-        tick(window);
-    }
+    os_run_window_loop(window, tick); // loop
 
-    ui_renderer_free(&renderer);
     logger_destroy(logger_global());
     script_context_cleanup();
+    script_context_terminate();
 
-    glfwDestroyCursor(default_cursor);
-    glfwDestroyCursor(text_input_cursor);
-    glfwDestroyCursor(resize_h_cursor);
-    glfwDestroyCursor(resize_v_cursor);
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    os_close_window(window);
     return 0;
 }

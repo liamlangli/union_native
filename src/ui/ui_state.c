@@ -1,4 +1,5 @@
 #include "ui/ui_state.h"
+#include "foundation/os.h"
 
 #include <GLFW/glfw3.h>
 #include <stb_ds.h>
@@ -77,13 +78,11 @@ bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index) {
 void ui_state_key_press(ui_state_t *state, int key) {
     hmput(state->key_press, key, state->time);
     hmput(state->key_pressed, key, state->time);
-    script_document_key_down(key);
 }
 
 void ui_state_key_release(ui_state_t *state, int key) {
     hmput(state->key_release, key, state->time);
     hmdel(state->key_pressed, key);
-    script_document_key_up(key);
 }
 
 bool ui_state_is_key_press(ui_state_t *state, int key) { return hmgeti(state->key_press, key) != -1; }

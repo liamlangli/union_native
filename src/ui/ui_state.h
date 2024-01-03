@@ -3,13 +3,6 @@
 #include "ui/ui_renderer.h"
 #include "ui/ui_type.h"
 
-enum CURSOR_TYPE {
-    CURSOR_Default = 0x00036001,
-    CURSOR_Text = 0x00036002,
-    CURSOR_ResizeH = 0x00036005,
-    CURSOR_ResizeV = 0x00036006
-};
-
 typedef struct ui_state_t {
     ui_rect window_rect;
 

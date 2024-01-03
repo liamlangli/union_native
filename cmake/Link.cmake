@@ -10,7 +10,7 @@ elseif (APPLE)
         target_link_libraries(${PROJECT_NAME} "-framework JavaScriptCore")
     endif()
 else() # LINUX
-    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv)
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv leveldb)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

@@ -1,4 +1,5 @@
 #include "foundation/io.h"
+#include "foundation/os.h"
 #include "foundation/ustring.h"
 #include "script/script.h"
 #include "ui/ui_input.h"

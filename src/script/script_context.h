@@ -2,6 +2,8 @@
 
 #include "foundation/global.h"
 #include "foundation/ustring.h"
+#include "foundation/db.h"
+#include "ui/ui_state.h"
 
 #include <GLFW/glfw3.h>
 #include <stb_ds.h>
@@ -15,9 +17,14 @@ typedef struct script_context_t {
     f64 mouse_x, mouse_y;
     GLFWwindow *window;
     void *module;
+    ui_state_t state;
+    ui_renderer_t renderer;
+    db_t db;
 } script_context_t;
 
 void script_context_init(GLFWwindow *window);
+void script_context_terminate(void);
+
 script_context_t *script_context_share(void);
 
 void *script_context_internal(void);
