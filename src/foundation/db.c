@@ -59,7 +59,7 @@ udata db_get(db_t db, ustring key) {
         leveldb_free(err);
         return udata_NULL;
     }
-    return (udata) { .data = value, .length = len };
+    return (udata) { .data = value, .length = (u32)len };
 }
 
 bool db_put(db_t db, ustring key, udata value) {

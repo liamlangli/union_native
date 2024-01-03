@@ -147,6 +147,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             ustring_view_insert_ustring_view(&input->label.text, input->label.cursor_index, &state->edit_str);
         }
         input->label.cursor_index += count;
+        input->label.start_index = input->label.cursor_index;
 
         if (count > 0)
             ui_label_update_text(&input->label, input->label.text);
@@ -205,6 +206,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         ui_state_set_active(state, id);
         ui_state_set_focus(state, id);
         ustring_view_set_ustring_view(&input->unmodified_text, &input->label.text);
+        input->label.start_index = input->label.cursor_index;
     }
 
     if (active && state->left_mouse_press) {
