@@ -1,5 +1,6 @@
 #include "foundation/db.h"
 
+#include <zip.h>
 #include <leveldb/c.h>
 #include <stdio.h>
 
@@ -86,72 +87,5 @@ bool db_delete(db_t db, ustring key) {
         leveldb_free(err);
         return false;
     }
-    return true;
-}
-
-bool db_save_dump_file(db_t db, ustring path) {
-    leveldb_t *conn = db.conn->db;
-
-    leveldb_readoptions_t* read_options = leveldb_readoptions_create();
-    leveldb_iterator_t* iter = leveldb_create_iterator(conn, read_options);
-
-    FILE* file = fopen(path.data, "wb");
-    if (!file) {
-        fprintf(stderr, "Error opening output file: %s\n", path.data);
-        return false;
-    }
-
-    leveldb_iter_seek_to_first(iter);
-    while (leveldb_iter_valid(iter)) {
-        size_t key_len, value_len;
-        const char* key = leveldb_iter_key(iter, &key_len);
-        const char* value = leveldb_iter_value(iter, &value_len);
-
-        // Write key and value to the file
-        fwrite(key, 1, key_len, file);
-        fwrite(value, 1, value_len, file);
-
-        leveldb_iter_next(iter);
-    }
-
-    fclose(file);
-    leveldb_iter_destroy(iter);
-    leveldb_readoptions_destroy(read_options);
-    return true;
-}
-
-bool db_load_dump_file(db_t db, ustring path) {
-    leveldb_t *conn = db.conn->db;
-    FILE* file = fopen(path.data, "rb");
-    if (!file) {
-        fprintf(stderr, "Error opening input file: %s\n", path.data);
-        return false;
-    }
-
-    char* buffer = NULL;
-    size_t buffer_size = 0;
-    size_t key_len, value_len;
-
-    while (fread(&key_len, sizeof(size_t), 1, file) == 1) {
-        fread(&value_len, sizeof(size_t), 1, file);
-
-        // Allocate memory for key and value
-        buffer = (char*)malloc(key_len + value_len);
-        if (!buffer) {
-            fprintf(stderr, "Memory allocation error\n");
-            fclose(file);
-            return false;
-        }
-
-        fread(buffer, 1, key_len + value_len, file);
-
-        leveldb_writeoptions_t* write_options = leveldb_writeoptions_create();
-        leveldb_put(conn, write_options, buffer, key_len, buffer + key_len, value_len, NULL);
-        leveldb_writeoptions_destroy(write_options);
-
-        free(buffer);
-    }
-
-    fclose(file);
     return true;
 }

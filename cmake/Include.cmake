@@ -1,5 +1,4 @@
 include_directories(src)
-include_directories(${THIRD_PARTY}/stb)
 include_directories(${LIBUV_INCLUDE_DIRS})
 
 set(LINK_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

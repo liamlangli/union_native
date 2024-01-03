@@ -17,6 +17,3 @@ void db_close(db_t db);
 udata db_get(db_t db, ustring key);
 bool db_put(db_t db, ustring key, udata value);
 bool db_delete(db_t db, ustring key);
-
-bool db_save_dump_file(db_t db, ustring path);
-bool db_load_dump_file(db_t db, ustring path);
