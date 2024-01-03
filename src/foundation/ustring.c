@@ -17,8 +17,8 @@ u32 ustring_safe_growth(ustring *s, u32 n) {
     }
 
     u32 new_size = MACRO_MAX(0, n);
-    if (new_size >= s->length) {
-        u32 new_length = MACRO_MAX(s->length * 2, 64);
+    if (new_size > s->length) {
+        u32 new_length = MACRO_MAX(s->length * 2, MIN_CAPACITY);
         while (new_length < new_size)
             new_length *= 2;
         char *new_data = malloc(new_length);
