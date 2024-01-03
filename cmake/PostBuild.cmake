@@ -7,11 +7,6 @@ elseif (APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy
         ${THIRD_PARTY}/glfw/lib/macos/libglfw.3.dylib $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 else() # Linux
-    if (ENABLE_RENDER_DOC)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${THIRD_PARTY}/renderdoc/lib/linux/librenderdoc.so $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    endif()
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

@@ -1,7 +1,15 @@
 #pragma once
 
 #include <stdbool.h>
-//#include <mimalloc-override.h>
+#if defined(ENABLE_MIMALLOC)
+    #include <mimalloc.h>
+
+    // Standard C allocation
+    #define malloc(n)               mi_malloc(n)
+    #define calloc(n,c)             mi_calloc(n,c)
+    #define realloc(p,n)            mi_realloc(p,n)
+    #define free(p)                 mi_free(p)
+#endif
 
 #ifndef bool
     #define bool int

@@ -1,19 +1,16 @@
+if (ENABLE_MIMALLOC)
+    target_link_libraries(${PROJECT_NAME} mimalloc)
+endif()
+
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32 uv)
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 m dl ws2_32 uv leveldb)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} GLESv2 EGL quickjs glfw.3 m dl ${LIBUV_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw.3 m dl ${LIBUV_LIBRARIES} leveldb)
     if (${SCRIPT_BACKEND} STREQUAL "Quickjs")
-        target_link_libraries(${PROJECT_NAME} quickjs)
-    elseif(${SCRIPT_BACKEND} STREQUAL "JavaScriptCore")
         target_link_libraries(${PROJECT_NAME} "-framework JavaScriptCore")
     endif()
 else() # LINUX
-    target_link_libraries(${PROJECT_NAME} çß quickjs glfw3 rt m dl uv)
-    if (ENABLE_RENDER_DOC)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${THIRD_PARTY}/renderdoc/lib/linux/librenderdoc.so $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    endif()
+    target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
