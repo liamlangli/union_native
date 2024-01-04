@@ -33,7 +33,7 @@ extern void os_window_run_loop(os_window_t *window, void (*fn)(void));
 extern void os_window_set_cursor(os_window_t *window, int cursor_type);
 extern void os_window_close(os_window_t *window);
 
-extern void os_window_tn_resize(os_window_t *window, int width, int height);
+extern void os_window_on_resize(os_window_t *window, int width, int height);
 
 extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);

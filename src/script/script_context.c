@@ -93,6 +93,9 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     LOG_INFO_FMT("content_length: %d\n", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
     script_context_t *ctx = script_context_share();
+
+    os_window_t *window = shared_context.window;
+    os_window_on_resize(window, window->width, window->height);
 }
 
 int script_eval_uri(ustring_view uri) {
@@ -110,6 +113,9 @@ int script_eval_uri(ustring_view uri) {
         shared_context.invalid_script = script_eval(content, uri) != 0;
         ustring_free(&content);
     }
+
+    os_window_t *window = shared_context.window;
+    os_window_on_resize(window, window->width, window->height);
     return 0;
 }
 

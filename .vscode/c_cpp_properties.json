@@ -46,7 +46,8 @@
                 "${workspaceFolder}/third_party/stb"
             ],
             "defines": [
-                "OS_WINDOWS"
+                "OS_WINDOWS",
+                "USER_AGENT"
             ],
             "compilerPath": "D:\\msys64\\mingw64\\bin\\clang.exe",
             "intelliSenseMode": "clang-x64",
