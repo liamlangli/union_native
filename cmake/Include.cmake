@@ -15,6 +15,8 @@ include_directories(
     ${THIRD_PARTY}/glfw/include
     ${THIRD_PARTY}/quickjs/include
     ${THIRD_PARTY}/mimalloc/include)
+link_directories(/usr/local/lib /opt/homebrew/lib)
+
 if (WIN32)
     list(APPEND LINK_DIR /usr/lib)
     list(APPEND LINK_DIR ${THIRD_PARTY}/quickjs/lib/mingw64)
