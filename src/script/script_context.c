@@ -22,6 +22,7 @@ void script_context_init(GLFWwindow *window) {
     shared_context.ui_scale = 2.0f;
     shared_context.window = window;
     shared_context.db = db_open(ustring_STR("union"));
+    shared_context.invalid_script = true;
     ui_renderer_init(&shared_context.renderer);
     ui_state_init(&shared_context.state, &shared_context.renderer);
     ui_dev_tool_init(&shared_context.dev_tool);
@@ -83,17 +84,15 @@ int script_eval(ustring source, ustring_view filename) {
     return ret;
 }
 
-void script_loop_tick() {
-
-    if (script_context_internal() == NULL)
-        return;
-    
-    script_context_t *context = script_context_share();
-    if (context->invalid_script) {
+void script_context_loop_tick() {
+    if (shared_context.invalid_script) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         return;
     } 
+
+    if (script_context_internal() == NULL)
+        return;
 
     script_module_browser_tick();
 

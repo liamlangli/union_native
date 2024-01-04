@@ -158,9 +158,9 @@ extern void os_set_window_cursor(GLFWwindow *window, int type) {
     }
 }
 
-extern void os_run_window_loop(GLFWwindow *window, void (*fn)(GLFWwindow *window)) {
+extern void os_run_window_loop(GLFWwindow *window, void (*fn)(void)) {
     while (!glfwWindowShouldClose(window)) {
-        fn(window);
+        fn();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

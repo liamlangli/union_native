@@ -15,6 +15,6 @@ enum CURSOR_TYPE {
 };
 
 extern GLFWwindow* os_create_window(ustring title, int width, int height);
-extern void os_run_window_loop(GLFWwindow *window, void (*fn)(GLFWwindow *window));
+extern void os_run_window_loop(GLFWwindow *window, void (*fn)(void));
 extern void os_set_window_cursor(GLFWwindow *window, int cursor_type);
 extern void os_close_window(GLFWwindow *window);
