@@ -139,3 +139,4 @@ u32 ustring_view_append_STR(ustring_view *a, const char *b) {
     a->length += b_length;
     return new_size;
 }
+

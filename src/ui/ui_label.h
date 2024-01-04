@@ -14,6 +14,7 @@ typedef struct ui_label_t {
 
     int start_index, cursor_index;
     bool render_selected;
+    ui_style text_style;
 } ui_label_t;
 
 void ui_label_init(ui_label_t *label, ustring_view text);

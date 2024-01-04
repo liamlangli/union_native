@@ -19,6 +19,7 @@ void ui_input_init(ui_input_t *input, ustring_view text) {
     input->outline = true;
     input->label.element.constraint.alignment = CENTER_VERTICAL | LEFT;
     input->label.element.constraint.margin.left = 5.f;
+    input->cursor_style = ui_theme_share()->text;
 }
 
 void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, u32 clip) {
@@ -36,10 +37,11 @@ void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, 
         cursor_rect.x += (rect.w - input->label.text_size.x * scale) * 0.5f + cursor_offset;
     }
 
-    cursor_rect.w = 1.2 * scale;
+    ui_style cursor_style = input->cursor_style;
+    cursor_rect.w = cursor_style.line_width * scale;
     cursor_rect.h = input->label.text_size.y * scale;
     cursor_rect.y += (rect.h - cursor_rect.h) * 0.5f;
-    fill_rect(state->renderer, 0, ui_theme_share()->text, cursor_rect, clip);
+    fill_rect(state->renderer, 0, cursor_style, cursor_rect, clip);
 }
 
 void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {

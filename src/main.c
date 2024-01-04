@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
     os_window_t* window = os_window_create(ustring_STR("union_native"), window_width, window_height);
     script_context_init(window);
-    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/index.js");
+    ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("public/simple.js");
     script_eval_uri(uri);
 
     os_window_run_loop(window, script_context_loop_tick); // loop

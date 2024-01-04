@@ -9,6 +9,7 @@ typedef struct ui_input_t {
     ustring_view unmodified_text;
     bool editing;
     bool outline;
+    ui_style cursor_style;
 } ui_input_t;
 
 void ui_input_init(ui_input_t *input, ustring_view text);

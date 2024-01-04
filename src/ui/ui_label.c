@@ -13,12 +13,15 @@ void ui_label_init(ui_label_t *label, ustring_view text) {
     memset(label->char_offsets, 0, MAX_CHAR_LENGTH);
     ui_label_update_text(label, text);
     label->cursor_index = (int)label->text.length;
+    label->text_style = ui_theme_share()->text;
 }
 
 void ui_label_update_text(ui_label_t *label, ustring_view text) {
     ui_font *sys_font = ui_font_system_font();
     label->text_size = ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
     label->text = text;
+    label->cursor_index = MACRO_MIN(label->cursor_index, (int)label->text.length);
+    label->start_index = MACRO_MIN(label->start_index, (int)label->text.length);
 }
 
 float2 ui_label_text_origin(ui_label_t *label, ui_rect rect) {
@@ -81,5 +84,5 @@ void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect
         fill_rect(renderer, layer_index, ui_theme_share()->text_selected, selection_rect, clip);
     }
 
-    draw_glyph(renderer, layer_index, origin, &renderer->system_font, label->text, clip, scale, style);
+    draw_glyph(renderer, layer_index, origin, &renderer->system_font, label->text, clip, scale, label->text_style);
 }

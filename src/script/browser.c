@@ -96,6 +96,7 @@ JSValue js_window_remove_event_listener(JSContext *context, JSValueConst _, int 
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
             script_value_deref(handler);
+            JS_FreeValue(context, scope.func);
             arrdel(scopes, i);
             break;
         }
@@ -138,6 +139,7 @@ JSValue js_document_remove_event_listener(JSContext *context, JSValueConst this_
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
             script_value_deref(handler);
+            JS_FreeValue(context, scope.func);
             arrdel(scopes, i);
             break;
         }
@@ -180,6 +182,7 @@ JSValue js_canvas_remove_event_listener(JSContext *context, JSValueConst _, int 
         js_scope scope = scopes[i];
         if (JS_VALUE_GET_PTR(scope.func) == JS_VALUE_GET_PTR(handler)) {
             script_value_deref(handler);
+            JS_FreeValue(context, scope.func);
             arrdel(scopes, i);
             break;
         }

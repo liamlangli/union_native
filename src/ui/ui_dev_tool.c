@@ -1,25 +1,48 @@
 #include "ui/ui_dev_tool.h"
+#include "foundation/ustring.h"
+#include "foundation/logger.h"
 #include "script/script_context.h"
 #include "ui/ui_draw.h"
+#include "ui/ui_label.h"
 #include "ui/ui_theme.h"
 #include "ui/ui_type.h"
+#include "ui/ui_input.h"
+#include "ui/ui_button.h"
+
+#include <stdio.h>
+
+// tab ui
+static ui_button_t console_tab;
+static ui_button_t network_tab;
+static ui_button_t memory_tab;
+static ui_button_t graphics_tab;
+static ui_button_t source_tab;
+static ui_button_t performance_tab;
+
+// console ui
+static ui_input_t console_input;
 
 void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
     dev_tool->snap_align = RIGHT;
-    // dev_tool->ui_rect = (){ 0, 0, 0, 0 };
     dev_tool->width = 320;
     dev_tool->height = 240;
+    dev_tool->visible = false;
+    dev_tool->tab = DEVTOOL_CONSOLE;
+
+    ui_input_init(&console_input, ustring_view_STR(""));
+    console_input.outline = false;
+    console_input.cursor_style = ui_theme_share()->panel_0;
+    console_input.label.element.constraint.margin.left = 3.f;
+    console_input.label.text_style = ui_theme_share()->text_dark;
 }
 
-void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible) {
+void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
     script_context_t *context = script_context_share();
-    dev_tool->visible = visible;
-
     int align = dev_tool->snap_align;
     f64 width = dev_tool->width;
     f64 height = dev_tool->height;
-    
-    ui_rect rect = context->state.window_rect;
+
+ui_rect rect = context->state.window_rect;
     if (align & LEFT) {
         rect = (ui_rect){ 0, 0, width, rect.h};
     } else if (align & RIGHT) {
@@ -29,15 +52,110 @@ void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible) {
     } else if (align & BOTTOM) {
         rect = (ui_rect){ 0, rect.h - height, rect.w, height};
     }
-
     dev_tool->rect = rect;
 }
 
+void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible) {
+    script_context_t *context = script_context_share();
+    ui_state_t *state = &context->state;
+    dev_tool->visible = visible;
+
+    if (!visible) {
+        dev_tool->rect = (ui_rect){ 0, 0, 0, 0 };
+        ui_state_clear_active(state);
+        ui_state_clear_focus(state);
+        return;
+    }
+
+    ui_dev_tool_resize(dev_tool);
+    if (dev_tool->tab == DEVTOOL_CONSOLE) {
+        ui_state_set_focus(state, console_input.element.id);
+    }
+}
+
+void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_source(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_network(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_graphics(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_memory(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_performance(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+
+void dev_tool_tab_well(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect) {
+
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_CONSOLE;
+    // }
+    // tab_rect.x += tab_rect.w + 8.f;
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_NETWORK;
+    // }
+    // tab_rect.x += tab_rect.w + 8.f;
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_MEMORY;
+    // }
+    // tab_rect.x += tab_rect.w + 8.f;
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_GRAPHICS;
+    // }
+    // tab_rect.x += tab_rect.w + 8.f;
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_SOURCE;
+    // }
+    // tab_rect.x += tab_rect.w + 8.f;
+    // if (ui_button(state, ui_theme_share()->panel_0, tab_rect, 0, 0)) {
+    //     dev_tool->tab = DEVTOOL_PERFORMANCE;
+    // }
+}
+
 void ui_dev_tool(ui_state_t *state, ui_dev_tool_t* dev_tool) {
+    if (!dev_tool->visible)
+        return;
+
+    ui_dev_tool_resize(dev_tool);
+
     script_context_t *context = script_context_share();
     ui_renderer_t* renderer = &context->renderer;
 
     fill_rect(renderer, 0, ui_theme_share()->text, dev_tool->rect, 0);
+    switch (dev_tool->tab) {
+    case DEVTOOL_CONSOLE:
+        ui_dev_tool_console(state, dev_tool, dev_tool->rect);
+        break;
+    default:
+        break;
+    }
+}
+
+static ustring command_open = ustring_STR("open ");
+static ustring eval = ustring_STR("<eval>");
+
+void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect) {
+    ui_renderer_t *renderer = state->renderer;
+
+    ui_rect input_rect = (ui_rect){.x = rect.x, .y = rect.y + rect.h - 24.f, .w = rect.w, .h = 24.f};
+    input_rect = ui_rect_shrink(input_rect, 2.f, 2.f);
+    if (ui_input(state, &console_input, ui_theme_share()->dev_tool_input, input_rect, 0, 0)) {
+        // LOG_INFO_FMT("try load script: %s\n", console_input.label.text.base.data);
+        // script_init(console_input.label.text);
+        ustring_view text = console_input.label.text;
+        if (ustring_view_start_with_ustring(text, command_open)) {
+            int start = command_open.length;
+            while (start < text.length && text.base.data[start] == ' ') start++;
+            ustring_view uri = ustring_view_sub_view(&text, start, text.length - start);
+            printf("try load script: %s\n", uri.base.data);
+            script_eval_uri(uri);
+        } else {
+            ustring content = ustring_view_to_ustring(&text);
+            script_eval(ustring_view_to_ustring(&text), ustring_view_from_ustring(eval));
+        }
+
+        ustring_view_clear(&console_input.label.text);
+        ui_label_update_text(&console_input.label, console_input.label.text);
+        ui_state_set_focus(state, console_input.element.id);
+    }
+
+    ui_rect line = (ui_rect){rect.x, rect.y + rect.h - 26.f, rect.w, 1.f};
+    fill_rect(renderer, 0, ui_theme_share()->panel_0, line, 0);
 }
 
 // static void renderer_init(GLFWwindow* window, ustring_view uri) {

@@ -37,3 +37,5 @@ extern void os_window_on_resize(os_window_t *window, int width, int height);
 
 extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);
+
+extern bool os_file_exists(ustring path);

@@ -89,7 +89,7 @@ static void os_window_on_key_action(os_window_t* window, int key, int scancode, 
     const bool alt_pressed = ui_state_is_key_pressed(state, KEY_LEFT_ALT) ||
         ui_state_is_key_pressed(state, KEY_RIGHT_ALT);
 
-    if (control_pressed && alt_pressed && key == KEY_I && action == GLFW_RELEASE) {
+    if (action == GLFW_RELEASE && ((control_pressed && alt_pressed && key == KEY_I) || key == KEY_F12)) {
         ui_dev_tool_set_visible(&ctx->dev_tool, !ctx->dev_tool.visible);
         printf("toggle dev tool\n");
     }

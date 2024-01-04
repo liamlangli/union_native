@@ -15,6 +15,6 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
-    "@union_native/core": "^0.2.20"
+    "@union_native/core": "^0.2.21"
   }
 }

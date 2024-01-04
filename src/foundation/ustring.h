@@ -35,11 +35,11 @@ typedef struct ustring_view {
     u32 length;
 } ustring_view;
 
-#define ustring_view_ustring(v) ((ustring_view){.base = (v), .start = 0, .length = (v).length}) // no memory allocation
+#define ustring_view_from_ustring(v) ((ustring_view){.base = (v), .start = 0, .length = (v).length}) // no memory allocation
 #define ustring_view_str(v) ((ustring_view){.base = ustring_str(v), .start = 0, .length = ustring_str(v).length}) // no memory allocation
 #define ustring_view_reserve(v, n) (ustring_safe_growth(&(v)->base, (v)->start + (v)->length + (n))) // may allocate new memory
 #define ustring_view_range(s, f, t) ((ustring_view){.base= (s)->base, .start = (f), .length = (t) - (f)}) // no memory allocation
-#define ustring_view_clear(v) ((v)->start = 0, (v)->length = 0) // no memory allocation
+#define ustring_view_clear(v) ((v)->start = 0, (v)->length = 0, (v)->base.data[0] = '\0') // no memory allocation
 #define ustring_view_equals(a, b)                                                                                              \
     ((a)->start == (b)->start && (a)->length == (b)->length &&                                                                 \
      strncmp((a)->base.data + (a)->start, (b)->base.data + (b)->start, (a)->length) == 0)
@@ -67,3 +67,5 @@ u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b); // may 
 u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b); // may allocate new memory
 u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b); // may allocate new memory
 u32 ustring_view_append_STR(ustring_view *a, const char *b);  // may allocate new memory
+
+#define ustring_view_start_with_ustring(v, a) ((v).length >= (a).length && strncmp((v).base.data + (v).start, (a).data, (a).length) == 0)
