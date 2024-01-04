@@ -3,6 +3,7 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/db.h"
+#include "ui/ui_dev_tool.h"
 #include "ui/ui_state.h"
 
 #include <GLFW/glfw3.h>
@@ -20,6 +21,10 @@ typedef struct script_context_t {
     db_t db;
     ui_state_t state;
     ui_renderer_t renderer;
+    ui_dev_tool_t dev_tool;
+
+    // script section
+    bool invalid_script;
 } script_context_t;
 
 void script_context_init(GLFWwindow *window);
@@ -43,5 +48,4 @@ void script_window_mouse_scroll(double x, double y);
 void script_document_key_down(int key);
 void script_document_key_up(int key);
 
-void script_frame_tick();
-void script_loop_tick();
+void script_context_loop_tick();

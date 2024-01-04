@@ -694,7 +694,7 @@ void script_document_key_up(int key) {
     JS_FreeValue(ctx, event);
 }
 
-void script_frame_tick(void) {
+void script_module_browser_tick(void) {
     CHECK_SCOPE
 
     JSValue ret;

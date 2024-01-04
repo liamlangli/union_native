@@ -1,6 +1,7 @@
 #include "foundation/foundation.h"
 #include "foundation/os.h"
 #include "foundation/ustring.h"
+#include "script/script_context.h"
 #include "ui/ui.h"
 #include "script/script.h"
 
@@ -205,20 +206,10 @@ static void state_update(GLFWwindow *window) {
 }
 
 void tick(GLFWwindow *window) {
-    if (invalid_script) {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    } else {
-        script_frame_tick();
-        script_loop_tick();
-    }
-
     if (ui_visible) {
         ui_render(window);
         state_update(window);
     }
-
-    uv_run(uv_default_loop(), UV_RUN_NOWAIT);
 }
 
 int main(int argc, char** argv) {
@@ -237,15 +228,9 @@ int main(int argc, char** argv) {
 
     ustring_view uri = argc >= 2 ? ustring_view_STR(argv[1]) : ustring_view_STR("os/index.js");
     renderer_init(window, uri);
-    // tick(window);
-
     script_init(window, uri);
-    // os_run_window_loop(window, tick); // loop
-    while (!glfwWindowShouldClose(window)) {
-        tick(window);
-        glfwPollEvents();
-        glfwSwapBuffers(window);
-    }
+
+    os_run_window_loop(window, script_context_loop_tick); // loop
 
     logger_destroy(logger_global());
     script_context_cleanup();

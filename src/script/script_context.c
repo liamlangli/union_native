@@ -1,7 +1,12 @@
-#include "script/script.h"
 #include "script/script_context.h"
+#include "script/browser.h"
+#include "script/webgl2.h"
+#include "ui/ui_dev_tool.h"
+
 #include <quickjs/quickjs-libc.h>
 #include <quickjs/quickjs.h>
+#include <stb_ds.h>
+#include <uv.h>
 
 typedef struct qjs_module {
     JSRuntime *runtime;
@@ -19,6 +24,7 @@ void script_context_init(GLFWwindow *window) {
     shared_context.db = db_open(ustring_STR("union"));
     ui_renderer_init(&shared_context.renderer);
     ui_state_init(&shared_context.state, &shared_context.renderer);
+    ui_dev_tool_init(&shared_context.dev_tool);
 }
 
 void script_context_terminate(void) {
@@ -78,8 +84,19 @@ int script_eval(ustring source, ustring_view filename) {
 }
 
 void script_loop_tick() {
+
     if (script_context_internal() == NULL)
         return;
+    
+    script_context_t *context = script_context_share();
+    if (context->invalid_script) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        return;
+    } 
+
+    script_module_browser_tick();
+
     int finished;
     JSContext *ctx;
     while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
@@ -88,4 +105,6 @@ void script_loop_tick() {
             break;
         }
     }
+
+    uv_run(uv_default_loop(), UV_RUN_NOWAIT);
 }
