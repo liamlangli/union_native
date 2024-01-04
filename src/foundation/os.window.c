@@ -218,6 +218,7 @@ os_window_t* os_window_create(ustring title, int width, int height) {
     glfwSwapInterval(1);
     window->native_window = (void*)native_window;
     glfwSetWindowUserPointer(native_window, window);
+    glfwGetWindowSize(native_window, &window->width, &window->height);
 
     glFrontFace(GL_CCW);
     glDepthRangef(0.0f, 1.0f);

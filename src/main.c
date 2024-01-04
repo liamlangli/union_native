@@ -1,14 +1,5 @@
 #include "foundation/foundation.h"
-#include "foundation/logger.h"
-#include "foundation/os.h"
-#include "foundation/ustring.h"
-#include "script/script_context.h"
-#include "ui/ui.h"
 #include "script/script.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>

@@ -282,13 +282,13 @@ static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst _) {
     return JS_NewInt32(ctx, script_context_share()->window->width);
 }
 
-static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst _) {
-    return JS_NewInt32(ctx, script_context_share()->window->height);
-}
-
 static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst _, JSValueConst val) {
     JS_ToInt32(ctx, &script_context_share()->window->width, val);
     return JS_UNDEFINED;
+}
+
+static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst _) {
+    return JS_NewInt32(ctx, script_context_share()->window->height);
 }
 
 static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst _, JSValueConst val) {
