@@ -207,7 +207,7 @@ void ui_renderer_render(ui_renderer_t *renderer) {
 
     script_context_t *ctx = script_context_share();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, ctx->framebuffer_width, ctx->framebuffer_height);
+    glViewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     glUseProgram(renderer->program);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

@@ -46,19 +46,6 @@ int io_save_jpg(ustring_view path, int width, int height, int channel, u8 *data)
     return stbi_write_jpg(path.base.data, width, height, channel, data, 100);
 }
 
-void io_clipboard_set(ustring_view text) {
-    script_context_t *ctx = script_context_share();
-    ustring data = ustring_view_to_new_ustring(&text);
-    glfwSetClipboardString(ctx->window, data.data);
-    ustring_free(&data);
-}
-
-ustring io_clipboard_get(void) {
-    script_context_t *ctx = script_context_share();
-    const char *text = glfwGetClipboardString(ctx->window);
-    return ustring_str((i8 *)text);
-}
-
 static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
                                        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
                                        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',

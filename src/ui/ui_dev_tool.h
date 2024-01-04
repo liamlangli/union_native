@@ -16,6 +16,7 @@ typedef struct ui_dev_tool_t {
     int tab;
     bool visible;
     ui_rect rect;
+    f64 width, height;
 } ui_dev_tool_t;
 
 void ui_dev_tool_init(ui_dev_tool_t* dev_tool);

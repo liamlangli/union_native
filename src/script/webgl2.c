@@ -802,7 +802,7 @@ static JSValue js_gl_draw_elements(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-void script_module_webgl2_register() {
+void script_webgl2_register() {
     JSContext *ctx = (JSContext *)script_context_internal();
     JSValue global = JS_GetGlobalObject(ctx);
     static JSCFunctionListEntry gl_proto_funcs[] = {
@@ -979,7 +979,6 @@ void script_module_webgl2_register() {
         JS_PROP_INT32_DEF("RGBA8_SNORM", GL_RGBA8_SNORM, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("RGB10_A2", GL_RGB10_A2, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("RGB10_A2UI", GL_RGB10_A2UI, JS_PROP_CONFIGURABLE),
-        JS_PROP_INT32_DEF("RGBA16", GL_RGBA16, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("SRGB8", GL_SRGB8, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("SRGB8_ALPHA8", GL_SRGB8_ALPHA8, JS_PROP_CONFIGURABLE),
         JS_PROP_INT32_DEF("R16F", GL_R16F, JS_PROP_CONFIGURABLE),
@@ -1094,4 +1093,8 @@ void script_module_webgl2_register() {
 
     JS_SetPropertyFunctionList(ctx, global, gl_funcs, countof(gl_funcs));
     JS_FreeValue(ctx, global);
+}
+
+void script_webgl2_cleanup(void) {
+    // delete all webgl2 objects
 }

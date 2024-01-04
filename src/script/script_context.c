@@ -2,6 +2,9 @@
 #include "script/browser.h"
 #include "script/webgl2.h"
 #include "ui/ui_dev_tool.h"
+#include "foundation/network.h"
+#include "foundation/logger.h"
+#include "foundation/io.h"
 
 #include <quickjs/quickjs-libc.h>
 #include <quickjs/quickjs.h>
@@ -16,10 +19,9 @@ typedef struct qjs_module {
 static script_context_t shared_context = {0};
 static qjs_module shared_module = {0};
 
-void script_context_init(GLFWwindow *window) {
+void script_context_init(os_window_t *window) {
     shared_module.runtime = JS_NewRuntime();
     shared_context.module = (void *)&shared_module;
-    shared_context.ui_scale = 2.0f;
     shared_context.window = window;
     shared_context.db = db_open(ustring_STR("union"));
     shared_context.invalid_script = true;
@@ -50,14 +52,15 @@ void script_context_destroy(void) {
 }
 
 void script_context_cleanup(void) {
-    script_module_browser_cleanup();
+    script_browser_cleanup();
+    script_webgl2_cleanup();
     script_context_destroy();
 }
 
 void script_context_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
-    script_module_browser_register();
-    script_module_webgl2_register();
+    script_browser_register();
+    script_webgl2_register();
 }
 
 int script_eval(ustring source, ustring_view filename) {
@@ -84,6 +87,32 @@ int script_eval(ustring source, ustring_view filename) {
     return ret;
 }
 
+static void on_remote_script_download(net_request_t request, net_response_t response) {
+    LOG_INFO_FMT("download remote script: %s\n", request.url.url.base.data);
+    LOG_INFO_FMT("status: %d\n", response.status);
+    LOG_INFO_FMT("content_length: %d\n", response.content_length);
+    shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
+    script_context_t *ctx = script_context_share();
+}
+
+int script_eval_uri(ustring_view uri) {
+    if (strncasecmp(uri.base.data, "http", 4) == 0) {
+        url_t url = url_parse(uri);
+        if (!url.valid) {
+            LOG_WARNING_FMT("invalid url: %s\n", uri.base.data);
+            return -1;
+        }
+        LOG_INFO_FMT("download remote script: %s\n", uri.base.data);
+        url_dump(url);
+        net_download_async(url, on_remote_script_download);
+    } else {
+        ustring content = io_read_file(uri);
+        shared_context.invalid_script = script_eval(content, uri) != 0;
+        ustring_free(&content);
+    }
+    return 0;
+}
+
 void script_context_loop_tick() {
     if (shared_context.invalid_script) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -94,7 +123,9 @@ void script_context_loop_tick() {
     if (script_context_internal() == NULL)
         return;
 
-    script_module_browser_tick();
+    script_browser_tick();
+    ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
+    ui_renderer_render(&shared_context.renderer);
 
     int finished;
     JSContext *ctx;

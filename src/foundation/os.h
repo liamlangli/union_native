@@ -14,7 +14,26 @@ enum CURSOR_TYPE {
     CURSOR_ResizeV = 0x00036006
 };
 
-extern GLFWwindow* os_create_window(ustring title, int width, int height);
-extern void os_run_window_loop(GLFWwindow *window, void (*fn)(void));
-extern void os_set_window_cursor(GLFWwindow *window, int cursor_type);
-extern void os_close_window(GLFWwindow *window);
+typedef struct os_window_t {
+    ustring title;
+    int width;
+    int height;
+    int framebuffer_width;
+    int framebuffer_height;
+
+    f64 mouse_x, mouse_y;
+
+    f64 display_ratio;
+    f64 ui_scale;
+    void* native_window;
+} os_window_t;
+
+extern os_window_t* os_window_create(ustring title, int width, int height);
+extern void os_window_run_loop(os_window_t *window, void (*fn)(void));
+extern void os_window_set_cursor(os_window_t *window, int cursor_type);
+extern void os_window_close(os_window_t *window);
+
+extern void os_window_tn_resize(os_window_t *window, int width, int height);
+
+extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
+extern ustring os_window_get_clipboard(os_window_t *window);

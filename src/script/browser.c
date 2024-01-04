@@ -279,29 +279,29 @@ static JSValue js_performance_now(JSContext *ctx, JSValueConst _, int argc, JSVa
 }
 
 static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst _) {
-    return JS_NewInt32(ctx, script_context_share()->width);
+    return JS_NewInt32(ctx, script_context_share()->window->width);
 }
 
 static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst _) {
-    return JS_NewInt32(ctx, script_context_share()->height);
+    return JS_NewInt32(ctx, script_context_share()->window->height);
 }
 
 static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToInt32(ctx, &script_context_share()->width, val);
+    JS_ToInt32(ctx, &script_context_share()->window->width, val);
     return JS_UNDEFINED;
 }
 
 static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToInt32(ctx, &script_context_share()->height, val);
+    JS_ToInt32(ctx, &script_context_share()->window->height, val);
     return JS_UNDEFINED;
 }
 
 static JSValue js_get_window_device_pixel_ratio(JSContext *ctx, JSValueConst _) {
-    return JS_NewFloat64(ctx, script_context_share()->display_ratio);
+    return JS_NewFloat64(ctx, script_context_share()->window->display_ratio);
 }
 
 static JSValue js_set_window_device_pixel_ratio(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToFloat64(ctx, &script_context_share()->display_ratio, val);
+    JS_ToFloat64(ctx, &script_context_share()->window->display_ratio, val);
     return JS_UNDEFINED;
 }
 
@@ -544,13 +544,8 @@ static JSValue js_weak_ref_ctor(JSContext *ctx, JSValueConst new_target, int arg
     if (ctx == NULL || rt == NULL)                                                                                             \
         return;
 
-void script_window_resize(int width, int height) {
+void script_browser_window_resize(int width, int height) {
     CHECK_SCOPE
-
-    script_context_share()->width = width;
-    script_context_share()->height = height;
-    script_context_share()->framebuffer_width = (int)(width * script_context_share()->display_ratio);
-    script_context_share()->framebuffer_height = (int)(height * script_context_share()->display_ratio);
     int index = (int)shgeti(browser.window_event_listeners, resize_event);
     if (index == -1)
         return;
@@ -568,21 +563,18 @@ void script_window_resize(int width, int height) {
     JS_FreeValue(ctx, event);
 }
 
-void script_window_mouse_move(double x, double y) {
+void script_browser_window_mouse_move(double x, double y) {
     CHECK_SCOPE
 
     script_context_t *context = script_context_share();
-    context->mouse_x = x / context->display_ratio;
-    context->mouse_y = y / context->display_ratio;
-
     int index = (int)shgeti(browser.window_event_listeners, mousemove_event);
     if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mousemove_event));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->mouse_x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->mouse_y));
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->window->mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->window->mouse_y));
     js_scope *scopes = browser.window_event_listeners[index].value;
 
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
@@ -594,9 +586,10 @@ void script_window_mouse_move(double x, double y) {
     JS_FreeValue(ctx, event);
 }
 
-void script_window_mouse_down(int button) {
+void script_browser_window_mouse_down(int button) {
     CHECK_SCOPE
 
+    script_context_t *context = script_context_share();
     int index = (int)shgeti(browser.window_event_listeners, mousedown_event);
     if (index == -1)
         return;
@@ -604,8 +597,8 @@ void script_window_mouse_down(int button) {
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mousedown_event));
     JS_SetPropertyStr(ctx, event, "button", JS_NewInt32(ctx, button));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, script_context_share()->mouse_x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, script_context_share()->mouse_y));
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->window->mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->window->mouse_y));
     js_scope *scopes = browser.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
@@ -616,9 +609,10 @@ void script_window_mouse_down(int button) {
     JS_FreeValue(ctx, event);
 }
 
-void script_window_mouse_up(int button) {
+void script_browser_window_mouse_up(int button) {
     CHECK_SCOPE
 
+    script_context_t *context = script_context_share();
     int index = (int)shgeti(browser.window_event_listeners, mouseup_event);
     if (index == -1)
         return;
@@ -626,8 +620,8 @@ void script_window_mouse_up(int button) {
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, mouseup_event));
     JS_SetPropertyStr(ctx, event, "button", JS_NewInt32(ctx, button));
-    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, script_context_share()->mouse_x));
-    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, script_context_share()->mouse_y));
+    JS_SetPropertyStr(ctx, event, "clientX", JS_NewFloat64(ctx, context->window->mouse_x));
+    JS_SetPropertyStr(ctx, event, "clientY", JS_NewFloat64(ctx, context->window->mouse_y));
     js_scope *scopes = browser.window_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
@@ -636,7 +630,7 @@ void script_window_mouse_up(int button) {
     JS_FreeValue(ctx, event);
 }
 
-void script_window_mouse_scroll(double x, double y) {
+void script_browser_window_mouse_scroll(double x, double y) {
     CHECK_SCOPE
 
     int index = (int)shgeti(browser.window_event_listeners, wheel_event);
@@ -656,7 +650,7 @@ void script_window_mouse_scroll(double x, double y) {
     JS_FreeValue(ctx, event);
 }
 
-void script_document_key_down(int key) {
+void script_browser_document_key_down(int key) {
     CHECK_SCOPE
 
     int index = (int)shgeti(browser.document_event_listeners, keydown_event);
@@ -675,7 +669,7 @@ void script_document_key_down(int key) {
     JS_FreeValue(ctx, event);
 }
 
-void script_document_key_up(int key) {
+void script_browser_document_key_up(int key) {
     CHECK_SCOPE
 
     int index = (int)shgeti(browser.document_event_listeners, keyup_event);
@@ -694,7 +688,7 @@ void script_document_key_up(int key) {
     JS_FreeValue(ctx, event);
 }
 
-void script_module_browser_tick(void) {
+void script_browser_tick(void) {
     CHECK_SCOPE
 
     JSValue ret;
@@ -722,7 +716,7 @@ void create_classes(JSRuntime *rt) {
     JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }
 
-void script_module_browser_register(void) {
+void script_browser_register(void) {
     CHECK_SCOPE
 
     JSValue global = JS_GetGlobalObject(ctx);
@@ -806,4 +800,4 @@ void script_listeners_cleanup() {
     }
 }
 
-void script_module_browser_cleanup(void) { script_listeners_cleanup(); }
+void script_browser_cleanup(void) { script_listeners_cleanup(); }

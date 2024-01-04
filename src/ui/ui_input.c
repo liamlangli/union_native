@@ -91,11 +91,11 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(state, KEY_C)) {
-            io_clipboard_set(input->label.text);
+            os_window_set_clipboard(script_context_share()->window, input->label.text);
             hmdel(state->key_press, KEY_C);
         }
         if (ui_state_is_key_press(state, KEY_X)) {
-            io_clipboard_set(ustring_view_sub_view(&input->label.text, from, to));
+            os_window_set_clipboard(script_context_share()->window, ustring_view_sub_view(&input->label.text, from, to));
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;
             input->label.start_index = from;
@@ -106,10 +106,10 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         if (ui_state_is_key_press(state, KEY_V)) {
             if (from != to)
                 ustring_view_erase(&input->label.text, from, to);
-            ustring pasted = io_clipboard_get();
+            ustring pasted = os_window_get_clipboard(script_context_share()->window);
             ustring_view_insert_ustring(&input->label.text, from, &pasted);
-            input->label.cursor_index = from + io_clipboard_get().length;
-            input->label.start_index = from + io_clipboard_get().length;
+            input->label.cursor_index = from + pasted.length;
+            input->label.start_index = from + pasted.length;
             input->label.render_selected = false;
             ui_label_update_text(&input->label, input->label.text);
             hmdel(state->key_press, KEY_V);
