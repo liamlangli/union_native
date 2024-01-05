@@ -136,14 +136,12 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
     input_rect.y = rect.y + rect.h - input_rect.h;
     input_rect = ui_rect_shrink(input_rect, 4.f, 4.f);
     if (ui_input(state, &console_input, ui_theme_shared()->panel_0, input_rect, 0, 0)) {
-        // LOG_INFO_FMT("try load script: %s\n", console_input.label.text.base.data);
-        // script_init(console_input.label.text);
         ustring_view text = console_input.label.text;
         if (ustring_view_start_with_ustring(text, command_open)) {
             int start = command_open.length;
             while (start < text.length && text.base.data[start] == ' ') start++;
             ustring_view uri = ustring_view_sub_view(&text, start, text.length - start);
-            printf("try load script: %s\n", uri.base.data);
+            LOG_INFO_FMT("try load script: {}", uri.base.data);
             script_eval_uri(uri);
         } else {
             ustring content = ustring_view_to_ustring(&text);
@@ -219,7 +217,7 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
 //     if (strncasecmp(uri.base.data, "http", 4) == 0) {
 //         url_t url = url_parse(uri);
 //         if (!url.valid) {
-//             LOG_WARNING_FMT("invalid url: %s\n", uri.base.data);
+//             LOG_WARN_FMT("invalid url: %s\n", uri.base.data);
 //             return;
 //         }
 //         LOG_INFO_FMT("download remote script: %s\n", uri.base.data);

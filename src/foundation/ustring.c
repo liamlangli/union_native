@@ -129,6 +129,25 @@ u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b) {
     return new_size;
 }
 
+u32 ustring_view_insert_STR_length(ustring_view *a, u32 index, const char *b, u32 length) {
+    if (length <= 0)
+        return a->length;
+    u32 new_size = a->start + a->length + length;
+    ustring_safe_growth(&a->base, new_size);
+    memmove((void *)a->base.data + a->start + index + length, (void *)a->base.data + a->start + index, a->length - index);
+    memcpy((void *)a->base.data + a->start + index, b, length);
+    a->length += length;
+    return new_size;
+}
+
+u32 ustring_view_insert_STR(ustring_view *a, u32 index, const char *b) {
+    return ustring_view_insert_STR_length(a, index, b, (u32)strlen(b));
+}
+
+u32 ustring_view_insert_STR_range(ustring_view *a, u32 index, const char *b, u32 start, u32 end) {
+    return ustring_view_insert_STR_length(a, index, b + start, end - start);
+}
+
 u32 ustring_view_append_STR(ustring_view *a, const char *b) {
     u32 b_length = (u32)strlen(b);
     if (b_length <= 0)

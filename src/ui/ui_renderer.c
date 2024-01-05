@@ -1,5 +1,6 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
+#include "foundation/logger.h"
 #include "script/script.h"
 
 #include <GLES3/gl3.h>
@@ -137,7 +138,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     if (length > 0) {
         char *log = (char *)malloc(length);
         glGetShaderInfoLog(vert_shader, length, NULL, log);
-        printf("vert shader compile log: %s\n", log);
+        LOG_ERROR_FMT("vert shader compile log: {}", log);
         free(log);
     }
 
@@ -148,7 +149,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     if (length > 0) {
         char *log = (char *)malloc(length);
         glGetShaderInfoLog(frag_shader, length, NULL, log);
-        printf("frag shader compile log: %s\n", log);
+        LOG_ERROR_FMT("frag shader compile log: {}", log);
         free(log);
     }
 
@@ -161,7 +162,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     if (length > 0) {
         char *log = (char *)malloc(length);
         glGetProgramInfoLog(program, length, NULL, log);
-        printf("program link log: %s\n", log);
+        LOG_ERROR_FMT("program link log: {}", log);
         free(log);
     }
 

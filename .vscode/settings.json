@@ -36,7 +36,8 @@
         "vector": "c",
         "memory": "c",
         "system_error": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "numbers": "c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",

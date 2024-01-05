@@ -28,7 +28,7 @@ const char * gl_err_msg(GLenum err) {
 static int gl_check_error(const char *msg, int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        fprintf(stderr, "gl error: %s, %s, %d\n", gl_err_msg(err), msg, line);
+        LOG_ERROR_FMT("gl error: {}, {}, {d}", gl_err_msg(err), msg, line);
         return 1;
     }
     return 0;
@@ -40,7 +40,7 @@ static int gl_get_shader_info_log(GLuint shader) {
     if (length > 0) {
         char *info_log = (char *)malloc(length);
         glGetShaderInfoLog(shader, length, NULL, info_log);
-        printf("shader info log: %s\n", info_log);
+        LOG_WARN_FMT("shader info log: {}", info_log);
         free(info_log);
         return -1;
     }
@@ -62,7 +62,7 @@ static JSValue js_gl_get_parameter(JSContext *ctx, JSValueConst this_val, int ar
     GLint param;
     glGetIntegerv(pname, &param);
     if (gl_check_error("glGetIntegerv", __LINE__) != 0) {
-        printf("glGetIntegerv error: %d\n", pname);
+        LOG_ERROR_FMT("glGetIntegerv error: {d}", pname);
         return JS_UNDEFINED;
     }
     return JS_NewInt32(ctx, param);
@@ -187,7 +187,6 @@ static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int ar
         const char *str = JS_ToCString(ctx, source);
         glShaderSource(shader, 1, &str, NULL);
         if (gl_check_error("glShaderSource", __LINE__) != 0) {
-            // printf("glShaderSource error: %s\n", str);
             gl_get_shader_info_log(shader);
         }
         JS_FreeCString(ctx, str);
@@ -254,7 +253,7 @@ static JSValue js_gl_link_program(JSContext *ctx, JSValueConst this_val, int arg
 
     GLuint err = glGetError();
     if (err != GL_NO_ERROR) {
-        fprintf(stderr, "glLinkProgram error: %d\n", err);
+        LOG_ERROR_FMT("glLinkProgram error: {d}", err);
     }
 
     return JS_UNDEFINED;
@@ -273,7 +272,7 @@ static JSValue js_gl_get_uniform_block_index(JSContext *ctx, JSValueConst this_v
     const char *uniformBlockName = JS_ToCString(ctx, argv[1]);
     GLuint index = glGetUniformBlockIndex(program, uniformBlockName);
     if (index == GL_INVALID_INDEX) {
-        fprintf(stderr, "invalid uniform block name: %s\n", uniformBlockName);
+        LOG_ERROR_FMT("invalid uniform block name: {}", uniformBlockName);
     }
 
     JS_FreeCString(ctx, uniformBlockName);

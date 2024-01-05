@@ -1,4 +1,5 @@
 #include "foundation/db.h"
+#include "foundation/logger.h"
 
 #include <zip.h>
 #include <leveldb/c.h>
@@ -26,7 +27,7 @@ db_t db_open(ustring name) {
     char *err = NULL;
     conn->db = leveldb_open(conn->o, name.data, &err);
     if (err != NULL) {
-        printf("db open error: %s\n", err);
+        LOG_ERROR_FMT("db open error: {}", err);
         leveldb_free(err);
         return db;
     }
@@ -55,7 +56,7 @@ udata db_get(db_t db, ustring key) {
     char *err = NULL;
     char *value = leveldb_get(conn->db, conn->or, key.data, key.length, &len, &err);
     if (err != NULL) {
-        printf("db read error: %s\n", err);
+        LOG_ERROR_FMT("db read error: {}", err);
         leveldb_free(err);
         return udata_NULL;
     }
@@ -69,7 +70,7 @@ bool db_put(db_t db, ustring key, udata value) {
     char *err = NULL;
     leveldb_put(conn->db, conn->ow, key.data, key.length, value.data, value.length, &err);
     if (err != NULL) {
-        printf("db write error: %s\n", err);
+        LOG_ERROR_FMT("db write error: {}", err);
         leveldb_free(err);
         return false;
     }
@@ -83,7 +84,7 @@ bool db_delete(db_t db, ustring key) {
     char *err = NULL;
     leveldb_delete(conn->db, conn->ow, key.data, key.length, &err);
     if (err != NULL) {
-        printf("db delete error: %s\n", err);
+        LOG_ERROR_FMT("db delete error: {}", err);
         leveldb_free(err);
         return false;
     }

@@ -64,6 +64,9 @@ ustring ustring_view_to_ustring(ustring_view *v); // no memory allocation
 u32 ustring_view_erase(ustring_view *v, u32 from, u32 to); // no memory allocation
 u32 ustring_view_insert_ustring_view(ustring_view *a, u32 index, ustring_view *b); // may allocate new memory
 u32 ustring_view_insert_ustring(ustring_view *a, u32 index, ustring *b); // may allocate new memory
+u32 ustring_view_insert_STR_length(ustring_view *a, u32 index, const char *b, u32 length); // may allocate new memory
+u32 ustring_view_insert_STR_range(ustring_view *a, u32 index, const char *b, u32 start, u32 end); // may allocate new memory
+u32 ustring_view_insert_STR(ustring_view *a, u32 index, const char *b); // may allocate new memory
 u32 ustring_view_set_ustring_view(ustring_view *a, ustring_view *b); // may allocate new memory
 u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b); // may allocate new memory
 u32 ustring_view_append_STR(ustring_view *a, const char *b);  // may allocate new memory

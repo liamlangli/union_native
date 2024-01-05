@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 static void error_callback(int error, const char* description) {
-    LOG_ERROR_FMT("Error: %s\n", description);
+    LOG_ERROR_FMT("Error: {}", description);
 }
 
 static int cursor_type = CURSOR_Default;
@@ -68,10 +68,6 @@ static void os_window_on_key_action(os_window_t* window, int key, int scancode, 
     script_context_t *ctx = script_context_shared();
     if (ctx == NULL) return;
     ui_state_t *state = &ctx->state;
-    //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
-    // if (key == KEY_GRAVE_ACCENT && action == GLFW_RELEASE) {
-    //     ui_visible = !ui_visible;
-    // }
 
     if (action == GLFW_PRESS) {
         ui_state_key_press(state, key);
@@ -91,7 +87,7 @@ static void os_window_on_key_action(os_window_t* window, int key, int scancode, 
 
     if (action == GLFW_RELEASE && ((control_pressed && alt_pressed && key == KEY_I) || key == KEY_F12)) {
         ui_dev_tool_set_visible(&ctx->dev_tool, !ctx->dev_tool.visible);
-        printf("toggle dev tool\n");
+        LOG_INFO("toggle dev tool");
     }
 
     if (control_pressed && ui_state_is_key_pressed(state, KEY_Q)) {
@@ -225,10 +221,10 @@ os_window_t* os_window_create(ustring title, int width, int height) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    LOG_INFO_FMT("USER_AGENT: %s\n", USER_AGENT);
-    LOG_INFO_FMT("GL_VERSION: %s\n", glGetString(GL_VERSION));
-    LOG_INFO_FMT("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-    LOG_INFO_FMT("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
+    LOG_INFO_FMT("USER_AGENT: {}", USER_AGENT);
+    LOG_INFO_FMT("GL_VERSION: {}", glGetString(GL_VERSION));
+    LOG_INFO_FMT("GL_RENDERER: {}", glGetString(GL_RENDERER));
+    LOG_INFO_FMT("GL_VENDOR: {}", glGetString(GL_VENDOR));
 
     default_cursor = glfwCreateStandardCursor(CURSOR_Default);
     text_input_cursor = glfwCreateStandardCursor(CURSOR_Text);

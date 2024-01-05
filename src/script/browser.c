@@ -253,7 +253,7 @@ JSValue js_cancel_animation_frame(JSContext *context, JSValueConst this_val, int
 static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "\x1b[32m[INFO]\x1b[0m %s\n", str);
+        LOG_INFO(str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -262,7 +262,7 @@ static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueC
 static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "\x1b[33m[WARN]\x1b[0m %s\n", str);
+        LOG_WARN(str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -271,7 +271,7 @@ static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValue
 static JSValue js_console_error(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     for (int i = 0; i < argc; ++i) {
         const char *str = JS_ToCString(ctx, argv[i]);
-        fprintf(stdout, "\x1b[31m[ERROR]\x1b[0m %s\n", str);
+        LOG_ERROR("{}", str);
         JS_FreeCString(ctx, str);
     }
     return JS_UNDEFINED;
@@ -512,7 +512,7 @@ static JSClassDef js_text_decode_class = {
 static JSValue js_text_decoder_decode(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
     if (argc >= 1) {
         const char *str = JS_ToCString(ctx, argv[0]);
-        fprintf(stdout, "text_decoder_decode: %s\n", str);
+        LOG_INFO("text_decoder_decode: {}", str);
     }
 
     return JS_UNDEFINED;

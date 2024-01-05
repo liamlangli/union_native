@@ -67,7 +67,7 @@ int script_eval(ustring source, ustring_view filename) {
     int ret;
 
     if (source.length == 0) {
-        printf("source is empty\n");
+        LOG_INFO("source is empty");
         return -1;
     }
 
@@ -88,9 +88,9 @@ int script_eval(ustring source, ustring_view filename) {
 }
 
 static void on_remote_script_download(net_request_t request, net_response_t response) {
-    LOG_INFO_FMT("download remote script: %s\n", request.url.url.base.data);
-    LOG_INFO_FMT("status: %d\n", response.status);
-    LOG_INFO_FMT("content_length: %d\n", response.content_length);
+    LOG_INFO_FMT("download remote script: {v}", request.url);
+    LOG_INFO_FMT("status: {d}", response.status);
+    LOG_INFO_FMT("content_length: {d}", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
     script_context_t *ctx = script_context_shared();
 
@@ -102,10 +102,10 @@ int script_eval_uri(ustring_view uri) {
     if (strncasecmp(uri.base.data, "http", 4) == 0) {
         url_t url = url_parse(uri);
         if (!url.valid) {
-            LOG_WARNING_FMT("invalid url: %s\n", uri.base.data);
+            LOG_WARN_FMT("invalid url: {v}", uri);
             return -1;
         }
-        LOG_INFO_FMT("download remote script: %s\n", uri.base.data);
+        LOG_INFO_FMT("download remote script: {v}", uri);
         url_dump(url);
         net_download_async(url, on_remote_script_download);
     } else {

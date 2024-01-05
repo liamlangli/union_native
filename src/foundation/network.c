@@ -1,5 +1,6 @@
 #include "foundation/network.h"
 #include "foundation/global.h"
+#include "foundation/logger.h"
 #include "foundation/ustring.h"
 #include <stdlib.h>
 
@@ -99,14 +100,14 @@ end:
 }
 
 void url_dump(url_t url) {
-    printf("url_t {\n");
-    printf("  valid: %d\n", url.valid);
-    printf("  protocol: %.*s\n", url.protocol.length, url.protocol.base.data + url.protocol.start);
-    printf("  host: %.*s\n", url.host.length, url.host.base.data + url.host.start);
-    printf("  port: %.*s\n", url.port.length, url.port.base.data + url.port.start);
-    printf("  path: %.*s\n", url.path.length, url.path.base.data + url.path.start);
-    printf("  query: %.*s\n", url.query.length, url.query.base.data + url.query.start);
-    printf("}\n");
+    LOG_INFO("url_t {");
+    LOG_INFO_FMT("  valid: {d}", url.valid);
+    LOG_INFO_FMT("  protocol: {v}", url.protocol);
+    LOG_INFO_FMT("  host: {v}", url.host);
+    LOG_INFO_FMT("  port: {v}", url.port);
+    LOG_INFO_FMT("  path: {v}", url.path);
+    LOG_INFO_FMT("  query: {v}", url.query);
+    LOG_INFO("}");
 }
 
 static ustring_view net_url_to_req_body(url_t url) {
@@ -127,13 +128,13 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
-    printf("%.*s\n", body.length, body.base.data);
+    LOG_INFO_FMT("{v}", body);
     return body;
 }
 
 static void on_write(uv_write_t *write, int status) {
     if (status < 0) {
-        fprintf(stderr, "write error %s\n", uv_err_name(status));
+        LOG_ERROR_FMT("write error {}\n", uv_err_name(status));
     }
     free(write);
 }
@@ -145,7 +146,7 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 
 static void on_close(uv_handle_t *handle) {
     free(handle);
-    printf("closed.\n");
+    LOG_INFO("closed.\n");
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
@@ -200,7 +201,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     net_session_t *session = stream->data;
     if (nread < 0) {
         if (nread != UV_EOF) {
-            fprintf(stderr, "read error %s\n", uv_err_name((int)nread));
+            LOG_ERROR_FMT("read error {}", uv_err_name((int)nread));
         }
         session->cb(session->request, session->response);
         uv_close((uv_handle_t *)stream, on_close);
@@ -226,10 +227,10 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
 static void on_connect(uv_connect_t *conn, int status) {
     if (status < 0) {
-        fprintf(stderr, "connection error %s\n", uv_err_name(status));
+        LOG_ERROR_FMT("connection error {}", uv_err_name(status));
         return;
     }
-    printf("connected to server.\n");
+    LOG_INFO("connected to server.");
 
     net_session_t *session = conn->data;
     uv_stream_t *stream = conn->handle;
@@ -254,7 +255,7 @@ int net_download_async(url_t url, url_session_cb cb) {
     ustring_free(&port);
 
     if (r) {
-        fprintf(stderr, "getaddrinfo call error %s\n", uv_err_name(r));
+        LOG_ERROR_FMT("getaddrinfo call error {}", uv_err_name(r));
         return 1;
     }
 

@@ -7,7 +7,7 @@
 
 enum LOG_TYPE {
     LOG_INFO,
-    LOG_WARNING,
+    LOG_WARN,
     LOG_ERROR
 };
 
@@ -40,8 +40,8 @@ void logger_input(logger_t *logger, int type, const char* message);
 void logger_format_input(logger_t *logger, int type, const char* fmt, ...);
 
 #define LOG_INFO(...) logger_format_input(logger_global(), LOG_INFO, __VA_ARGS__)
-#define LOG_WARNING(...) logger_format_input(logger_global(), LOG_WARNING, __VA_ARGS__)
+#define LOG_WARN(...) logger_format_input(logger_global(), LOG_WARN, __VA_ARGS__)
 #define LOG_ERROR(...) logger_format_input(logger_global(), LOG_ERROR, __VA_ARGS__)
 #define LOG_INFO_FMT(fmt, ...) logger_format_input(logger_global(), LOG_INFO, fmt, __VA_ARGS__)
-#define LOG_WARNING_FMT(fmt, ...) logger_format_input(logger_global(), LOG_WARNING, fmt, __VA_ARGS__)
+#define LOG_WARN_FMT(fmt, ...) logger_format_input(logger_global(), LOG_WARN, fmt, __VA_ARGS__)
 #define LOG_ERROR_FMT(fmt, ...) logger_format_input(logger_global(), LOG_ERROR, fmt, __VA_ARGS__)

@@ -89,7 +89,6 @@ u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift) {
                 key = '\t';
                 break;
             default:
-                // fprintf(stderr, "Unknown key: %d\n", key);
                 valid = false;
                 break;
             }
