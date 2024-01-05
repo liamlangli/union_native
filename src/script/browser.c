@@ -282,29 +282,29 @@ static JSValue js_performance_now(JSContext *ctx, JSValueConst _, int argc, JSVa
 }
 
 static JSValue js_get_window_inner_width(JSContext *ctx, JSValueConst _) {
-    return JS_NewInt32(ctx, script_context_share()->window->width);
+    return JS_NewInt32(ctx, script_context_shared()->window->width);
 }
 
 static JSValue js_set_window_inner_width(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToInt32(ctx, &script_context_share()->window->width, val);
+    JS_ToInt32(ctx, &script_context_shared()->window->width, val);
     return JS_UNDEFINED;
 }
 
 static JSValue js_get_window_inner_height(JSContext *ctx, JSValueConst _) {
-    return JS_NewInt32(ctx, script_context_share()->window->height);
+    return JS_NewInt32(ctx, script_context_shared()->window->height);
 }
 
 static JSValue js_set_window_inner_height(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToInt32(ctx, &script_context_share()->window->height, val);
+    JS_ToInt32(ctx, &script_context_shared()->window->height, val);
     return JS_UNDEFINED;
 }
 
 static JSValue js_get_window_device_pixel_ratio(JSContext *ctx, JSValueConst _) {
-    return JS_NewFloat64(ctx, script_context_share()->window->display_ratio);
+    return JS_NewFloat64(ctx, script_context_shared()->window->display_ratio);
 }
 
 static JSValue js_set_window_device_pixel_ratio(JSContext *ctx, JSValueConst _, JSValueConst val) {
-    JS_ToFloat64(ctx, &script_context_share()->window->display_ratio, val);
+    JS_ToFloat64(ctx, &script_context_shared()->window->display_ratio, val);
     return JS_UNDEFINED;
 }
 
@@ -569,7 +569,7 @@ void script_browser_window_resize(int width, int height) {
 void script_browser_window_mouse_move(double x, double y) {
     CHECK_SCOPE
 
-    script_context_t *context = script_context_share();
+    script_context_t *context = script_context_shared();
     int index = (int)shgeti(browser.window_event_listeners, mousemove_event);
     if (index == -1)
         return;
@@ -592,7 +592,7 @@ void script_browser_window_mouse_move(double x, double y) {
 void script_browser_window_mouse_down(int button) {
     CHECK_SCOPE
 
-    script_context_t *context = script_context_share();
+    script_context_t *context = script_context_shared();
     int index = (int)shgeti(browser.window_event_listeners, mousedown_event);
     if (index == -1)
         return;
@@ -615,7 +615,7 @@ void script_browser_window_mouse_down(int button) {
 void script_browser_window_mouse_up(int button) {
     CHECK_SCOPE
 
-    script_context_t *context = script_context_share();
+    script_context_t *context = script_context_shared();
     int index = (int)shgeti(browser.window_event_listeners, mouseup_event);
     if (index == -1)
         return;

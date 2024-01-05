@@ -14,12 +14,12 @@
 void ui_input_init(ui_input_t *input, ustring_view text) {
     ui_label_init(&input->label, text);
     ui_element_init(&input->element);
-    input->radiuses = (float4){6.f, 6.f, 6.f, 6.f};
+    input->radiuses = (float4){4.f, 4.f, 4.f, 4.f};
     input->editing = false;
     input->outline = true;
     input->label.element.constraint.alignment = CENTER_VERTICAL | LEFT;
     input->label.element.constraint.margin.left = 5.f;
-    input->cursor_style = ui_theme_share()->text;
+    input->cursor_style = ui_theme_shared()->text;
 }
 
 void ui_input_render_cursor(ui_state_t *state, ui_input_t *input, ui_rect rect, u32 clip) {
@@ -93,11 +93,11 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(state, KEY_C)) {
-            os_window_set_clipboard(script_context_share()->window, input->label.text);
+            os_window_set_clipboard(script_context_shared()->window, input->label.text);
             hmdel(state->key_press, KEY_C);
         }
         if (ui_state_is_key_press(state, KEY_X)) {
-            os_window_set_clipboard(script_context_share()->window, ustring_view_sub_view(&input->label.text, from, to));
+            os_window_set_clipboard(script_context_shared()->window, ustring_view_sub_view(&input->label.text, from, to));
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;
             input->label.start_index = from;
@@ -108,7 +108,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         if (ui_state_is_key_press(state, KEY_V)) {
             if (from != to)
                 ustring_view_erase(&input->label.text, from, to);
-            ustring pasted = os_window_get_clipboard(script_context_share()->window);
+            ustring pasted = os_window_get_clipboard(script_context_shared()->window);
             ustring_view_insert_ustring(&input->label.text, from, &pasted);
             input->label.cursor_index = from + pasted.length;
             input->label.start_index = from + pasted.length;
@@ -237,7 +237,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
         stroke_round_rect_pre_corner(state->renderer, 0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
     }
 
-    ui_label(state, &input->label, ui_theme_share()->text, rect, layer_index, clip);
+    ui_label(state, &input->label, ui_theme_shared()->text, rect, layer_index, clip);
     if (active || focus) {
         ui_input_render_cursor(state, input, rect, clip);
     }

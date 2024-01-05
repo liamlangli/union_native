@@ -19,7 +19,7 @@ static GLFWcursor *resize_h_cursor;
 static GLFWcursor *resize_v_cursor;
 
 static void os_window_on_mouse_button(os_window_t* window, int button, int action, int mods) {
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     if (ctx == NULL) return;
     ui_state_t *state = &ctx->state;
 
@@ -56,7 +56,7 @@ static void os_window_on_mouse_button(os_window_t* window, int button, int actio
 }
 
 static void os_window_on_scroll(os_window_t* window, double offset_x, double offset_y) {
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     ui_state_t *state = &ctx->state;
     if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(offset_x, offset_y);
     const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
@@ -65,7 +65,7 @@ static void os_window_on_scroll(os_window_t* window, double offset_x, double off
 }
 
 static void os_window_on_key_action(os_window_t* window, int key, int scancode, int action, int mods) {
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     if (ctx == NULL) return;
     ui_state_t *state = &ctx->state;
     //printf("key: %d, scancode: %d, action: %d, mods: %d\n", key, scancode, action, mods);
@@ -100,7 +100,7 @@ static void os_window_on_key_action(os_window_t* window, int key, int scancode, 
 }
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     glfwGetFramebufferSize(window->native_window, &window->framebuffer_width, &window->framebuffer_height);
     window->display_ratio = (f64)window->framebuffer_height / (f64)window->height;
     f32 ui_width = (f32)(width / window->ui_scale * window->display_ratio);
@@ -124,7 +124,7 @@ static int nb_frames = 0;
 static void os_window_tick(os_window_t *window) {
     double mouse_x, mouse_y;
     int width, height, framebuffer_width, framebuffer_height;
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     ui_state_t *state = &ctx->state;
 
     glfwGetCursorPos((GLFWwindow*)window->native_window, &mouse_x, &mouse_y);

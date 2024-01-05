@@ -26,7 +26,7 @@ typedef struct script_context_t {
 void script_context_init(os_window_t *window);
 void script_context_terminate(void);
 
-script_context_t *script_context_share(void);
+script_context_t *script_context_shared(void);
 
 void *script_context_internal(void);
 void *script_runtime_internal(void);

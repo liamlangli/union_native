@@ -20,7 +20,6 @@ typedef struct ui_renderer_t {
     u32 index_offset, primitive_offset;
     u32 last_index_offset, last_primitive_offset;
     u32 preserved_primitive_offset;
-    ui_font system_font;
 
     // gpu side
     u32 program;

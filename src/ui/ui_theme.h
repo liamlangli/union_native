@@ -3,6 +3,7 @@
 #include "ui/ui_type.h"
 
 typedef struct ui_theme_t {
+    ui_style bg;
     ui_style panel_0;
     ui_style panel_1;
     ui_style panel_2;
@@ -20,4 +21,4 @@ typedef struct ui_theme_t {
     ui_style dev_tool_input;
 } ui_theme_t;
 
-ui_theme_t *ui_theme_share();
+ui_theme_t *ui_theme_shared();

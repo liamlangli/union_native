@@ -15,12 +15,7 @@ float2 ui_font_compute_size_and_offset(ui_font *font, ustring_view text, f32 *of
     return size;
 }
 
-static ui_font _system_font;
-ui_font *ui_font_system_font() {
-    static bool system_font_initialized = false;
-    if (system_font_initialized)
-        return &_system_font;
-    ui_font_init(&_system_font, msdf_font_system_font(), 16);
-    system_font_initialized = true;
+static ui_font _system_font = {0};
+ui_font *ui_font_shared() {
     return &_system_font;
 }

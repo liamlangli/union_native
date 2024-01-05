@@ -41,7 +41,7 @@ void ui_scroll_view(ui_state_t *state, ui_scroll_view_t *view, ui_rect rect, u32
         .w = UI_SCROLL_BAR_DEFAULT_WIDTH,
         .h = scroll_bar_height};
     
-    const ui_theme_t *theme = ui_theme_share();
+    const ui_theme_t *theme = ui_theme_shared();
     ui_style style = theme->scroll_bar;
     style.color = active ? theme->scroll_bar.active_color : hover ? theme->scroll_bar.hover_color : theme->scroll_bar.color;
     fill_round_rect(state->renderer, layer_index, style, bar_rect, active || hover ? 2.f : 1.0f, clip, TRIANGLE_SOLID);

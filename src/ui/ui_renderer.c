@@ -78,8 +78,8 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     renderer->primitive_offset = 0;
     renderer->preserved_primitive_offset = 0;
 
-    ui_font_init(&renderer->system_font, msdf_font_system_font(), 16);
-    ui_renderer_write_msdf_font(renderer, renderer->system_font.font);
+    ui_font_init(ui_font_shared(), msdf_font_system_font(), 14);
+    ui_renderer_write_msdf_font(renderer, ui_font_shared()->font);
 
     // gpu
     GLint max_texture_size = 4096;
@@ -205,7 +205,7 @@ void ui_renderer_render(ui_renderer_t *renderer) {
     if (renderer->last_index_offset <= 0)
         return;
 
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     glUseProgram(renderer->program);

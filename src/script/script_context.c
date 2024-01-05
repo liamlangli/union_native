@@ -40,7 +40,7 @@ void script_context_terminate(void) {
     db_close(shared_context.db);
 }
 
-script_context_t *script_context_share(void) { return &shared_context; }
+script_context_t *script_context_shared(void) { return &shared_context; }
 void *script_context_internal(void) { return shared_module.context; }
 void *script_runtime_internal(void) { return shared_module.runtime; }
 
@@ -92,7 +92,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     LOG_INFO_FMT("status: %d\n", response.status);
     LOG_INFO_FMT("content_length: %d\n", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
-    script_context_t *ctx = script_context_share();
+    script_context_t *ctx = script_context_shared();
 
     os_window_t *window = shared_context.window;
     os_window_on_resize(window, window->width, window->height);
