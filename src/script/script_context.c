@@ -123,11 +123,10 @@ void script_context_loop_tick() {
     if (shared_context.invalid_script) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
+        ui_renderer_render(&shared_context.renderer);
         return;
-    } 
-
-    if (script_context_internal() == NULL)
-        return;
+    }
 
     script_browser_tick();
     ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
