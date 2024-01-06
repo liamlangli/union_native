@@ -657,7 +657,7 @@ void script_browser_document_key_down(int key) {
     CHECK_SCOPE
 
     int index = (int)shgeti(browser.document_event_listeners, keydown_event);
-    if (index != -1)
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);
@@ -676,7 +676,7 @@ void script_browser_document_key_up(int key) {
     CHECK_SCOPE
 
     int index = (int)shgeti(browser.document_event_listeners, keyup_event);
-    if (index != -1)
+    if (index == -1)
         return;
 
     JSValue event = JS_NewObject(ctx);

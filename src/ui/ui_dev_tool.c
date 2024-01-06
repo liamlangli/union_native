@@ -150,7 +150,6 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
 
         ustring_view_clear(&console_input.label.text);
         ui_label_update_text(&console_input.label, console_input.label.text);
-        ui_state_set_focus(state, console_input.element.id);
     }
 }
 
