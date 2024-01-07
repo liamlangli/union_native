@@ -26,7 +26,7 @@ void ui_scroll_view(ui_state_t *state, ui_scroll_view_t *view, ui_rect rect, u32
     }
 
     if (hover || active) {
-        view->offset_y = MACRO_MIN(content_height, state->pointer_scroll.y + view->offset_y);
+        view->offset_y = MACRO_CLAMP(view->offset_y + state->pointer_scroll.y * 2.0f, 0.f, max_scroll_y);
     }
 
     if (!view->scroll_bar)
@@ -57,4 +57,14 @@ void ui_scroll_view(ui_state_t *state, ui_scroll_view_t *view, ui_rect rect, u32
             ui_state_set_active(state, 0);
         }
     }
+}
+
+u32 ui_scroll_view_item_start(ui_scroll_view_t *view, ui_rect rect) {
+    u32 start = (u32)(view->offset_y / view->item_height);
+    u32 count = ui_scroll_view_item_count(view, rect);
+    return MACRO_CLAMP(start, 0, MACRO_MAX(0, view->item_count - count));
+}
+
+u32 ui_scroll_view_item_count(ui_scroll_view_t *view, ui_rect rect) {
+    return MACRO_MIN(view->item_count, (u32)(rect.h / view->item_height) + 1);
 }

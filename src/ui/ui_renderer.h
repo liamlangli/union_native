@@ -50,7 +50,8 @@ typedef struct ui_triangle_vertex {
 
 typedef struct ui_glyph_header {
     f32 x, y;
-    u32 font, clip;
+    u32 font;
+    f32 clip;
 } ui_glyph_header;
 
 typedef struct ui_glyph_vertex {
@@ -69,6 +70,8 @@ u32 ui_layer_write_rect_vertex(ui_layer *layer, ui_rect_vertex vertex);
 u32 ui_layer_write_triangle_vertex(ui_layer *layer, ui_triangle_vertex vertex, bool advanced);
 u32 ui_layer_write_glyph_header(ui_layer *layer, ui_glyph_header header);
 u32 ui_layer_write_glyph_vertex(ui_layer *layer, ui_glyph_vertex vertex);
+u32 ui_layer_write_clip(ui_layer *layer, ui_rect rect, u32 parent);
+ui_rect ui_layer_read_clip(ui_layer *layer, u32 clip);
 void ui_layer_clear(ui_layer *layer);
 
 // renderer func
@@ -76,5 +79,3 @@ void ui_renderer_init(ui_renderer_t *renderer);
 void ui_renderer_free(ui_renderer_t *renderer);
 void ui_renderer_render(ui_renderer_t *renderer);
 
-u32 ui_renderer_write_clip(ui_renderer_t *renderer, ui_rect rect, u32 parent);
-ui_rect ui_renderer_read_clip(ui_renderer_t *renderer, u32 clip);

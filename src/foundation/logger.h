@@ -12,7 +12,7 @@ enum LOG_TYPE {
     LOG_ERROR
 };
 
-#define LOG_DEFAULT_MAX_LINES 1024
+#define LOG_DUMP_STRIDE 1024
 
 typedef struct log_line_t {
     ustring line;
@@ -29,7 +29,7 @@ typedef struct logger_config_t {
 typedef struct logger_t {
     logger_config_t config;
     log_line_t *lines;
-    u32 new_line_count;
+    u32 last_dump, new_line_count;
 } logger_t;
 
 void logger_init(logger_t *logger);

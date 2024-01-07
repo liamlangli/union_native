@@ -246,18 +246,19 @@ void ui_renderer_render(ui_renderer_t *renderer) {
     glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);
 }
 
-u32 ui_renderer_write_clip(ui_renderer_t *renderer, ui_rect rect, u32 parent) {
-    u32 offset = renderer->primitive_offset;
+u32 ui_layer_write_clip(ui_layer *layer, ui_rect rect, u32 parent) {
+    u32 offset = layer->primitive_offset;
     if (parent == 0) {
-        *(ui_rect *)(renderer->primitive_data + offset) = rect;
+        *(ui_rect *)(layer->primitive_data + offset) = rect;
     } else {
-        ui_rect parent_rect = ui_renderer_read_clip(renderer, parent);
-        *(ui_rect *)(renderer->primitive_data + offset) = ui_rect_intersect(rect, parent_rect);
+        ui_rect parent_rect = ui_layer_read_clip(layer, parent);
+        *(ui_rect *)(layer->primitive_data + offset) = ui_rect_intersect(rect, parent_rect);
     }
+    layer->primitive_offset += 4;
     return offset;
 }
 
-ui_rect ui_renderer_read_clip(ui_renderer_t *renderer, u32 clip) { return *(ui_rect *)(renderer->primitive_data + clip); }
+ui_rect ui_layer_read_clip(ui_layer *layer, u32 clip) { return *(ui_rect *)(layer->primitive_data + clip); }
 
 void ui_layer_write_index(ui_layer *layer, u32 index) { layer->index_data[layer->index_offset++] = index; }
 

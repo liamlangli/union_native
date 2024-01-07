@@ -9,13 +9,10 @@ char* itoa(int num, char* str, int base);
 char* ftoa(float num, char* str, int precision);
 
 /**
- * string:
- *   {} {[\d]:[\d]}
- * 
- * integer:
- *   {d} {[\d]d}
- * 
- * float:
- *   {f} {[\d].[\d]f}
+ *         string: {} {[\d]:[\d]}
+ *        integer: {d} {[\d]d}
+ *          float: {f} {[\d].[\d]f}
+ *   ustring_view: {v}
+ *        ustring: {s}
 */
 ustring format(const char *fmt, ...);

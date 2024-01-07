@@ -6,7 +6,6 @@
 #include "foundation/logger.h"
 #include "foundation/io.h"
 
-#include <quickjs/quickjs-libc.h>
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
 #include <uv.h>
@@ -18,6 +17,33 @@ typedef struct qjs_module {
 
 static script_context_t shared_context = {0};
 static qjs_module shared_module = {0};
+
+static void script_dump_obj(JSContext *ctx, JSValueConst val) {
+    const char *str;
+    str = JS_ToCString(ctx, val);
+    if (str) {
+        LOG_ERROR(str);
+        JS_FreeCString(ctx, str);
+    } else {
+        LOG_ERROR("[exception]]");
+    }
+}
+
+void script_dump_error(JSContext *ctx) {
+    bool is_error;
+    
+    JSValue exception = JS_GetException(ctx);
+    is_error = JS_IsError(ctx, exception);
+    script_dump_obj(ctx, exception);
+    if (is_error) {
+        JSValue val = JS_GetPropertyStr(ctx, val, "stack");
+        if (!JS_IsUndefined(val)) {
+            script_dump_obj(ctx, val);
+        }
+        JS_FreeValue(ctx, val);
+    }
+    JS_FreeValue(ctx, exception);
+} 
 
 void script_context_init(os_window_t *window) {
     shared_module.runtime = JS_NewRuntime();
@@ -78,7 +104,7 @@ int script_eval(ustring source, ustring_view filename) {
     JSValue val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 
     if (JS_IsException(val)) {
-        js_std_dump_error(ctx);
+        script_dump_error(ctx);
         ret = -1;
     } else {
         ret = 0;
@@ -103,16 +129,20 @@ int script_eval_direct(ustring source, ustring *result) {
     }
     JSValue val = JS_Eval(ctx, source.data, source.length, "<eval>", 0);
     if (JS_IsException(val)) {
-        js_std_dump_error(ctx);
+        script_dump_error(ctx);
         ret = -1;
     } else {
         ret = 0;
     }
 
+    size_t len;
+    JS_ToCStringLen(ctx, &len, val);
     const i8* str = JS_ToCString(ctx, val);
     if (str) {
-        const u32 len = strlen(str);
-        *result = ustring_range(strdup(str), len);
+        i8* data = malloc(len + 1);
+        memcpy(data, str, len);
+        data[len] = '\0';
+        *result = (ustring){.data = data, .length = (u32)len, .null_terminated = true, .is_static = false};
         JS_FreeCString(ctx, str);
     }
 

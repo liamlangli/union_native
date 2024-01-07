@@ -11,15 +11,20 @@ void ui_label_init(ui_label_t *label, ustring_view text) {
     label->start_index = 0;
     label->render_selected = false;
     memset(label->char_offsets, 0, MAX_CHAR_LENGTH);
-    ui_label_update_text(label, text);
+    ui_label_compute_size_and_offset(label);
     label->cursor_index = (int)label->text.length;
     label->text_style = ui_theme_shared()->text;
 }
 
 void ui_label_update_text(ui_label_t *label, ustring_view text) {
-    ui_font *sys_font = ui_font_shared();
-    label->text_size = ui_font_compute_size_and_offset(sys_font, text, label->char_offsets);
+    if (ustring_view_equals(&label->text, &text)) return;
     label->text = text;
+    ui_label_compute_size_and_offset(label);
+}
+
+void ui_label_compute_size_and_offset(ui_label_t *label) {
+    ui_font *sys_font = ui_font_shared();
+    label->text_size = ui_font_compute_size_and_offset(sys_font, label->text, label->char_offsets);
     label->cursor_index = MACRO_MIN(label->cursor_index, (int)label->text.length);
     label->start_index = MACRO_MIN(label->start_index, (int)label->text.length);
 }
@@ -65,10 +70,11 @@ void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect
     if (label->text.length == 0) return;
     ui_rect clip_rect;
     ui_renderer_t *renderer = state->renderer;
+    ui_layer *layer = &renderer->layers[layer_index];
     f32 scale = label->scale;
 
     if (clip != 0) {
-        clip_rect = ui_renderer_read_clip(renderer, clip);
+        clip_rect = ui_layer_read_clip(layer, clip);
         if (ui_rect_clip(rect, clip_rect) == CLIP_RESULT_DISCARD) return;
     }
 

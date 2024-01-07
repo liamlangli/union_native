@@ -18,6 +18,8 @@ void logger_init(logger_t *logger) {
     logger->config.write_to_file = false;
     logger->config.file_path = ustring_STR("");
     logger->lines = NULL;
+    logger->new_line_count = 0;
+    logger->last_dump = 0;
 }
 
 void logger_destroy(logger_t *logger) {
@@ -53,18 +55,28 @@ void logger_input(logger_t *logger, int type, ustring message) {
     }
 
     u32 count = (u32)arrlen(logger->lines);
-    if (logger->config.write_to_file) {
-        FILE *file = fopen(logger->config.file_path.data, "a");
-        fprintf(file, "%s\n", message.data);
-        fclose(file);
-        logger->new_line_count = 0;
-    } else {
-        f64 time = 0;
-        script_context_t *ctx = script_context_shared();
-        if (ctx != NULL) {
-            time = ctx->state.time;
+    u32 last_dump = logger->last_dump;
+    if (count - last_dump > LOG_DUMP_STRIDE) {
+        ustring_view dump = ustring_view_STR("");
+        for (u32 i = last_dump; i < count; i++) {
+            ustring_view_append_STR(&dump, logger->lines[i].line.data);
         }
-        log_line_t line = { .line = message, .type = type, .time = time };
-        arrpush(logger->lines, line);
+        if (logger->config.write_to_file) {
+            FILE *file = fopen(logger->config.file_path.data, "a");
+            fprintf(file, "%s\n", dump.base.data);
+            fclose(file);
+        }
+        logger->last_dump = count;
+        ustring_view_free(&dump);
+        logger->last_dump = logger->last_dump + LOG_DUMP_STRIDE;
+        logger->new_line_count = 0;
     }
+    f64 time = 0;
+    script_context_t *ctx = script_context_shared();
+    if (ctx != NULL) {
+        time = ctx->state.time;
+    }
+    log_line_t line = { .line = message, .type = type, .time = time };
+    arrpush(logger->lines, line);
+    logger->new_line_count++;
 }

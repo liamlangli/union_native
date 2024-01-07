@@ -88,7 +88,7 @@ void main()
 
         v.xy = rect_vertex(primitive_rect, corner_id).xy;
         color = decode_color(floatBitsToUint(glyph_data.z));
-        highp uint raw_clip = floatBitsToUint(glyph_header.w);
+        highp uint raw_clip = uint(glyph_header.w);
         clip = raw_clip == 0u ? 0u : header_ptr - raw_clip;
 
         sample_point = rect_vertex(glyph_sample_rect, corner_id).xy / font_texture_size;

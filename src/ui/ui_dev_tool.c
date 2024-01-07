@@ -2,12 +2,14 @@
 #include "foundation/ustring.h"
 #include "foundation/logger.h"
 #include "script/script_context.h"
+
 #include "ui/ui_draw.h"
 #include "ui/ui_label.h"
 #include "ui/ui_theme.h"
 #include "ui/ui_type.h"
 #include "ui/ui_input.h"
 #include "ui/ui_button.h"
+#include "ui/ui_scroll_view.h"
 
 #include <stdio.h>
 
@@ -21,6 +23,9 @@ static ui_button_t performance_tab;
 
 // console ui
 static ui_input_t console_input;
+static ui_scroll_view_t console_view;
+static ui_label_t *console_labels;
+static u32 console_label_count = 0;
 
 void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
     dev_tool->snap_align = RIGHT;
@@ -31,6 +36,8 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
 
     ui_input_init(&console_input, ustring_view_STR(""));
     console_input.label.element.constraint.margin.left = 3.f;
+
+    ui_scroll_view_init(&console_view, 20);
 }
 
 void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
@@ -126,13 +133,14 @@ void ui_dev_tool(ui_state_t *state, ui_dev_tool_t* dev_tool) {
 }
 
 static ustring command_open = ustring_STR("open ");
-static ustring eval = ustring_STR("<eval>");
+#define DEV_TOOL_INPUT_HEIGHT 32.f
 
 void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect) {
     ui_renderer_t *renderer = state->renderer;
+    ui_layer *layer = &renderer->layers[0];
 
     ui_rect input_rect = rect;
-    input_rect.h = 32.f;
+    input_rect.h = DEV_TOOL_INPUT_HEIGHT;
     input_rect.y = rect.y + rect.h - input_rect.h;
     input_rect = ui_rect_shrink(input_rect, 4.f, 4.f);
     if (ui_input(state, &console_input, ui_theme_shared()->panel_0, input_rect, 0, 0)) {
@@ -144,7 +152,7 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             LOG_INFO_FMT("try load script: {}", uri.base.data);
             script_eval_uri(uri);
         } else {
-            ustring result;
+            ustring result = ustring_NULL;
             ustring content = ustring_view_to_ustring(&text);
             int err = script_eval_direct(content, &result);
             if (err != -1 && result.length > 0) {
@@ -154,9 +162,44 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
         }
 
         ustring_view_clear(&console_input.label.text);
-        ui_label_update_text(&console_input.label, console_input.label.text);
+        ui_label_compute_size_and_offset(&console_input.label);
         LOG_INFO("do eval");
     }
+
+    // render scroll_view
+    ui_rect scroll_view_rect = rect;
+    scroll_view_rect.h -= DEV_TOOL_INPUT_HEIGHT;
+    ui_rect clip_rect = scroll_view_rect;
+    clip_rect.y += 3.f;
+    clip_rect.h -= 3.f;
+    u32 clip = ui_layer_write_clip(layer, clip_rect, 0);
+
+    logger_t *logger = logger_global();
+    u32 line_count = (u32)arrlen(logger->lines);
+    console_view.item_count = line_count;
+    u32 start = ui_scroll_view_item_start(&console_view, scroll_view_rect);
+    u32 count = ui_scroll_view_item_count(&console_view, scroll_view_rect);
+    if (count > console_label_count) {
+        console_labels = realloc(console_labels, sizeof(ui_label_t) * count);
+        for (u32 i = console_label_count; i < count; i++) {
+            ui_label_init(&console_labels[i], ustring_view_STR(""));
+            console_labels[i].element.constraint.alignment = LEFT | CENTER_VERTICAL;
+            console_labels[i].element.constraint.margin.left = 4.f;
+            console_labels[i].scale = 0.7f;
+        }
+        console_label_count = count;
+    }
+
+    ui_rect label_rect = scroll_view_rect;
+    label_rect.y -= fmodf(console_view.offset_y, console_view.item_height);
+    label_rect.h = console_view.item_height;
+    for (int i = start; i < start + count; i++) {
+        ui_label_t *label = &console_labels[i];
+        ui_label_update_text(label, ustring_view_from_ustring(logger->lines[i].line));
+        ui_label(state, label, ui_theme_shared()->text, label_rect, 0, clip);
+        label_rect.y += console_view.item_height;
+    }
+    ui_scroll_view(state, &console_view, scroll_view_rect, 0, clip);
 }
 
 // static void renderer_init(GLFWwindow* window, ustring_view uri) {

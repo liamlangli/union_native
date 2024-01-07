@@ -19,6 +19,8 @@ typedef struct ui_label_t {
 
 void ui_label_init(ui_label_t *label, ustring_view text);
 void ui_label_update_text(ui_label_t *label, ustring_view text);
+void ui_label_compute_size_and_offset(ui_label_t *label);
+
 u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location);
 float2 ui_label_text_origin(ui_label_t *label, ui_rect rect);
 f32 ui_label_cursor_offset(ui_label_t *label);

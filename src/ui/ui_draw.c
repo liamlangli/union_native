@@ -346,7 +346,7 @@ void fill_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_rect
     ui_rect clip_rect;
     ui_layer *layer = &renderer->layers[layer_index];
     if (clip != 0) {
-        clip_rect = ui_renderer_read_clip(renderer, clip);
+        clip_rect = ui_layer_read_clip(layer, clip);
         int result = ui_rect_clip(rect, clip_rect);
         if (result == CLIP_RESULT_DISCARD)
             return;
@@ -382,7 +382,7 @@ void fill_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_sty
     ui_rect clip_rect;
     ui_layer *layer = &renderer->layers[layer_index];
     if (clip != 0) {
-        clip_rect = ui_renderer_read_clip(renderer, clip);
+        clip_rect = ui_layer_read_clip(layer, clip);
         int result = ui_rect_clip(rect, clip_rect);
         if (result == CLIP_RESULT_DISCARD)
             return;
@@ -404,7 +404,7 @@ void stroke_rect(ui_renderer_t *renderer, u32 layer_index, ui_style style, ui_re
     ui_rect clip_rect;
     ui_layer *layer = &renderer->layers[layer_index];
     if (clip != 0) {
-        clip_rect = ui_renderer_read_clip(renderer, clip);
+        clip_rect = ui_layer_read_clip(layer, clip);
         int result = ui_rect_clip(rect, clip_rect);
         if (result == CLIP_RESULT_DISCARD)
             return;
@@ -440,7 +440,7 @@ void stroke_round_rect_pre_corner(ui_renderer_t *renderer, u32 layer_index, ui_s
     ui_rect clip_rect;
     ui_layer *layer = &renderer->layers[layer_index];
     if (clip != 0) {
-        clip_rect = ui_renderer_read_clip(renderer, clip);
+        clip_rect = ui_layer_read_clip(layer, clip);
         int result = ui_rect_clip(rect, clip_rect);
         if (result == CLIP_RESULT_DISCARD)
             return;
@@ -467,7 +467,7 @@ void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font
     ui_glyph_header header;
     header.x = origin.x;
     header.y = origin.y;
-    header.clip = clip >> 2;
+    header.clip = clip;
     header.font = font->font->gpu_font_start;
 
     float2 glyph_origin = origin;
@@ -489,6 +489,7 @@ void draw_glyph(ui_renderer_t *renderer, u32 layer_index, float2 origin, ui_font
             continue;
 
         if (header_offset >= GLYPH_BATCH_SIZE) {
+            if (clip != 0) header.clip = (layer->primitive_offset - clip) >> 2;
             ui_layer_write_glyph_header(layer, header);
             header_offset = 0;
         }

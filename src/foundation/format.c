@@ -162,5 +162,6 @@ ustring format(const char *fmt, ...) {
         i = end + 1;
     }
     va_end(args);
+    ustring_view_set_null_terminated(&view);
     return view.base;
 }

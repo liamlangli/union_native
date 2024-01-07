@@ -1,8 +1,8 @@
+#include "ui/ui_input.h"
 #include "foundation/io.h"
 #include "foundation/os.h"
 #include "foundation/ustring.h"
 #include "script/script.h"
-#include "ui/ui_input.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_label.h"
@@ -74,7 +74,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         }
         hmdel(state->key_press, KEY_BACKSPACE);
         input->label.render_selected = false;
-        ui_label_update_text(&input->label, input->label.text);
+        ui_label_compute_size_and_offset(&input->label);
     }
 
     if (control_pressed) {
@@ -102,7 +102,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.cursor_index = from;
             input->label.start_index = from;
             input->label.render_selected = false;
-            ui_label_update_text(&input->label, input->label.text);
+            ui_label_compute_size_and_offset(&input->label);
             hmdel(state->key_press, KEY_X);
         }
         if (ui_state_is_key_press(state, KEY_V)) {
@@ -113,10 +113,9 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             input->label.cursor_index = from + pasted.length;
             input->label.start_index = from + pasted.length;
             input->label.render_selected = false;
-            ui_label_update_text(&input->label, input->label.text);
+            ui_label_compute_size_and_offset(&input->label);
             hmdel(state->key_press, KEY_V);
         }
-
     } else {
         if (ui_state_is_key_press(state, KEY_LEFT)) {
             if (input->label.cursor_index > 0) {
@@ -132,9 +131,11 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
             }
         }
 
-        const bool shift = hmgeti(state->key_pressed, KEY_LEFT_SHIFT) != -1 || hmgeti(state->key_pressed, KEY_RIGHT_SHIFT) != -1;
+        const bool shift =
+            hmgeti(state->key_pressed, KEY_LEFT_SHIFT) != -1 || hmgeti(state->key_pressed, KEY_RIGHT_SHIFT) != -1;
         u32 count = ui_keycode_parse(&state->edit_str, state->key_press, shift);
-        if (count <= 0) return;
+        if (count <= 0)
+            return;
 
         if (from != to) {
             ustring_view_erase(&input->label.text, from, to);
@@ -152,7 +153,7 @@ void ui_input_handle_edit(ui_state_t *state, ui_input_t *input) {
         input->label.start_index = input->label.cursor_index;
 
         if (count > 0)
-            ui_label_update_text(&input->label, input->label.text);
+            ui_label_compute_size_and_offset(&input->label);
     }
 }
 
@@ -198,7 +199,7 @@ bool ui_input(ui_state_t *state, ui_input_t *input, ui_style style, ui_rect rect
             ui_state_clear_focus(state);
             hmdel(state->key_press, KEY_ESCAPE);
             ustring_view_set_ustring_view(&input->label.text, &input->unmodified_text);
-            ui_label_update_text(&input->label, input->label.text);
+            ui_label_compute_size_and_offset(&input->label);
             input->label.cursor_index = input->label.text.length;
             input->label.render_selected = false;
         }
