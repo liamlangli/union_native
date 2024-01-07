@@ -366,21 +366,28 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     ustring base64;
     udata data;
     bool is_base64 = false;
-    if (strncmp(path, "data:image/png;base64,", 22) == 0) {
-        base64 = ustring_range((i8 *)path + 22, len);
-        is_base64 = true;
-    } else if (strncmp(path, "data:image/jpeg;base64,", 23) == 0) {
-        base64 = ustring_range((i8 *)path + 23, len);
-        is_base64 = true;
-    }
 
-    if (is_base64) {
+    if (strncmp(path, "data:image", 10) == 0) {
+        base64 = ustring_range((i8 *)path + 10, len);
+        is_base64 = true;
+        if (strncmp(path, "data:image/png;base64,", 22) == 0) {
+            base64 = ustring_range((i8 *)path + 22, len);
+        } else if (strncmp(path, "data:image/jpeg;base64,", 23) == 0) {
+            base64 = ustring_range((i8 *)path + 23, len);
+        }
         data = io_base64_decode(base64);
+        image->data = io_load_image_memory(data, &image->width, &image->height, &image->channel, 4);
+    } else {
+        if (strncmp(path, "http", 4) == 0) {
+            assert(false);
+        } else {
+            image->data = io_load_image(ustring_view_STR(path), &image->width, &image->height, &image->channel, 4);
+        }
     }
 
-    image->data = io_load_image_memory(data, &image->width, &image->height, &image->channel, 4);
     JS_FreeCString(ctx, path);
     if (image->data == NULL) {
+        LOG_ERROR_FMT("Failed to load image: {}", path);
         return JS_EXCEPTION;
     }
 
