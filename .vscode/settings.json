@@ -1,12 +1,12 @@
 {
     "files.associations": {
-        "*.h": "c",
         "*.tmsl": "hlsl",
         "*.shader": "hlsl",
         "*.inc": "cpp",
         "*.und": "xml",
         "*.uss": "plaintext",
         "*.py": "python",
+        "*.h": "c",
         "*.c": "c",
         "typeinfo": "c",
         "chrono": "c",
@@ -37,7 +37,15 @@
         "memory": "c",
         "system_error": "c",
         "cstdint": "c",
-        "numbers": "c"
+        "numbers": "c",
+        "__availability": "c",
+        "__config": "c",
+        "__verbose_abort": "c",
+        "cstdio": "c",
+        "ctime": "c",
+        "cwchar": "c",
+        "locale": "c",
+        "version": "c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",

@@ -187,7 +187,7 @@ static JSValue js_gl_shader_source(JSContext *ctx, JSValueConst this_val, int ar
         const char *str = JS_ToCString(ctx, source);
         glShaderSource(shader, 1, &str, NULL);
         if (gl_check_error("glShaderSource", __LINE__) != 0) {
-            gl_get_shader_info_log(shader);
+
         }
         JS_FreeCString(ctx, str);
     } else {

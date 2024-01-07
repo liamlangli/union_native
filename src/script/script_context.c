@@ -65,6 +65,7 @@ void script_context_setup(void) {
 
 int script_eval(ustring source, ustring_view filename) {
     int ret;
+    assert(source.null_terminated == true);
 
     if (source.length == 0) {
         LOG_INFO("source is empty");
@@ -81,6 +82,38 @@ int script_eval(ustring source, ustring_view filename) {
         ret = -1;
     } else {
         ret = 0;
+    }
+
+    JS_FreeValue(ctx, val);
+    return ret;
+}
+
+int script_eval_direct(ustring source, ustring *result) {
+    int ret;
+    assert(source.null_terminated == true);
+
+    if (source.length == 0) {
+        return -1;
+    }
+
+    JSContext *ctx = script_context_internal();
+    if (ctx == NULL) {
+        script_context_setup();
+        ctx = script_context_internal();
+    }
+    JSValue val = JS_Eval(ctx, source.data, source.length, "<eval>", 0);
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        ret = -1;
+    } else {
+        ret = 0;
+    }
+
+    const i8* str = JS_ToCString(ctx, val);
+    if (str) {
+        const u32 len = strlen(str);
+        *result = ustring_range(strdup(str), len);
+        JS_FreeCString(ctx, str);
     }
 
     JS_FreeValue(ctx, val);

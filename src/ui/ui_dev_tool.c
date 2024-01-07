@@ -144,12 +144,18 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             LOG_INFO_FMT("try load script: {}", uri.base.data);
             script_eval_uri(uri);
         } else {
+            ustring result;
             ustring content = ustring_view_to_ustring(&text);
-            script_eval(ustring_view_to_ustring(&text), ustring_view_from_ustring(eval));
+            int err = script_eval_direct(content, &result);
+            if (err != -1 && result.length > 0) {
+                LOG_INFO_FMT("{u}", result);
+            }
+            ustring_free(&result);
         }
 
         ustring_view_clear(&console_input.label.text);
         ui_label_update_text(&console_input.label, console_input.label.text);
+        LOG_INFO("do eval");
     }
 }
 

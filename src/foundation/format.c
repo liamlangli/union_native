@@ -1,16 +1,17 @@
 #include "foundation/format.h"
 
 #include <math.h>
+#include <stdarg.h>
 
 int find_char(const char *fmt, char c) {
     int i = 0;
     int r = -1;
     while (fmt[i] != '\0') {
-        i++;
         if (fmt[i] == c) {
             r = i;
             break;
         }
+        i++;
     }
     return r;
 }
@@ -19,11 +20,11 @@ int find_char_range(const char *fmt, int start, int end, char c) {
     int i = start;
     int r = -1;
     while (i < end) {
-        i++;
         if (fmt[i] == c) {
             r = i;
             break;
         }
+        i++;
     }
     return r;
 }
@@ -95,4 +96,71 @@ int atoi_range(const char *fmt, int from, int size) {
         i++;
     }
     return r;
+}
+
+ustring format(const char *fmt, ...) {
+    ustring_view view = ustring_view_STR(fmt);
+    int size = (int)strlen(fmt);
+    if (size == 0)
+        return view.base;
+
+    int i, start, end, count;
+    va_list args;
+    char buff[65];
+
+    va_start(args, fmt);
+    i = 0;
+
+    while (i < size) {
+        start = find_char_range(fmt, i, size, '{');
+        if (start == -1) break;
+        end = find_char_range(fmt, start, size, '}');
+        if (end == -1) break;
+
+        ustring_view_erase(&view, start, end + 1);
+        if (end - start == 1) { // char * for {}
+            char *str = va_arg(args, char *);
+            ustring_view_insert_STR(&view, start, str);
+        } else {
+            if (fmt[end - 1] == 'd') {
+                if (end - start == 2) {
+                    ustring_view_insert_STR(&view, start, itoa(va_arg(args, int), buff, 10));
+                } else {
+                    // parse base
+                    int base = atoi_range(fmt, start + 1, end - start - 2);
+                    ustring_view_insert_STR(&view, start, itoa(va_arg(args, int), buff, base));
+                }
+            } else if (fmt[end - 1] == 'f') {
+                if (end - start == 2) {
+                    ustring_view_insert_STR(&view, start, ftoa(va_arg(args, int), buff, 10));
+                } else {
+                    // parse base
+                    int precision = atoi_range(fmt, start + 1, end - start - 2);
+                    ustring_view_insert_STR(&view, start, ftoa(va_arg(args, int), buff, precision));
+                }
+            } else if (fmt[end - 1] == 'v') {
+                ustring_view arg = va_arg(args, ustring_view);
+                ustring_view_insert_ustring_view(&view, start, &arg);
+            } else if (fmt[end - 1] == 'u') {
+                ustring arg = va_arg(args, ustring);
+                ustring_view_insert_ustring(&view, start, &arg);
+            } else {
+                // parse range
+                char *str = va_arg(args, char *);
+                int colon = find_char_range(fmt, start, end, ':');
+                if (colon == -1)  {
+                    ustring_view_insert_STR(&view, start, str);
+                } else {
+                    int from = atoi_range(fmt, start + 1, colon);
+                    int len = atoi_range(fmt, colon + 1, end - 1);
+                    len = len ? len : (int)strlen(str);
+                    ustring_view_insert_STR_range(&view, start, str, from, from + len);
+                }
+            }
+        }
+
+        i = end + 1;
+    }
+    va_end(args);
+    return view.base;
 }

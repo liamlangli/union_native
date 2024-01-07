@@ -36,5 +36,6 @@ void script_context_setup(void);
 
 int script_eval(ustring source, ustring_view filename);
 int script_eval_uri(ustring_view uri);
+int script_eval_direct(ustring source, ustring *result);
 
 void script_context_loop_tick();

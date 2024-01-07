@@ -2,6 +2,7 @@
 
 #include "foundation/global.h"
 #include "foundation/ustring.h"
+#include "foundation/format.h"
 
 #include <stb_ds.h>
 
@@ -33,15 +34,13 @@ typedef struct logger_t {
 
 void logger_init(logger_t *logger);
 void logger_destroy(logger_t *logger);
-
 logger_t *logger_global(void);
 
-void logger_input(logger_t *logger, int type, const char* message);
-void logger_format_input(logger_t *logger, int type, const char* fmt, ...);
+void logger_input(logger_t *logger, int type, ustring message);
 
-#define LOG_INFO(...) logger_format_input(logger_global(), LOG_INFO, __VA_ARGS__)
-#define LOG_WARN(...) logger_format_input(logger_global(), LOG_WARN, __VA_ARGS__)
-#define LOG_ERROR(...) logger_format_input(logger_global(), LOG_ERROR, __VA_ARGS__)
-#define LOG_INFO_FMT(fmt, ...) logger_format_input(logger_global(), LOG_INFO, fmt, __VA_ARGS__)
-#define LOG_WARN_FMT(fmt, ...) logger_format_input(logger_global(), LOG_WARN, fmt, __VA_ARGS__)
-#define LOG_ERROR_FMT(fmt, ...) logger_format_input(logger_global(), LOG_ERROR, fmt, __VA_ARGS__)
+#define LOG_INFO(...) logger_input(logger_global(), LOG_INFO, format(__VA_ARGS__))
+#define LOG_WARN(...) logger_input(logger_global(), LOG_WARN, format(__VA_ARGS__))
+#define LOG_ERROR(...) logger_input(logger_global(), LOG_ERROR, format(__VA_ARGS__))
+#define LOG_INFO_FMT(fmt, ...) logger_input(logger_global(), LOG_INFO, format(fmt, __VA_ARGS__))
+#define LOG_WARN_FMT(fmt, ...) logger_input(logger_global(), LOG_WARN, format(fmt, __VA_ARGS__))
+#define LOG_ERROR_FMT(fmt, ...) logger_input(logger_global(), LOG_ERROR, format(fmt, __VA_ARGS__))
