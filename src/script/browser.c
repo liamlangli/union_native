@@ -1,6 +1,6 @@
 #include "foundation/io.h"
 #include "foundation/logger.h"
-#include "script/script.h"
+#include "script/api.h"
 
 #include <GLFW/glfw3.h>
 #include <assert.h>

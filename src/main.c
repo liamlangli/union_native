@@ -1,5 +1,5 @@
-#include "foundation/foundation.h"
-#include "script/script.h"
+#include "foundation/api.h"
+#include "script/api.h"
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>

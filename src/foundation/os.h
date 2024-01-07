@@ -26,12 +26,15 @@ typedef struct os_window_t {
     f64 display_ratio;
     f64 ui_scale;
     void* native_window;
+
+    bool capture_required, capture_started;
 } os_window_t;
 
 extern os_window_t* os_window_create(ustring title, int width, int height);
 extern void os_window_run_loop(os_window_t *window, void (*fn)(void));
 extern void os_window_set_cursor(os_window_t *window, int cursor_type);
 extern void os_window_close(os_window_t *window);
+extern void os_window_capture_require(os_window_t *window);
 
 extern void os_window_on_resize(os_window_t *window, int width, int height);
 

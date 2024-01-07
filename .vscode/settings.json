@@ -45,7 +45,8 @@
         "ctime": "c",
         "cwchar": "c",
         "locale": "c",
-        "version": "c"
+        "version": "c",
+        "*.mm": "objective-c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",

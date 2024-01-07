@@ -2,7 +2,7 @@
 #include "foundation/io.h"
 #include "foundation/os.h"
 #include "foundation/ustring.h"
-#include "script/script.h"
+#include "script/script_context.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_label.h"

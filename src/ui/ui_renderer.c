@@ -1,7 +1,7 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
 #include "foundation/logger.h"
-#include "script/script.h"
+#include "script/script_context.h"
 
 #include <GLES3/gl3.h>
 #include <math.h>

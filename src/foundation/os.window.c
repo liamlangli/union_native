@@ -8,6 +8,10 @@
 
 #include <stdio.h>
 
+#if defined(OS_MACOS)
+    #include "macos/gpu.h"
+#endif
+
 static void error_callback(int error, const char* description) {
     LOG_ERROR_FMT("Error: {}", description);
 }
@@ -61,7 +65,7 @@ static void os_window_on_scroll(os_window_t* window, double offset_x, double off
     if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(offset_x, offset_y);
     const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
     state->pointer_scroll.x = (f32)(offset_x * (shift ? state->smooth_factor : 1.f));
-    state->pointer_scroll.y = (f32)(offset_y * (shift ? state->smooth_factor : 1.f));
+    state->pointer_scroll.y = (f32)(-offset_y * (shift ? state->smooth_factor : 1.f));
 }
 
 static void os_window_on_key_action(os_window_t* window, int key, int scancode, int action, int mods) {
@@ -256,11 +260,30 @@ void os_window_set_cursor(os_window_t *window, int type) {
 
 void os_window_run_loop(os_window_t *window, void (*fn)(void)) {
     while (!glfwWindowShouldClose((GLFWwindow*)window->native_window)) {
+#if defined(OS_MACOS)
+        if (window->capture_required && !window->capture_started) {
+            metal_capture_start();
+            LOG_INFO("Metal capture start");
+            window->capture_started = true;
+        }
+#endif
         fn();
         os_window_tick(window);
         glfwSwapBuffers((GLFWwindow*)window->native_window);
         glfwPollEvents();
+#if defined(OS_MACOS)
+        if (window->capture_required && window->capture_started) {
+            window->capture_started = false;
+            window->capture_required = false;
+            metal_capture_end();
+            LOG_INFO("Metal capture end");
+        }
+#endif
     }
+}
+
+void os_window_capture_require(os_window_t *window) {
+    window->capture_required = true;
 }
 
 void os_window_close(os_window_t *window) {

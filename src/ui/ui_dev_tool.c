@@ -133,6 +133,9 @@ void ui_dev_tool(ui_state_t *state, ui_dev_tool_t* dev_tool) {
 }
 
 static ustring command_open = ustring_STR("open ");
+static ustring command_close = ustring_STR("close");
+static ustring command_exit = ustring_STR("exit");
+static ustring command_capture = ustring_STR("gpu.capture");
 #define DEV_TOOL_INPUT_HEIGHT 32.f
 
 void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect) {
@@ -151,6 +154,10 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             ustring_view uri = ustring_view_sub_view(&text, start, text.length);
             LOG_INFO_FMT("try load script: {v}", uri);
             script_eval_uri(uri);
+        } else if (ustring_view_start_with_ustring(text, command_close)) {
+            ui_dev_tool_set_visible(dev_tool, false);
+        } else if (ustring_view_start_with_ustring(text, command_capture)) {
+            os_window_capture_require(script_context_shared()->window);
         } else {
             ustring result = ustring_NULL;
             ustring content = ustring_view_to_ustring(&text);

@@ -1,5 +1,4 @@
 #include "foundation/io.h"
-#include "script/script.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

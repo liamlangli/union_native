@@ -1,8 +1,7 @@
 #include "script/webgl2.h"
-
+#include "script/script_context.h"
 #include "foundation/global.h"
 #include "foundation/logger.h"
-#include "script/script.h"
 
 #include <GLES3/gl3.h>
 #include <quickjs/quickjs.h>
