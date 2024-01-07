@@ -8,7 +8,7 @@
 #include <quickjs/quickjs.h>
 #include <stdlib.h>
 
-const char * gl_err_msg(GLenum err) {
+const char *gl_err_msg(GLenum err) {
         switch (err) {
         case GL_INVALID_ENUM:
                 return "GL_INVALID_ENUM";

@@ -118,48 +118,56 @@ ustring format(const char *fmt, ...) {
         if (end == -1) break;
 
         ustring_view_erase(&view, start, end + 1);
+        char *str = "";
+        u32 len = 0;
         if (end - start == 1) { // char * for {}
-            char *str = va_arg(args, char *);
-            ustring_view_insert_STR(&view, start, str);
+            str = va_arg(args, char *);
+            len = (u32)strlen(str);
         } else {
             if (fmt[end - 1] == 'd') {
                 if (end - start == 2) {
-                    ustring_view_insert_STR(&view, start, itoa(va_arg(args, int), buff, 10));
+                    str = itoa(va_arg(args, int), buff, 10);
                 } else {
                     // parse base
                     int base = atoi_range(fmt, start + 1, end - start - 2);
-                    ustring_view_insert_STR(&view, start, itoa(va_arg(args, int), buff, base));
+                    str = itoa(va_arg(args, int), buff, base);
                 }
+                len = (u32)strlen(str);
             } else if (fmt[end - 1] == 'f') {
                 if (end - start == 2) {
-                    ustring_view_insert_STR(&view, start, ftoa(va_arg(args, int), buff, 10));
+                    str = ftoa(va_arg(args, f64), buff, 10);
                 } else {
-                    // parse base
                     int precision = atoi_range(fmt, start + 1, end - start - 2);
-                    ustring_view_insert_STR(&view, start, ftoa(va_arg(args, int), buff, precision));
+                    str = ftoa(va_arg(args, f64), buff, precision);
                 }
+                len = (u32)strlen(str);
             } else if (fmt[end - 1] == 'v') {
                 ustring_view arg = va_arg(args, ustring_view);
-                ustring_view_insert_ustring_view(&view, start, &arg);
+                str = arg.base.data + arg.start;
+                len = arg.length;
             } else if (fmt[end - 1] == 'u') {
                 ustring arg = va_arg(args, ustring);
-                ustring_view_insert_ustring(&view, start, &arg);
+                str = arg.data;
+                len = (u32)strlen(str);
             } else {
                 // parse range
-                char *str = va_arg(args, char *);
+                str = va_arg(args, char *);
                 int colon = find_char_range(fmt, start, end, ':');
                 if (colon == -1)  {
-                    ustring_view_insert_STR(&view, start, str);
+                    len = (u32)strlen(str);
                 } else {
                     int from = atoi_range(fmt, start + 1, colon);
                     int len = atoi_range(fmt, colon + 1, end - 1);
+                    str += from;
                     len = len ? len : (int)strlen(str);
-                    ustring_view_insert_STR_range(&view, start, str, from, from + len);
                 }
             }
         }
 
-        i = end + 1;
+        ustring_view_insert_STR_length(&view, start, str, len);
+        size += start - end - 1 + len;
+        i = start + len;
+        fmt = (const char *)view.base.data;
     }
     va_end(args);
     ustring_view_set_null_terminated(&view);

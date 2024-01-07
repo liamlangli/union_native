@@ -162,7 +162,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
 }
 
 int script_eval_uri(ustring_view uri) {
-    if (strncasecmp(uri.base.data, "http", 4) == 0) {
+    if (ustring_view_start_with_ustring(uri, ustring_STR("http"))) {
         url_t url = url_parse(uri);
         if (!url.valid) {
             LOG_WARN_FMT("invalid url: {v}", uri);

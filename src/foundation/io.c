@@ -9,7 +9,8 @@
 
 ustring io_read_file(ustring_view path) {
     ustring_view_set_null_terminated(&path);
-    FILE *file = fopen(path.base.data, "rb");
+    const char *raw_path = path.base.data + path.start;
+    FILE *file = fopen(raw_path, "rb");
     if (!file) {
         return ustring_str("");
     }
@@ -29,10 +30,12 @@ ustring io_read_file(ustring_view path) {
 
 u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {
     ustring_view_set_null_terminated(&path);
+    stbi_set_flip_vertically_on_load(0);
     return stbi_load(path.base.data, width, height, channel, request_channel);
 }
 
 u8 *io_load_image_memory(udata data, int *width, int *height, int *channel, int request_channel) {
+    stbi_set_flip_vertically_on_load(1);
     return stbi_load_from_memory((const u8 *)data.data, data.length, width, height, channel, request_channel);
 }
 

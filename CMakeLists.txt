@@ -27,6 +27,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/ThirdParty.cmake)
 source_group(foundation FILES ${FOUNDATION_SOURCES})
 source_group(ui FILES ${UI_SOURCES})
 source_group(script FILES ${SCRIPT_SOURCES})
+source_group(macos FILE ${MACOS_SOURCES})
 source_group(main FILES ${MAIN_ENTRY})
 
 include(${CMAKE_SOURCE_DIR}/cmake/Include.cmake)

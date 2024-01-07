@@ -368,7 +368,6 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     size_t len;
     JS_ToCStringLen(ctx, &len, val);
     const char *path = JS_ToCString(ctx, val);
-    int width, height, channel;
 
     // check base64 header
     ustring base64;
@@ -397,6 +396,36 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
     if (JS_IsFunction(script_context_internal(), scope.func))
         JS_Call(script_context_internal(), scope.func, this_val, 1, &this_val);
 
+    return JS_UNDEFINED;
+}
+
+static JSValue js_get_image_width(JSContext *ctx, JSValueConst this_val) {
+    js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
+    if (image == NULL)
+        return JS_EXCEPTION;
+    return JS_NewInt32(ctx, image->width);
+}
+
+static JSValue js_set_image_width(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+    js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
+    if (image == NULL)
+        return JS_EXCEPTION;
+    JS_ToInt32(ctx, &image->width, val);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_get_image_height(JSContext *ctx, JSValueConst this_val) {
+    js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
+    if (image == NULL)
+        return JS_EXCEPTION;
+    return JS_NewInt32(ctx, image->height);
+}
+
+static JSValue js_set_image_height(JSContext *ctx, JSValueConst this_val, JSValueConst val) {
+    js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
+    if (image == NULL)
+        return JS_EXCEPTION;
+    JS_ToInt32(ctx, &image->height, val);
     return JS_UNDEFINED;
 }
 
@@ -429,6 +458,8 @@ static const JSCFunctionListEntry js_style_proto_funcs[] = {
 
 static const JSCFunctionListEntry js_image_proto_funcs[] = {
     JS_CGETSET_DEF("src", js_get_image_src, js_set_image_src),
+    JS_CGETSET_DEF("width", js_get_image_width, js_set_image_width),
+    JS_CGETSET_DEF("height", js_get_image_height, js_set_image_height),
     JS_CGETSET_DEF("onload", js_get_image_onload, js_set_image_onload),
 };
 

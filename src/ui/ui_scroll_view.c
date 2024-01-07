@@ -26,7 +26,7 @@ void ui_scroll_view(ui_state_t *state, ui_scroll_view_t *view, ui_rect rect, u32
     }
 
     if (hover || active) {
-        view->offset_y = MACRO_CLAMP(view->offset_y + state->pointer_scroll.y * 2.0f, 0.f, max_scroll_y);
+        view->offset_y = MACRO_CLAMP(view->offset_y + state->pointer_scroll.y * 10.0f, 0.f, max_scroll_y);
     }
 
     if (!view->scroll_bar)

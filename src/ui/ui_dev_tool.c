@@ -148,8 +148,8 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
         if (ustring_view_start_with_ustring(text, command_open)) {
             int start = command_open.length;
             while (start < text.length && text.base.data[start] == ' ') start++;
-            ustring_view uri = ustring_view_sub_view(&text, start, text.length - start);
-            LOG_INFO_FMT("try load script: {}", uri.base.data);
+            ustring_view uri = ustring_view_sub_view(&text, start, text.length);
+            LOG_INFO_FMT("try load script: {v}", uri);
             script_eval_uri(uri);
         } else {
             ustring result = ustring_NULL;
@@ -158,12 +158,12 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             if (err != -1 && result.length > 0) {
                 LOG_INFO_FMT("{u}", result);
             }
+            LOG_INFO("do eval: {u}", content);
             ustring_free(&result);
         }
 
         ustring_view_clear(&console_input.label.text);
         ui_label_compute_size_and_offset(&console_input.label);
-        LOG_INFO("do eval");
     }
 
     // render scroll_view
