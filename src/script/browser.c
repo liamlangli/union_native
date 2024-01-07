@@ -308,14 +308,6 @@ static JSValue js_set_window_device_pixel_ratio(JSContext *ctx, JSValueConst _, 
     return JS_UNDEFINED;
 }
 
-typedef struct js_image {
-    int width;
-    int height;
-    int channel;
-    u8 *data;
-    js_scope onload;
-} js_image;
-
 static JSClassID js_image_class_id;
 
 static void js_image_finalizer(JSRuntime *rt, JSValue val) {
@@ -325,11 +317,12 @@ static void js_image_finalizer(JSRuntime *rt, JSValue val) {
     if (image->data)
         free(image->data);
     js_free_rt(rt, image);
-    js_scope scope = image->onload;
-    if (JS_IsFunction(script_context_internal(), scope.func)) {
-        script_value_deref(scope.func);
-        JS_FreeValue(script_context_internal(), scope.func);
+    js_scope *scope = image->onload;
+    if (JS_IsFunction(script_context_internal(), scope->func)) {
+        script_value_deref(scope->func);
+        JS_FreeValue(script_context_internal(), scope->func);
     }
+    free(scope);
 }
 
 static JSValue js_image_ctor(JSContext *ctx, JSValueConst new_target, int argc, JSValueConst *argv) {
@@ -385,16 +378,15 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
         data = io_base64_decode(base64);
     }
 
-    // u8 *data = io_load_image(ustring_view_str(path), &width, &height, &channel, 0);
     image->data = io_load_image_memory(data, &image->width, &image->height, &image->channel, 4);
     JS_FreeCString(ctx, path);
     if (image->data == NULL) {
         return JS_EXCEPTION;
     }
 
-    js_scope scope = image->onload;
-    if (JS_IsFunction(script_context_internal(), scope.func))
-        JS_Call(script_context_internal(), scope.func, this_val, 1, &this_val);
+    js_scope* scope = (js_scope*)image->onload;
+    if (JS_IsFunction(script_context_internal(), scope->func))
+        JS_Call(script_context_internal(), scope->func, this_val, 1, &this_val);
 
     return JS_UNDEFINED;
 }
@@ -435,9 +427,10 @@ static JSValue js_set_image_onload(JSContext *ctx, JSValueConst this_val, JSValu
     js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
     if (image == NULL)
         return JS_EXCEPTION;
-    js_scope scope = {.this = this_val, .func = val};
     script_value_ref(val);
-    image->onload = scope;
+    js_scope *onload = malloc(sizeof(js_scope));
+    *onload = (js_scope){.this = this_val, .func = val};
+    image->onload = onload;
     return JS_UNDEFINED;
 }
 
@@ -445,7 +438,13 @@ static JSValue js_get_image_onload(JSContext *ctx, JSValueConst this_val) {
     js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
     if (image == NULL)
         return JS_EXCEPTION;
-    return image->onload.func;
+    js_scope *onload = image->onload;
+    return onload->func;
+}
+
+js_image *js_image_from_opaque(void *opaque) {
+    JSValue val = *(JSValue*)opaque;
+    return JS_GetOpaque(val, js_image_class_id);
 }
 
 static JSValue js_set_style_cursor(JSContext *ctx, JSValueConst this_val, JSValueConst val) { return JS_UNDEFINED; }

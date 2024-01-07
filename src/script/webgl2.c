@@ -1,5 +1,6 @@
 #include "script/webgl2.h"
 #include "script/script_context.h"
+#include "script/browser.h"
 #include "foundation/global.h"
 #include "foundation/logger.h"
 
@@ -530,10 +531,10 @@ static JSValue js_gl_active_texture(JSContext *ctx, JSValueConst this_val, int a
 }
 
 static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    GLuint target, level, internalformat, width, height, border, format, type;
+    GLuint target, level, internal_format, width, height, border, format, type;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &level, argv[1]);
-    JS_ToUint32(ctx, &internalformat, argv[2]);
+    JS_ToUint32(ctx, &internal_format, argv[2]);
     JS_ToUint32(ctx, &width, argv[3]);
     JS_ToUint32(ctx, &height, argv[4]);
     JS_ToUint32(ctx, &border, argv[5]);
@@ -541,11 +542,19 @@ static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc
     JS_ToUint32(ctx, &type, argv[7]);
     JSValue data = argv[8];
 
+    js_image *image = js_image_from_opaque(&data);
+    if (image) {
+        GLuint internal_format = image->channel == 3 ? GL_RGB8 : GL_RGBA8;
+        GLenum format = image->channel == 3 ? GL_RGB : GL_RGBA;
+        GLenum type = GL_UNSIGNED_BYTE;
+        glTexImage2D(target, level, internal_format, image->width, image->height, border, format, type, image->data);
+        return JS_UNDEFINED;
+    }
+
     JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
     size_t length;
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
-    glTexImage2D(target, level, internalformat, width, height, border, format, type, data_buffer);
-
+    glTexImage2D(target, level, internal_format, width, height, border, format, type, data_buffer);
     return JS_UNDEFINED;
 }
 
@@ -561,6 +570,16 @@ static JSValue js_gl_tex_sub_image2d(JSContext *ctx, JSValueConst this_val, int 
     JS_ToUint32(ctx, &type, argv[7]);
     JSValue data = argv[8];
 
+    js_image *image = js_image_from_opaque(&data);
+    if (image) {
+        GLuint internal_format = image->channel == 3 ? GL_RGB8 : GL_RGBA8;
+        GLenum format = image->channel == 3 ? GL_RGB : GL_RGBA;
+        GLenum type = GL_UNSIGNED_BYTE;
+        glTexSubImage2D(target, level, xoffset, yoffset, image->width, image->height, format, type, image->data);
+        gl_check_error("glTexSubImage2D", __LINE__);
+        return JS_UNDEFINED;
+    }
+
     JSValue buffer = JS_GetPropertyStr(ctx, data, "buffer");
     size_t length;
     u8 *data_buffer = JS_GetArrayBuffer(ctx, &length, buffer);
@@ -570,25 +589,25 @@ static JSValue js_gl_tex_sub_image2d(JSContext *ctx, JSValueConst this_val, int 
 }
 
 static JSValue js_gl_tex_storage2d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    GLuint target, levels, internalformat, width, height;
+    GLuint target, levels, internal_format, width, height;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &levels, argv[1]);
-    JS_ToUint32(ctx, &internalformat, argv[2]);
+    JS_ToUint32(ctx, &internal_format, argv[2]);
     JS_ToUint32(ctx, &width, argv[3]);
     JS_ToUint32(ctx, &height, argv[4]);
-    glTexStorage2D(target, levels, internalformat, width, height);
+    glTexStorage2D(target, levels, internal_format, width, height);
     return JS_UNDEFINED;
 }
 
 static JSValue js_gl_tex_storage3d(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    GLuint target, levels, internalformat, width, height, depth;
+    GLuint target, levels, internal_format, width, height, depth;
     JS_ToUint32(ctx, &target, argv[0]);
     JS_ToUint32(ctx, &levels, argv[1]);
-    JS_ToUint32(ctx, &internalformat, argv[2]);
+    JS_ToUint32(ctx, &internal_format, argv[2]);
     JS_ToUint32(ctx, &width, argv[3]);
     JS_ToUint32(ctx, &height, argv[4]);
     JS_ToUint32(ctx, &depth, argv[5]);
-    glTexStorage3D(target, levels, internalformat, width, height, depth);
+    glTexStorage3D(target, levels, internal_format, width, height, depth);
     return JS_UNDEFINED;
 }
 
@@ -676,12 +695,12 @@ static JSValue js_gl_bind_renderbuffer(JSContext *ctx, JSValueConst this_val, in
 }
 
 static JSValue js_gl_renderbuffer_storage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    GLuint target, internalformat, width, height;
+    GLuint target, internal_format, width, height;
     JS_ToUint32(ctx, &target, argv[0]);
-    JS_ToUint32(ctx, &internalformat, argv[1]);
+    JS_ToUint32(ctx, &internal_format, argv[1]);
     JS_ToUint32(ctx, &width, argv[2]);
     JS_ToUint32(ctx, &height, argv[3]);
-    glRenderbufferStorage(target, internalformat, width, height);
+    glRenderbufferStorage(target, internal_format, width, height);
     return JS_UNDEFINED;
 }
 

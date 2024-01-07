@@ -34,7 +34,6 @@ u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int 
 }
 
 u8 *io_load_image_memory(udata data, int *width, int *height, int *channel, int request_channel) {
-    stbi_set_flip_vertically_on_load(1);
     return stbi_load_from_memory((const u8 *)data.data, data.length, width, height, channel, request_channel);
 }
 
