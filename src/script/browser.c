@@ -701,7 +701,7 @@ void script_browser_document_key_down(int key) {
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keydown_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
-    js_scope *scopes = browser.window_event_listeners[index].value;
+    js_scope *scopes = browser.document_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));
@@ -720,7 +720,7 @@ void script_browser_document_key_up(int key) {
     JSValue event = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, event, "type", JS_NewString(ctx, keyup_event));
     JS_SetPropertyStr(ctx, event, "key", JS_NewInt32(ctx, key));
-    js_scope *scopes = browser.window_event_listeners[index].value;
+    js_scope *scopes = browser.document_event_listeners[index].value;
     for (int i = 0, l = (int)arrlen(scopes); i < l; ++i) {
         js_scope scope = scopes[i];
         assert(JS_IsLiveObject(rt, scope.func));

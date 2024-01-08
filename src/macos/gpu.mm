@@ -1,4 +1,4 @@
-#include "macos/gpu.h"
+#include "foundation/gpu.h"
 
 #if defined(OS_MACOS)
 #import <Foundation/Foundation.h>

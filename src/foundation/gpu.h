@@ -14,3 +14,10 @@ void metal_capture_end(void);
 #endif
 
 #endif
+
+#if defined(OS_LINUX)
+
+void render_doc_capture_start(void);
+void render_doc_capture_end(void);
+
+#endif
