@@ -9,6 +9,7 @@
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
 #include <uv.h>
+#include <assert.h>
 
 typedef struct qjs_module {
     JSRuntime *runtime;
@@ -199,7 +200,7 @@ void script_context_loop_tick() {
     JSContext *ctx;
     while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
         if (finished < 0) {
-            js_std_dump_error(script_context_internal());
+            script_dump_error(script_context_internal());
             break;
         }
     }

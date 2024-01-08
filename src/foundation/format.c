@@ -117,7 +117,6 @@ ustring format(const char *fmt, ...) {
         end = find_char_range(fmt, start, size, '}');
         if (end == -1) break;
 
-        ustring_view_erase(&view, start, end + 1);
         char *str = "";
         u32 len = 0;
         if (end - start == 1) { // char * for {}
@@ -164,6 +163,7 @@ ustring format(const char *fmt, ...) {
             }
         }
 
+        ustring_view_erase(&view, start, end + 1);
         ustring_view_insert_STR_length(&view, start, str, len);
         size += start - end - 1 + len;
         i = start + len;
