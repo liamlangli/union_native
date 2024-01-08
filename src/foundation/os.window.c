@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #if defined(OS_MACOS)
-    #include "macos/gpu.h"
+    #include "foundation/gpu.h"
 #endif
 
 static void error_callback(int error, const char* description) {
