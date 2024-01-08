@@ -101,6 +101,8 @@ static void os_window_on_key_action(os_window_t* window, int key, int scancode, 
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
     script_context_t *ctx = script_context_shared();
+    window->width = width;
+    window->height = height;
     glfwGetFramebufferSize(window->native_window, &window->framebuffer_width, &window->framebuffer_height);
     window->display_ratio = (f64)window->framebuffer_height / (f64)window->height;
     f32 ui_width = (f32)(width / window->ui_scale * window->display_ratio);
@@ -185,6 +187,7 @@ static void glfw_on_resize(GLFWwindow *window, int width, int height) {
 os_window_t* os_window_create(ustring title, int width, int height) {
     os_window_t* window = malloc(sizeof(os_window_t));
     window->ui_scale = 2.0;
+    window->title = title;
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
