@@ -29,7 +29,6 @@ ustring io_read_file(ustring_view path) {
 
 u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {
     ustring_view_set_null_terminated(&path);
-    stbi_set_flip_vertically_on_load(0);
     return stbi_load(path.base.data, width, height, channel, request_channel);
 }
 

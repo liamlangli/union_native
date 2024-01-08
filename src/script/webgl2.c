@@ -544,9 +544,6 @@ static JSValue js_gl_tex_image2d(JSContext *ctx, JSValueConst this_val, int argc
 
     js_image *image = js_image_from_opaque(&data);
     if (image) {
-        GLuint internal_format = image->channel == 3 ? GL_RGB8 : GL_RGBA8;
-        GLenum format = image->channel == 3 ? GL_RGB : GL_RGBA;
-        GLenum type = GL_UNSIGNED_BYTE;
         glTexImage2D(target, level, internal_format, image->width, image->height, border, format, type, image->data);
         return JS_UNDEFINED;
     }
@@ -572,8 +569,6 @@ static JSValue js_gl_tex_sub_image2d(JSContext *ctx, JSValueConst this_val, int 
 
     js_image *image = js_image_from_opaque(&data);
     if (image) {
-        GLenum format = image->channel == 3 ? GL_RGB : GL_RGBA;
-        GLenum type = GL_UNSIGNED_BYTE;
         glTexSubImage2D(target, level, xoffset, yoffset, image->width, image->height, format, type, image->data);
         gl_check_error("glTexSubImage2D", __LINE__);
         return JS_UNDEFINED;
@@ -595,7 +590,6 @@ static JSValue js_gl_tex_storage2d(JSContext *ctx, JSValueConst this_val, int ar
     JS_ToUint32(ctx, &width, argv[3]);
     JS_ToUint32(ctx, &height, argv[4]);
     glTexStorage2D(target, levels, internal_format, width, height);
-    LOG_INFO_FMT("glTexStorage2D: {d}, {d}, {d}, {d}, {d}", target, levels, internal_format, width, height);
     return JS_UNDEFINED;
 }
 

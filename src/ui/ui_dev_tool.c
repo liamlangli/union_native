@@ -11,8 +11,6 @@
 #include "ui/ui_button.h"
 #include "ui/ui_scroll_view.h"
 
-#include <stdio.h>
-
 // tab ui
 static ui_button_t console_tab;
 static ui_button_t network_tab;
@@ -31,7 +29,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
     dev_tool->snap_align = RIGHT;
     dev_tool->width = 480;
     dev_tool->height = 320;
-    dev_tool->visible = true;
+    dev_tool->visible = false;
     dev_tool->tab = DEVTOOL_CONSOLE;
 
     ui_input_init(&console_input, ustring_view_STR(""));

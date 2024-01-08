@@ -331,6 +331,7 @@ static JSValue js_image_ctor(JSContext *ctx, JSValueConst new_target, int argc, 
     JSValue proto;
 
     image = js_mallocz(ctx, sizeof(*image));
+    image->channel = 4;
     if (!image)
         return JS_EXCEPTION;
     proto = JS_GetPropertyStr(ctx, new_target, "prototype");
