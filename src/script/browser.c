@@ -838,6 +838,7 @@ void script_listeners_cleanup() {
         js_frame_callback cb = frame_callbacks[i];
         script_value_deref(cb.value.func);
         JS_FreeValue(ctx, cb.key);
+        hmdel(frame_callbacks, cb.key);
     }
 }
 
