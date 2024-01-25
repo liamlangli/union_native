@@ -4,5 +4,7 @@
 <dict>
     <key>MetalCaptureEnabled</key>
     <true/>
+    <key>CFBundleIconFile</key>
+    <string>Resources/icon.icns</string>
 </dict>
 </plist>

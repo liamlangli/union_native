@@ -11,6 +11,14 @@
             "program": "${workspaceFolder}/build/un",
             "args": [],
             "cwd": "${workspaceFolder}/build",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "macos run app",
+            "program": "${workspaceFolder}/build/un.app",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
         }
     ]
 }

@@ -19,7 +19,7 @@ camera.perspective(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.look_at(ZERO);
 const control = new SphericalControl(camera);
 
-EventHub.on(GlobalEvent.MouseDrag, (payload) => {
+EventHub.on(GlobalEvent.MouseMove, (payload) => {
     const delta = payload.delta;
     control.rotate_horizontal(delta.x / window.innerWidth);
     control.rotate_vertical(delta.y / window.innerHeight);

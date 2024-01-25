@@ -10,6 +10,8 @@ if (APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/app/Info.plist"
     )
-    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/app/Assets.xcassets)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/app/Assets.xcassets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set(MACOSX_BUNDLE_ICON_FILE icon.icns)
+    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/app/icon.icns)
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "@loader_path/../Frameworks")
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/app/icon.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 endif()

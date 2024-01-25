@@ -121,6 +121,7 @@ ustring format(const char *fmt, ...) {
         u32 len = 0;
         if (end - start == 1) { // char * for {}
             str = va_arg(args, char *);
+            if (str == NULL) str = "";
             len = (u32)strlen(str);
         } else {
             if (fmt[end - 1] == 'd') {
