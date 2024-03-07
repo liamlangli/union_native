@@ -15,6 +15,8 @@ __pycache__
 log.txt
 
 example/public/index.js
+node_modules
+yarn.lock
 
 third_party/renderdoc/lib/macos
 
