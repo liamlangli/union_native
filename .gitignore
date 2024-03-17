@@ -22,3 +22,5 @@ third_party/renderdoc/lib/macos
 
 *.sublime-project
 *.sublime-workspace
+
+npm/public/*.js

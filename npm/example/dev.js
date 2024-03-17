@@ -12,14 +12,14 @@ let ctx = await context({
     bundle: true,
     sourcemap: "inline",
     sourcesContent: true,
-    outdir: "public",
+    outdir: "../public",
     external: ['acorn'],
     plugins: [
         glsl({minify: true, resolveIncludes: true})
     ]
 });
 
-let { host, port } = await ctx.serve({ servedir: 'public' });
+let { host, port } = await ctx.serve({ servedir: '../public' });
 
 http.createServer((request, response) => {
     const options = {

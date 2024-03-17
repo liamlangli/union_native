@@ -8,7 +8,7 @@ build({
         'src/terrain.ts'
     ],
     bundle: true,
-    outdir: "../../build/public",
+    outdir: "../public",
     treeShaking: true,
     // minify: true,
     // minifyIdentifiers: true,
