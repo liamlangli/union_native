@@ -2,6 +2,7 @@
 
 #include "ui/ui_font.h"
 #include "ui/ui_type.h"
+#include "gpu/gpu.h"
 
 #define MAX_UI_LAYERS 4
 
@@ -22,17 +23,12 @@ typedef struct ui_renderer_t {
     u32 preserved_primitive_offset;
 
     // gpu side
-    u32 program;
-    u32 vao;
     float4 window_size;
-    u32 window_size_location;
-    u32 primitive_data_texture;
-    u32 primitive_data_texture_location;
     u32 primitive_data_texture_width;
-    u32 icon_texture;
-    u32 icon_texture_location;
-    u32 font_texture_location;
-    u32 index_buffer;
+    sg_image primitive_data_texture;
+    sg_buffer index_buffer;
+    sg_image icon_texture;
+    sg_pipeline pipeline;
 } ui_renderer_t;
 
 typedef struct ui_rect_vertex {

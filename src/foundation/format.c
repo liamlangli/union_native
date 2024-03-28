@@ -98,7 +98,7 @@ int atoi_range(const char *fmt, int from, int size) {
     return r;
 }
 
-ustring format(const char *fmt, ...) {
+ustring uformat(const char *fmt, ...) {
     ustring_view view = ustring_view_STR(fmt);
     int size = (int)strlen(fmt);
     if (size == 0)

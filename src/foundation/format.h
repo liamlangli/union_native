@@ -15,4 +15,4 @@ char* ftoa(float num, char* str, int precision);
  *   ustring_view: {v}
  *        ustring: {s}
 */
-ustring format(const char *fmt, ...);
+ustring uformat(const char *fmt, ...);

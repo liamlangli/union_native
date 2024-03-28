@@ -1,7 +1,6 @@
 #include "ui/msdf_font.h"
-#include "foundation/io.h"
+#include "gpu/gpu.h"
 
-#include <GLES3/gl3.h>
 #include <stb_ds.h>
 
 msdf_font *msdf_alloc() {
@@ -173,7 +172,7 @@ msdf_font *msdf_font_system_font() {
         123, 113, -1,
     };
 
-    int char_count = countof(char_data);
+    int char_count = count_of(char_data);
     for (int i = 0; i < char_count; ++i) {
         int *g_data = char_data[i];
         msdf_glyph g = (msdf_glyph){.id = g_data[0],
@@ -188,25 +187,12 @@ msdf_font *msdf_font_system_font() {
         hmput(system_font.char_map, g_data[0], g);
     }
 
-    int kerning_count = countof(kerning_data);
+    int kerning_count = count_of(kerning_data);
     for (int i = 0; i < kerning_count; ++i) {
         int *k_data = kerning_data[i];
         kerning_key key = (kerning_key){.first = k_data[0], .second = k_data[1]};
         hmput(system_font.kerning_map, key, k_data[2]);
     }
 
-    int width, height, channel;
-    u8 *data = io_load_image(ustring_view_STR("public/font/Lato-Regular.png"), &width, &height, &channel, 3);
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    GLint internal_format = channel == 3 ? GL_RGB8 : GL_RGBA8;
-    GLint format = channel == 3 ? GL_RGB : GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    system_font.texture_handle = texture;
     return &system_font;
 }

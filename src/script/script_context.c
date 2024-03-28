@@ -1,6 +1,5 @@
 #include "script/script_context.h"
 #include "script/browser.h"
-#include "script/webgl2.h"
 #include "ui/ui_dev_tool.h"
 #include "foundation/network.h"
 #include "foundation/logger.h"
@@ -23,10 +22,10 @@ static void script_dump_obj(JSContext *ctx, JSValueConst val) {
     const char *str;
     str = JS_ToCString(ctx, val);
     if (str) {
-        LOG_ERROR(str);
+        ULOG_ERROR(str);
         JS_FreeCString(ctx, str);
     } else {
-        LOG_ERROR("[exception]]");
+        ULOG_ERROR("[exception]]");
     }
 }
 
@@ -80,14 +79,12 @@ void script_context_destroy(void) {
 
 void script_context_cleanup(void) {
     script_browser_cleanup();
-    script_webgl2_cleanup();
     script_context_destroy();
 }
 
 void script_context_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
     script_browser_register();
-    script_webgl2_register();
 }
 
 int script_eval(ustring source, ustring_view filename) {
@@ -95,7 +92,7 @@ int script_eval(ustring source, ustring_view filename) {
     assert(source.null_terminated == true);
 
     if (source.length == 0) {
-        LOG_INFO("source is empty");
+        ULOG_INFO("source is empty");
         return -1;
     }
 
@@ -152,9 +149,9 @@ int script_eval_direct(ustring source, ustring *result) {
 }
 
 static void on_remote_script_download(net_request_t request, net_response_t response) {
-    LOG_INFO_FMT("download remote script: {v}", request.url);
-    LOG_INFO_FMT("status: {d}", response.status);
-    LOG_INFO_FMT("content_length: {d}", response.content_length);
+    ULOG_INFO_FMT("download remote script: {v}", request.url);
+    ULOG_INFO_FMT("status: {d}", response.status);
+    ULOG_INFO_FMT("content_length: {d}", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
     script_context_t *ctx = script_context_shared();
 
@@ -166,10 +163,10 @@ int script_eval_uri(ustring_view uri) {
     if (ustring_view_start_with_ustring(uri, ustring_STR("http"))) {
         url_t url = url_parse(uri);
         if (!url.valid) {
-            LOG_WARN_FMT("invalid url: {v}", uri);
+            ULOG_WARN_FMT("invalid url: {v}", uri);
             return -1;
         }
-        LOG_INFO_FMT("download remote script: {v}", uri);
+        ULOG_INFO_FMT("download remote script: {v}", uri);
         url_dump(url);
         net_download_async(url, on_remote_script_download);
     } else {
@@ -185,8 +182,6 @@ int script_eval_uri(ustring_view uri) {
 
 void script_context_loop_tick() {
     if (shared_context.invalid_script) {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
         ui_renderer_render(&shared_context.renderer);
         return;

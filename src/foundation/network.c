@@ -100,14 +100,14 @@ end:
 }
 
 void url_dump(url_t url) {
-    LOG_INFO("url_t {");
-    LOG_INFO_FMT("  valid: {d}", url.valid);
-    LOG_INFO_FMT("  protocol: {v}", url.protocol);
-    LOG_INFO_FMT("  host: {v}", url.host);
-    LOG_INFO_FMT("  port: {v}", url.port);
-    LOG_INFO_FMT("  path: {v}", url.path);
-    LOG_INFO_FMT("  query: {v}", url.query);
-    LOG_INFO("}");
+    ULOG_INFO("url_t {");
+    ULOG_INFO_FMT("  valid: {d}", url.valid);
+    ULOG_INFO_FMT("  protocol: {v}", url.protocol);
+    ULOG_INFO_FMT("  host: {v}", url.host);
+    ULOG_INFO_FMT("  port: {v}", url.port);
+    ULOG_INFO_FMT("  path: {v}", url.path);
+    ULOG_INFO_FMT("  query: {v}", url.query);
+    ULOG_INFO("}");
 }
 
 static ustring_view net_url_to_req_body(url_t url) {
@@ -128,13 +128,13 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
-    LOG_INFO_FMT("{v}", body);
+    ULOG_INFO_FMT("{v}", body);
     return body;
 }
 
 static void on_write(uv_write_t *write, int status) {
     if (status < 0) {
-        LOG_ERROR_FMT("write error {}\n", uv_err_name(status));
+        ULOG_ERROR_FMT("write error {}\n", uv_err_name(status));
     }
     free(write);
 }
@@ -146,7 +146,7 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 
 static void on_close(uv_handle_t *handle) {
     free(handle);
-    LOG_INFO("closed.\n");
+    ULOG_INFO("closed.\n");
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
@@ -201,7 +201,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     net_session_t *session = stream->data;
     if (nread < 0) {
         if (nread != UV_EOF) {
-            LOG_ERROR_FMT("read error {}", uv_err_name((int)nread));
+            ULOG_ERROR_FMT("read error {}", uv_err_name((int)nread));
         }
         session->cb(session->request, session->response);
         uv_close((uv_handle_t *)stream, on_close);
@@ -227,10 +227,10 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
 static void on_connect(uv_connect_t *conn, int status) {
     if (status < 0) {
-        LOG_ERROR_FMT("connection error {}", uv_err_name(status));
+        ULOG_ERROR_FMT("connection error {}", uv_err_name(status));
         return;
     }
-    LOG_INFO("connected to server.");
+    ULOG_INFO("connected to server.");
 
     net_session_t *session = conn->data;
     uv_stream_t *stream = conn->handle;
@@ -255,7 +255,7 @@ int net_download_async(url_t url, url_session_cb cb) {
     ustring_free(&port);
 
     if (r) {
-        LOG_ERROR_FMT("getaddrinfo call error {}", uv_err_name(r));
+        ULOG_ERROR_FMT("getaddrinfo call error {}", uv_err_name(r));
         return 1;
     }
 

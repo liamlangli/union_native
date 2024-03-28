@@ -1,7 +1,6 @@
 #include "ui/ui_state.h"
-#include "foundation/os.h"
+#include "os/os.h"
 
-#include <GLFW/glfw3.h>
 #include <stb_ds.h>
 
 #define LONG_PRESS_TIME 0.5
@@ -14,7 +13,7 @@ void ui_state_init(ui_state_t *state, ui_renderer_t *renderer) {
     state->active = -1;
     state->hover = -1;
     state->focus = -1;
-    state->time = glfwGetTime();
+    // state->time = glfwGetTime();
     state->smooth_factor = 0.1;
 
     ustring_view_reserve(&state->edit_str, 32);
@@ -31,7 +30,7 @@ void ui_state_reset_mouse_state(ui_state_t *state) {
 
 bool ui_state_update(ui_state_t *state) {
     state->last_time = state->time;
-    state->time = glfwGetTime();
+    // state->time = glfwGetTime();
     state->delta_time = state->time - state->last_time;
 
     state->hover = state->next_hover;

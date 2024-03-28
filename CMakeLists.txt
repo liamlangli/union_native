@@ -19,6 +19,16 @@ aux_source_directory(src/foundation FOUNDATION_SOURCES)
 file(GLOB FOUNDATION_HEADERS src/foundation/*.h)
 list(APPEND PROJECT_SRC ${FOUNDATION_SOURCES})
 
+# os
+aux_source_directory(src/os OS_SOURCES)
+file(GLOB OS_HEADERS src/os/*.h)
+list(APPEND PROJECT_SRC ${OS_SOURCES})
+
+# ui
+aux_source_directory(src/gpu UI_SOURCES)
+file(GLOB GPU_HEADERS src/gpu/*.h)
+list(APPEND PROJECT_SRC ${GPU_SOURCES})
+
 # ui
 aux_source_directory(src/ui UI_SOURCES)
 file(GLOB UI_HEADERS src/ui/*.h)
@@ -32,7 +42,9 @@ list(APPEND PROJECT_SRC ${SCRIPT_SOURCES})
 # macos
 aux_source_directory(src/macos MACOS_SOURCES)
 file(GLOB MACOS_HEADERS src/macos/*.h)
-list(APPEND PROJECT_SRC ${MACOS_SOURCES})
+if (APPLE)
+    list(APPEND PROJECT_SRC ${MACOS_SOURCES})
+endif()
 
 # include third party
 include(${CMAKE_SOURCE_DIR}/cmake/ThirdParty.cmake)

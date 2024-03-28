@@ -1,9 +1,5 @@
 #pragma once
 
-#define GLFW_INCLUDE_ES3
-#include <GLFW/glfw3.h>
-#include <GLES3/gl3.h>
-
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 
@@ -26,12 +22,23 @@ typedef struct os_window_t {
     f64 display_ratio;
     f64 ui_scale;
     void* native_window;
+    void* native_context;
 
     bool capture_required, capture_started;
+
+    void *on_launch;
+    void *on_frame;
+    void *on_terminate;
 } os_window_t;
 
-extern os_window_t* os_window_create(ustring title, int width, int height);
-extern void os_window_run_loop(os_window_t *window, void (*fn)(void));
+extern void os_setup(int argc, char **argv);
+extern void os_terminate();
+
+typedef void(*os_on_launch)(os_window_t*);
+typedef void(*os_on_frame)(os_window_t*);
+typedef void(*os_on_terminate)(os_window_t*);
+
+extern os_window_t* os_window_create(ustring title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate);
 extern void os_window_set_cursor(os_window_t *window, int cursor_type);
 extern void os_window_close(os_window_t *window);
 extern void os_window_capture_require(os_window_t *window);
@@ -42,3 +49,6 @@ extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);
 
 extern bool os_file_exists(ustring path);
+
+extern void os_time_init();
+extern long os_time();

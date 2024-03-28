@@ -46,7 +46,7 @@ typedef double f64;
 
 #define EPSILON 0.00001f
 
-#define countof(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define count_of(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 #define MACRO_CONCAT_IMPL(a, b) a##b
 #define MACRO_CONCAT(a, b) MACRO_CONCAT_IMPL(a, b)

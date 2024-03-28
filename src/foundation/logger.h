@@ -6,19 +6,19 @@
 
 #include <stb_ds.h>
 
-enum LOG_TYPE {
-    LOG_INFO,
-    LOG_WARN,
-    LOG_ERROR
+enum ULOG_TYPE {
+    ULOG_INFO,
+    ULOG_WARN,
+    ULOG_ERROR
 };
 
-#define LOG_DUMP_STRIDE 1024
+#define ULOG_DUMP_STRIDE 1024
 
-typedef struct log_line_t {
+typedef struct ULOG_line_t {
     ustring line;
     int type;
     f64 time;
-} log_line_t;
+} ULOG_line_t;
 
 typedef struct logger_config_t {
     bool std_out, write_to_file;
@@ -28,7 +28,7 @@ typedef struct logger_config_t {
 
 typedef struct logger_t {
     logger_config_t config;
-    log_line_t *lines;
+    ULOG_line_t *lines;
     u32 last_dump, new_line_count;
 } logger_t;
 
@@ -38,9 +38,9 @@ logger_t *logger_global(void);
 
 void logger_input(logger_t *logger, int type, ustring message);
 
-#define LOG_INFO(...) logger_input(logger_global(), LOG_INFO, format(__VA_ARGS__))
-#define LOG_WARN(...) logger_input(logger_global(), LOG_WARN, format(__VA_ARGS__))
-#define LOG_ERROR(...) logger_input(logger_global(), LOG_ERROR, format(__VA_ARGS__))
-#define LOG_INFO_FMT(fmt, ...) logger_input(logger_global(), LOG_INFO, format(fmt, __VA_ARGS__))
-#define LOG_WARN_FMT(fmt, ...) logger_input(logger_global(), LOG_WARN, format(fmt, __VA_ARGS__))
-#define LOG_ERROR_FMT(fmt, ...) logger_input(logger_global(), LOG_ERROR, format(fmt, __VA_ARGS__))
+#define ULOG_INFO(...) logger_input(logger_global(), ULOG_INFO, uformat(__VA_ARGS__))
+#define ULOG_WARN(...) logger_input(logger_global(), ULOG_WARN, uformat(__VA_ARGS__))
+#define ULOG_ERROR(...) logger_input(logger_global(), ULOG_ERROR, uformat(__VA_ARGS__))
+#define ULOG_INFO_FMT(fmt, ...) logger_input(logger_global(), ULOG_INFO, uformat(fmt, __VA_ARGS__))
+#define ULOG_WARN_FMT(fmt, ...) logger_input(logger_global(), ULOG_WARN, uformat(fmt, __VA_ARGS__))
+#define ULOG_ERROR_FMT(fmt, ...) logger_input(logger_global(), ULOG_ERROR, uformat(fmt, __VA_ARGS__))

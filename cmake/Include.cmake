@@ -11,8 +11,6 @@ endif()
 include_directories(
     /usr/local/include
     /opt/homebrew/include
-    ${THIRD_PARTY}/angle/include
-    ${THIRD_PARTY}/glfw/include
     ${THIRD_PARTY}/quickjs/include
     ${THIRD_PARTY}/mimalloc/include)
 link_directories(/usr/local/lib /opt/homebrew/lib)
@@ -25,8 +23,6 @@ if (WIN32)
 elseif (APPLE)
     list(APPEND LINK_DIR
         /usr/local/lib
-        ${THIRD_PARTY}/angle/lib/macos/${PROC_ARCH}
-        ${THIRD_PARTY}/glfw/lib/macos
         ${THIRD_PARTY}/quickjs/lib/macos/${PROC_ARCH}
     )
     add_definitions(-DOS_MACOS)
@@ -35,8 +31,7 @@ else() # LINUX
     list(APPEND LINK_DIR
         /usr/lib
         /usr/local/lib
-        /usr/local/lib/quickjs
-        ${THIRD_PARTY}/glfw/lib/linux)
+        /usr/local/lib/quickjs)
     list(APPEND LINK_DIR ${THIRD_PARTY}/mimalloc/lib/linux/${UN_BUILD_TYPE})
     
     add_definitions(-DOS_LINUX)

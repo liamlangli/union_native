@@ -123,7 +123,7 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             int start = command_open.length;
             while (start < text.length && text.base.data[start] == ' ') start++;
             ustring_view uri = ustring_view_sub_view(&text, start, text.length);
-            LOG_INFO_FMT("try load script: {v}", uri);
+            ULOG_INFO_FMT("try load script: {v}", uri);
             script_eval_uri(uri);
         } else if (ustring_view_start_with_ustring(text, command_close)) {
             ui_dev_tool_set_visible(dev_tool, false);
@@ -134,9 +134,9 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
             ustring content = ustring_view_to_ustring(&text);
             int err = script_eval_direct(content, &result);
             if (err != -1 && result.length > 0) {
-                LOG_INFO_FMT("{u}", result);
+                ULOG_INFO_FMT("{u}", result);
             }
-            LOG_INFO("do eval: {u}", content);
+            ULOG_INFO("do eval: {u}", content);
             ustring_free(&result);
         }
 
