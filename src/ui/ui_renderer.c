@@ -1,4 +1,5 @@
 #include "ui/ui_renderer.h"
+#include "ui/ui_font.h"
 #include "foundation/io.h"
 #include "foundation/logger.h"
 #include "gpu/gpu.h"
@@ -86,7 +87,6 @@ void ui_renderer_init(ui_renderer_t *renderer) {
 
     // gpu
     int max_texture_size = 4096;
-    // glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
 
     int texture_width = max_texture_size;
     int texture_height = PRIMITIVE_DATA_INIT_COUNT / 4 / texture_width;

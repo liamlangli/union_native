@@ -1,6 +1,12 @@
+#pragma once
+
 enum {
     GPU_SWAP_BUFFER_COUNT = 3,
-    GPU_ATTRIBUTE_MAX = 16,
+    GPU_ATTRIBUTE_COUNT = 16,
+    GPU_BLOCK_UNIFORM_COUNT = 16,
+    GPU_BLOCK_COUNT = 4,
+    GPU_SHADER_TEXTURE_COUNT = 12,
+    GPU_SHADER_SAMPLER_COUNT = 8,
 };
 
 typedef enum gpu_pixel_format {
@@ -89,15 +95,105 @@ typedef enum gpu_pixel_format {
 } gpu_pixel_format;
 
 typedef enum gpu_buffer_type {
-    GPU_BUFFER_VERTEX,
-    GPU_BUFFER_INDEX,
-    GPU_BUFFER_UNIFORM,
-    GPU_BUFFER_STORAGE
+    BUFFER_VERTEX,
+    BUFFER_INDEX,
+    BUFFER_UNIFORM,
+    BUFFER_STORAGE
 } gpu_buffer_type;
 
 typedef enum gpu_texture_type {
-    GPU_TEXTURE_2D,
-    GPU_TEXTURE_CUBE,
-    GPU_TEXTURE_3D,
-    GPU_TEXTURE_ARRAY,
+    TEXTURE_2D,
+    TEXTURE_CUBE,
+    TEXTURE_3D,
+    TEXTURE_ARRAY,
 } gpu_texture_type;
+
+typedef enum gpu_attribute_type {
+    ATTRIBUTE_FLOAT,
+    ATTRIBUTE_UINT,
+    ATTRIBUTE_INT,
+    ATTRIBUTE_USHORT,
+    ATTRIBUTE_SHORT,
+    ATTRIBUTE_BYTE,
+    ATTRIBUTE_UBYTE,
+} gpu_attribute_type;
+
+typedef enum gpu_uniform_layout {
+    UNIFORM_LAYOUT_AUTO,
+    UNIFORM_LAYOUT_NATIVE,
+    UNIFORM_LAYOUT_STD140,
+} gpu_uniform_layout;
+
+typedef enum gpu_uniform_type {
+    UNIFORM_FLOAT,
+    UNIFORM_FLOAT2,
+    UNIFORM_FLOAT3,
+    UNIFORM_FLOAT4,
+    UNIFORM_MAT3,
+    UNIFORM_MAT4,
+} gpu_uniform_type;
+
+typedef enum gpu_texture_sample_type {
+    TEXTURE_SAMPLE_TYPE_FLOAT,
+    TEXTURE_SAMPLE_TYPE_DEPTH,
+    TEXTURE_SAMPLE_TYPE_SINT,
+    TEXTURE_SAMPLE_TYPE_UINT,
+    TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT,
+} gpu_texture_sample_type;
+
+typedef enum gpu_sampler_type {
+    SAMPLER_TYPE_FILTERING,
+    SAMPLER_TYPE_NEAREST,
+    SAMPLER_TYPE_COMPARISON,
+} gpu_sampler_type;
+
+typedef enum gpu_filter {
+    FILTER_AUTO,
+    FILTER_NEAREST,
+    FILTER_LINEAR,
+} gpu_filter;
+
+typedef enum gpu_wrap {
+    WRAP_AUTO,
+    WRAP_CLAMP_TO_EDGE,
+    WRAP_REPEAT,
+    WRAP_MIRRORED_REPEAT,
+} gpu_wrap;
+
+typedef enum gpu_compare_func {
+    COMPARE_AUTO,
+    COMPARE_NEVER,
+    COMPARE_LESS,
+    COMPARE_EQUAL,
+    COMPARE_LESS_EQUAL,
+    COMPARE_GREATER,
+    COMPARE_NOT_EQUAL,
+    COMPARE_GREATER_EQUAL,
+    COMPARE_ALWAYS,
+} gpu_compare_func;
+
+typedef enum gpu_primitive_type {
+    PRIMITIVE_POINTS,
+    PRIMITIVE_LINES,
+    PRIMITIVE_LINE_STRIP,
+    PRIMITIVE_LINE_LOOP,
+    PRIMITIVE_TRIANGLES,
+    PRIMITIVE_TRIANGLE_STRIP,
+    PRIMITIVE_TRIANGLE_FAN,
+} gpu_primitive_type;
+
+typedef enum gpu_index_type {
+    INDEX_UINT16,
+    INDEX_UINT32,
+} gpu_index_type;
+
+typedef enum gpu_face_winding {
+    FACE_WINDING_CCW,
+    FACE_WINDING_CW,
+} gpu_face_winding;
+
+typedef enum gpu_cull_mode {
+    CULL_NONE,
+    CULL_FRONT,
+    CULL_BACK,
+} gpu_cull_mode;

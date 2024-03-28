@@ -65,10 +65,10 @@ int _gpu_mtl_add_resource(id res) {
 
 MTLTextureType _gpu_mtl_texture_type(gpu_texture_type type) {
     switch (type) {
-        case GPU_TEXTURE_2D: return MTLTextureType2D;
-        case GPU_TEXTURE_CUBE: return MTLTextureTypeCube;
-        case GPU_TEXTURE_3D: return MTLTextureType3D;
-        case GPU_TEXTURE_ARRAY: return MTLTextureType2DArray;
+        case TEXTURE_2D: return MTLTextureType2D;
+        case TEXTURE_CUBE: return MTLTextureTypeCube;
+        case TEXTURE_3D: return MTLTextureType3D;
+        case TEXTURE_ARRAY: return MTLTextureType2DArray;
         default: return MTLTextureType2D;
     }
 }
@@ -156,12 +156,12 @@ gpu_texture gpu_create_texture(gpu_device_t *device, gpu_texture_desc *desc) {
     mtl_desc.pixelFormat = _gpu_mtl_pixel_format(desc->format);
     mtl_desc.width = (NSUInteger)desc->width;
     mtl_desc.height = (NSUInteger)desc->height;
-    if (desc->type == GPU_TEXTURE_3D)
+    if (desc->type == TEXTURE_3D)
         mtl_desc.depth = (NSUInteger)desc->depth;
     else
         mtl_desc.arrayLength = (NSUInteger)desc->depth;
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
     [device->device newTextureWithDescriptor: mtl_desc];
-    return tex;
+    return (gpu_texture){ .id = 0 };
 }
