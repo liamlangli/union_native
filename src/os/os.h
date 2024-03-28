@@ -22,7 +22,7 @@ typedef struct os_window_t {
     f64 display_ratio;
     f64 ui_scale;
     void* native_window;
-    void* native_context;
+    void *gpu_device;
 
     bool capture_required, capture_started;
 

@@ -59,7 +59,6 @@ void gpu_destroy_device(gpu_device_t *device) {
 
 int _gpu_mtl_add_resource(id res) {
     int slot = -1;
-
     return slot;
 }
 
@@ -159,9 +158,15 @@ gpu_texture gpu_create_texture(gpu_device_t *device, gpu_texture_desc *desc) {
     if (desc->type == TEXTURE_3D)
         mtl_desc.depth = (NSUInteger)desc->depth;
     else
-        mtl_desc.arrayLength = (NSUInteger)desc->depth;
+        mtl_desc.arrayLength = 1;
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
     [device->device newTextureWithDescriptor: mtl_desc];
     return (gpu_texture){ .id = 0 };
+}
+
+gpu_buffer gpu_create_buffer(gpu_device_t *device, gpu_buffer_desc *desc) {
+    id<MTLBuffer> buffer = [device->device newBufferWithLength: desc->size options: MTLResourceStorageModeShared];
+    printf("%d", buffer.length);
+    return (gpu_buffer){ .id = _gpu_mtl_add_resource(buffer) };
 }

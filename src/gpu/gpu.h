@@ -5,8 +5,6 @@
 #include "os/os.h"
 #include "gpu_const.h"
 
-#include <sokol_gfx.h>
-
 typedef struct gpu_device_t gpu_device_t;
 typedef struct gpu_texture { u32 id; } gpu_texture;
 typedef struct gpu_sampler { u32 id; } gpu_sampler;

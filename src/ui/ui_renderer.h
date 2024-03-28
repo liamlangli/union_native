@@ -24,10 +24,10 @@ typedef struct ui_renderer_t {
     // gpu side
     float4 window_size;
     u32 primitive_data_texture_width;
-    sg_image primitive_data_texture;
-    sg_buffer index_buffer;
-    sg_image icon_texture;
-    sg_pipeline pipeline;
+    gpu_texture primitive_data_texture;
+    gpu_buffer index_buffer;
+    gpu_texture icon_texture;
+    gpu_pipeline pipeline;
 } ui_renderer_t;
 
 typedef struct ui_rect_vertex {
@@ -70,7 +70,7 @@ ui_rect ui_layer_read_clip(ui_layer *layer, u32 clip);
 void ui_layer_clear(ui_layer *layer);
 
 // renderer func
-void ui_renderer_init(ui_renderer_t *renderer);
+void ui_renderer_init(ui_renderer_t *renderer, gpu_device_t *device);
 void ui_renderer_free(ui_renderer_t *renderer);
 void ui_renderer_render(ui_renderer_t *renderer);
 

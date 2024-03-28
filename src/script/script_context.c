@@ -4,6 +4,7 @@
 #include "foundation/network.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
+#include "gpu/gpu.h"
 
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
@@ -51,7 +52,7 @@ void script_context_init(os_window_t *window) {
     shared_context.window = window;
     shared_context.db = db_open(ustring_STR("union"));
     shared_context.invalid_script = true;
-    ui_renderer_init(&shared_context.renderer);
+    ui_renderer_init(&shared_context.renderer, (gpu_device_t*)window->gpu_device);
     ui_state_init(&shared_context.state, &shared_context.renderer);
     ui_dev_tool_init(&shared_context.dev_tool);
 }
