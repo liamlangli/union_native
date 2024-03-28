@@ -1,7 +1,12 @@
 #include "ui/ui_renderer.h"
 #include "foundation/io.h"
 #include "foundation/logger.h"
+#include "foundation/ustring.h"
 #include "script/script_context.h"
+
+#if OS_MACOS
+#include <unistd.h>
+#endif
 
 #include <GLES3/gl3.h>
 #include <math.h>

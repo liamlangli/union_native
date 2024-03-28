@@ -15,11 +15,3 @@ elseif (APPLE)
 else() # LINUX
     target_link_libraries(${PROJECT_NAME} GLESv2 quickjs glfw3 rt m dl uv leveldb)
 endif()
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/npm/public $<TARGET_FILE_DIR:${PROJECT_NAME}>/public)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/npm/example/public $<TARGET_FILE_DIR:${PROJECT_NAME}>/public)

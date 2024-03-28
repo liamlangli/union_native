@@ -4,6 +4,7 @@
 #import <Foundation/Foundation.h>
 #import <MetalKit/MetalKit.h>
 #import <Metal/Metal.h>
+
 void metal_capture_start(void) {
     MTLCaptureDescriptor *desc = [MTLCaptureDescriptor new];
     desc.captureObject = MTLCreateSystemDefaultDevice();

@@ -27,6 +27,8 @@ u32 ustring_safe_growth(ustring *s, u32 n);
     (ustring_safe_growth(s, (s)->length + (n)), memcpy((s)->data + (s)->length, (d), (n)), (s)->length += (n),                \
      (s)->null_terminated = false)
 #define ustring_NULL ((ustring){.data = NULL, .length = 0, .null_terminated = false, .is_static = false})
+#define ustring_printf(s)                                                                                                     \
+    ((s)->null_terminated ? (s)->data : (ustring_set_null_terminated(s), (s)->data)) // may allocate new memory
 
 // mutable string view
 typedef struct ustring_view {
