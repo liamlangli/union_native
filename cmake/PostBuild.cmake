@@ -4,4 +4,4 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/app/Info.plist $<TARGET_FILE_DIR:${PROJECT_NAME}>/Info.plist)
+    ${CMAKE_SOURCE_DIR}/app/AppIcon.icns $<TARGET_FILE_DIR:${PROJECT_NAME}>/../Resources/AppIcon.icns)
