@@ -5,7 +5,6 @@
 #include "os/os.h"
 #include "gpu_const.h"
 
-typedef struct gpu_device_t gpu_device_t;
 typedef struct gpu_texture { u32 id; } gpu_texture;
 typedef struct gpu_sampler { u32 id; } gpu_sampler;
 typedef struct gpu_buffer { u32 id; } gpu_buffer;
@@ -13,9 +12,6 @@ typedef struct gpu_shader { u32 id; } gpu_shader;
 typedef struct gpu_pipeline { u32 id; } gpu_pipeline;
 typedef struct gpu_attachments { u32 id; } gpu_attachments;
 typedef struct gpu_color { f32 r, g, b, a; } gpu_color;
-
-gpu_device_t* gpu_create_device(os_window_t *window);
-void gpu_destroy_device(gpu_device_t *device);
 
 typedef struct gpu_texture_desc {
     int width, height, depth;
@@ -145,7 +141,14 @@ typedef struct gpu_pass {
     gpu_attachments attachments;
 } gpu_pass;
 
-gpu_texture gpu_create_texture(gpu_device_t *device, gpu_texture_desc *desc);
-gpu_texture gpu_create_sampler(gpu_device_t *device, gpu_sampler_desc *desc);
-gpu_buffer gpu_create_buffer(gpu_device_t *device, gpu_buffer_desc *desc);
-gpu_pipeline gpu_create_pipeline(gpu_device_t *device, gpu_pipeline_desc *desc);
+bool gpu_request_device(os_window_t *window);
+void gpu_destroy_device();
+
+gpu_texture gpu_create_texture(gpu_texture_desc *desc);
+gpu_texture gpu_create_sampler(gpu_sampler_desc *desc);
+gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc);
+gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc);
+
+bool gpu_begin_pass(gpu_pass *pass);
+void gpu_end_pass();
+void gpu_commit();

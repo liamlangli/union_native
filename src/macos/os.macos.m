@@ -101,8 +101,9 @@ static os_on_terminate terminate_func = NULL;
     _window->width = width;
     _window->height = height;
     _window->native_window = mtk_view;
-    gpu_device_t *device = gpu_create_device(_window);
-    _window->gpu_device = device;
+    if(!gpu_request_device(_window)) {
+        assert(false);
+    }
 
     // call the init function
     if (launch_func) {

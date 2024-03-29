@@ -59,7 +59,7 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
 }
 
 // renderer func
-void ui_renderer_init(ui_renderer_t *renderer, gpu_device_t *device) {
+void ui_renderer_init(ui_renderer_t *renderer) {
     // 4M ui data
     // 1M for primitive buffer 3M for index data
     renderer->primitive_data = (u32 *)malloc(PRIMITIVE_DATA_INIT_COUNT * sizeof(f32) * 4);
@@ -97,16 +97,16 @@ void ui_renderer_init(ui_renderer_t *renderer, gpu_device_t *device) {
     primitive_data_desc.format = PIXELFORMAT_RGBA32F;
     primitive_data_desc.data = (udata){.data = (i8*)renderer->primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
 
-    renderer->primitive_data_texture = gpu_create_texture(device, &primitive_data_desc);
+    renderer->primitive_data_texture = gpu_create_texture(&primitive_data_desc);
     renderer->primitive_data_texture_width = texture_width;
 
     gpu_texture_desc icon_texture_desc = {0};
     icon_texture_desc.width = 1024;
     icon_texture_desc.height = 1024;
     icon_texture_desc.format = PIXELFORMAT_RGBA8;
-    renderer->icon_texture = gpu_create_texture(device, &icon_texture_desc);
+    renderer->icon_texture = gpu_create_texture(&icon_texture_desc);
 
-    renderer->index_buffer = gpu_create_buffer(device, &(gpu_buffer_desc){
+    renderer->index_buffer = gpu_create_buffer(&(gpu_buffer_desc){
         .size = PRIMITIVE_DATA_INIT_COUNT * 4,
         .type = BUFFER_VERTEX,
         .data = (udata){.data = (i8*)renderer->index_data, PRIMITIVE_DATA_INIT_COUNT * 4},

@@ -70,7 +70,7 @@ ui_rect ui_layer_read_clip(ui_layer *layer, u32 clip);
 void ui_layer_clear(ui_layer *layer);
 
 // renderer func
-void ui_renderer_init(ui_renderer_t *renderer, gpu_device_t *device);
+void ui_renderer_init(ui_renderer_t *renderer);
 void ui_renderer_free(ui_renderer_t *renderer);
 void ui_renderer_render(ui_renderer_t *renderer);
 
