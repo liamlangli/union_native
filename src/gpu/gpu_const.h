@@ -3,6 +3,7 @@
 enum {
     GPU_SWAP_BUFFER_COUNT = 3,
     GPU_ATTRIBUTE_COUNT = 16,
+    GPU_ATTACHMENT_COUNT = 4,
     GPU_BLOCK_UNIFORM_COUNT = 16,
     GPU_BLOCK_COUNT = 4,
     GPU_SHADER_TEXTURE_COUNT = 12,
@@ -197,3 +198,14 @@ typedef enum gpu_cull_mode {
     CULL_FRONT,
     CULL_BACK,
 } gpu_cull_mode;
+
+typedef enum gpu_load_action {
+    LOAD_ACTION_CLEAR,
+    LOAD_ACTION_LOAD,
+    LOAD_ACTION_DONTCARE,
+} gpu_load_action;
+
+typedef enum gpu_store_action {
+    STORE_ACTION_STORE,
+    STORE_ACTION_DONTCARE,
+} gpu_store_action;

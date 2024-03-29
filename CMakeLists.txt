@@ -40,9 +40,16 @@ file(GLOB SCRIPT_HEADERS src/script/*.h)
 list(APPEND PROJECT_SRC ${SCRIPT_SOURCES})
 
 # macos
-aux_source_directory(src/macos MACOS_SOURCES)
+set(MACOS_SOURCES
+    src/macos/metal.m
+    src/macos/metal_type.m)
 file(GLOB MACOS_HEADERS src/macos/*.h)
 if (APPLE)
+    if (IOS)
+        list(APPEND MACOS_SOURCES src/macos/os.ios.m)
+    else()
+        list(APPEND MACOS_SOURCES src/macos/os.macos.m)
+    endif()
     list(APPEND PROJECT_SRC ${MACOS_SOURCES})
 endif()
 
@@ -51,6 +58,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/ThirdParty.cmake)
 
 # source groups
 source_group(foundation FILES ${FOUNDATION_SOURCES} ${FOUNDATION_HEADERS})
+source_group(os FILES ${OS_SOURCES} ${OS_HEADERS})
 source_group(ui FILES ${UI_SOURCES} ${UI_HEADERS})
 source_group(script FILES ${SCRIPT_SOURCES} ${SCRIPT_HEADERS})
 source_group(macos FILE ${MACOS_SOURCES} ${MACOS_HEADERS})

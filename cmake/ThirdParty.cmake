@@ -2,7 +2,6 @@
 # zip
 include_directories(${THIRD_PARTY}/zip)
 aux_source_directory(${THIRD_PARTY}/zip ZIP_SRC)
-message(STATUS "zip src: ${ZIP_SRC}")
 list(APPEND PROJECT_SRC ${ZIP_SRC})
 source_group(third_party\\zip FILES ${ZIP_SRC})
 set_source_files_properties(${ZIP_SRC} PROPERTIES UNITY_GROUP "zip")

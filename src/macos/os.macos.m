@@ -1,34 +1,30 @@
 
+#include "gpu/gpu.h"
+#include "macos/metal.h"
 #include <TargetConditionals.h>
-#if !TARGET_OS_IPHONE
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
-#else
-#import <UIKit/UIKit.h>
-#endif
 
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+#import <dispatch/semaphore.h>
 
 #include "foundation/api.h"
 #include "os/os.h"
 
-
-#if !TARGET_OS_IPHONE
 @interface UNApp : NSApplication
 @end
+
 @interface UNAppDelegate : NSObject<NSApplicationDelegate>
 @end
+
 @interface UNWindowDelegate : NSObject<NSWindowDelegate>
 @end
+
 static NSWindow* window;
-#else
-@interface UNAppDelegate : NSObject<UIApplicationDelegate>
-@end
-static UIWindow* window;
-#endif
 @interface UNViewDelegate : NSObject<MTKViewDelegate>
 @end
+
 @interface UNMTKView : MTKView
 @end
 
@@ -46,12 +42,6 @@ static os_on_launch launch_func = NULL;
 static os_on_frame frame_func = NULL;
 static os_on_terminate terminate_func = NULL;
 
-
-#if TARGET_OS_IPHONE
-static id mtk_view_controller;
-#endif
-
-#if !TARGET_OS_IPHONE
 //------------------------------------------------------------------------------
 @implementation UNApp
 // From http://cocoadev.com/index.pl?GameKeyboardHandlingAlmost
@@ -66,41 +56,28 @@ static id mtk_view_controller;
     }
 }
 @end
-#endif
 
 //------------------------------------------------------------------------------
 @implementation UNAppDelegate
-#if !TARGET_OS_IPHONE
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
     (void)aNotification;
-#else
-- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    (void)application;
-    (void)launchOptions;
-#endif
-    // window delegate and main window
-    #if TARGET_OS_IPHONE
-        CGRect mainScreenBounds = [[UIScreen mainScreen] bounds];
-        window = [[UIWindow alloc] initWithFrame:mainScreenBounds];
-        (void)window_delegate;
-    #else
-        window_delegate = [[UNWindowDelegate alloc] init];
-        const NSUInteger style =
-            NSWindowStyleMaskTitled |
-            NSWindowStyleMaskClosable |
-            NSWindowStyleMaskMiniaturizable |
-            NSWindowStyleMaskResizable;
-        window = [[NSWindow alloc]
-            initWithContentRect:NSMakeRect(0, 0, width, height)
-            styleMask:style
-            backing:NSBackingStoreBuffered
-            defer:NO];
-        [window setTitle:[NSString stringWithUTF8String:window_title]];
-        [window setAcceptsMouseMovedEvents:YES];
-        [window center];
-        [window setRestorable:YES];
-        [window setDelegate:window_delegate];
-    #endif
+
+    window_delegate = [[UNWindowDelegate alloc] init];
+    const NSUInteger style =
+        NSWindowStyleMaskTitled |
+        NSWindowStyleMaskClosable |
+        NSWindowStyleMaskMiniaturizable |
+        NSWindowStyleMaskResizable;
+    window = [[NSWindow alloc]
+        initWithContentRect:NSMakeRect(0, 0, width, height)
+        styleMask:style
+        backing:NSBackingStoreBuffered
+        defer:NO];
+    [window setTitle:[NSString stringWithUTF8String:window_title]];
+    [window setAcceptsMouseMovedEvents:YES];
+    [window center];
+    [window setRestorable:YES];
+    [window setDelegate:window_delegate];
 
     // view delegate, MTKView and Metal device
     mtk_view_delegate = [[UNViewDelegate alloc] init];
@@ -112,50 +89,34 @@ static id mtk_view_controller;
     [mtk_view setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
     [mtk_view setDepthStencilPixelFormat:MTLPixelFormatDepth32Float_Stencil8];
     [mtk_view setSampleCount:(NSUInteger)1];
-    #if !TARGET_OS_IPHONE
-        [window setContentView:mtk_view];
-        CGSize drawable_size = { (CGFloat) width, (CGFloat) height };
-        [mtk_view setDrawableSize:drawable_size];
-        [[mtk_view layer] setMagnificationFilter:kCAFilterNearest];
-        NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
-        [NSApp activateIgnoringOtherApps:YES];
-        [window makeKeyAndOrderFront:nil];
-    #else
-        [mtk_view setContentScaleFactor:1.0f];
-        [mtk_view setUserInteractionEnabled:YES];
-        [mtk_view setMultipleTouchEnabled:YES];
-        [window addSubview:mtk_view];
-        mtk_view_controller = [[UIViewController<MTKViewDelegate> alloc] init];
-        [mtk_view_controller setView:mtk_view];
-        [window setRootViewController:mtk_view_controller];
-        [window makeKeyAndVisible];
-    #endif
+
+    [window setContentView:mtk_view];
+    CGSize drawable_size = { (CGFloat) width, (CGFloat) height };
+    [mtk_view setDrawableSize:drawable_size];
+    [[mtk_view layer] setMagnificationFilter:kCAFilterNearest];
+    NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
+    [NSApp activateIgnoringOtherApps:YES];
+    [window makeKeyAndOrderFront:nil];
 
     _window->width = width;
     _window->height = height;
     _window->native_window = mtk_view;
-    _window->gpu_device = mtl_device;
+    gpu_device_t *device = gpu_create_device(_window);
+    _window->gpu_device = device;
 
     // call the init function
     if (launch_func) {
         launch_func(_window);
     }
-
-    #if TARGET_OS_IPHONE
-        return YES;
-    #endif
 }
 
-#if !TARGET_OS_IPHONE
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
     (void)sender;
     return YES;
 }
-#endif
 @end
 
 //------------------------------------------------------------------------------
-#if !TARGET_OS_IPHONE
 @implementation UNWindowDelegate
 - (BOOL)windowShouldClose:(id)sender {
     (void)sender;
@@ -196,7 +157,6 @@ static id mtk_view_controller;
     // FIXME
 }
 @end
-#endif
 
 //------------------------------------------------------------------------------
 @implementation UNViewDelegate
@@ -210,7 +170,6 @@ static id mtk_view_controller;
 - (void)drawInMTKView:(nonnull MTKView*)view {
     (void)view;
     @autoreleasepool {
-        //frame_func();
         if (frame_func != NULL) {
             frame_func(_window);
         }
@@ -225,7 +184,6 @@ static id mtk_view_controller;
     return YES;
 }
 
-#if !TARGET_OS_IPHONE
 - (BOOL)canBecomeKeyView {
     return YES;
 }
@@ -316,7 +274,6 @@ static id mtk_view_controller;
     //     mouse_wheel_func(dy);
     // }
 }
-#endif
 @end
 
 //------------------------------------------------------------------------------
@@ -324,19 +281,11 @@ void osx_start(int w, int h, const char* title) {
     width = w;
     height = h;
     window_title = title;
-    #if !TARGET_OS_IPHONE
     [UNApp sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     id delg = [[UNAppDelegate alloc] init];
     [NSApp setDelegate:delg];
     [NSApp run];
-    #else
-    @autoreleasepool {
-        int argc = 0;
-        char* argv[] = {};
-        UIApplicationMain(argc, argv, nil, NSStringFromClass([UNAppDelegate class]));
-    }
-    #endif
 }
 
 /* return current MTKView drawable width */

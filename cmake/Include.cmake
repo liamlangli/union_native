@@ -20,21 +20,25 @@ if (WIN32)
     list(APPEND LINK_DIR ${THIRD_PARTY}/quickjs/lib/mingw64)
     list(APPEND LINK_DIR ${THIRD_PARTY}/mimalloc/lib/mingw64/${UN_BUILD_TYPE})
     add_definitions(-DOS_WINDOWS)
+    set(PLATFORM "OS_WINDOWS")
 elseif (APPLE)
-    list(APPEND LINK_DIR
-        /usr/local/lib
-        ${THIRD_PARTY}/quickjs/lib/macos/${PROC_ARCH}
-    )
-    add_definitions(-DOS_MACOS)
-    add_definitions(-DGL_SILENCE_DEPRECATION)
+    list(APPEND LINK_DIR ${THIRD_PARTY}/quickjs/lib/macos/${PROC_ARCH})
+    if (IOS)
+        add_definitions(-DOS_IOS)
+        set(PLATFORM "OS_IOS")
+    else()
+        add_definitions(-DOS_MACOS)
+        set(PLATFORM "OS_MACOS")
+    endif()
 else() # LINUX
     list(APPEND LINK_DIR
         /usr/lib
         /usr/local/lib
         /usr/local/lib/quickjs)
     list(APPEND LINK_DIR ${THIRD_PARTY}/mimalloc/lib/linux/${UN_BUILD_TYPE})
-    
     add_definitions(-DOS_LINUX)
 endif()
+
+message(STATUS "OS: ${PLATFORM}")
 
 link_directories(${LINK_DIR})

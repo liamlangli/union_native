@@ -11,6 +11,8 @@ typedef struct gpu_sampler { u32 id; } gpu_sampler;
 typedef struct gpu_buffer { u32 id; } gpu_buffer;
 typedef struct gpu_shader { u32 id; } gpu_shader;
 typedef struct gpu_pipeline { u32 id; } gpu_pipeline;
+typedef struct gpu_attachments { u32 id; } gpu_attachments;
+typedef struct gpu_color { f32 r, g, b, a; } gpu_color;
 
 gpu_device_t* gpu_create_device(os_window_t *window);
 void gpu_destroy_device(gpu_device_t *device);
@@ -113,6 +115,35 @@ typedef struct gpu_binding {
     gpu_stage_binding vertex;
     gpu_stage_binding fragment;
 } gpu_binding;
+
+typedef struct gpu_color_attachment_action {
+    gpu_load_action load_action;
+    gpu_store_action store_action;
+    gpu_color clear_value;
+} gpu_color_attachment_action;
+
+typedef struct gpu_depth_attachment_action {
+    gpu_load_action load_action;
+    gpu_store_action store_action;
+    f32 clear_value;
+} gpu_depth_attachment_action;
+
+typedef struct gpu_stencil_attachment_action {
+    gpu_load_action load_action;
+    gpu_store_action store_action;
+    u8 clear_value;
+} gpu_stencil_attachment_action;
+
+typedef struct gpu_pass_action {
+    gpu_color_attachment_action color_action[GPU_ATTACHMENT_COUNT];
+    gpu_depth_attachment_action depth_action;
+    gpu_stencil_attachment_action stencil_action;
+} gpu_pass_action;
+
+typedef struct gpu_pass {
+    gpu_pass_action action;
+    gpu_attachments attachments;
+} gpu_pass;
 
 gpu_texture gpu_create_texture(gpu_device_t *device, gpu_texture_desc *desc);
 gpu_texture gpu_create_sampler(gpu_device_t *device, gpu_sampler_desc *desc);

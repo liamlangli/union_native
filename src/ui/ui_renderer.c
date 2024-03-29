@@ -107,6 +107,7 @@ void ui_renderer_init(ui_renderer_t *renderer, gpu_device_t *device) {
     renderer->icon_texture = gpu_create_texture(device, &icon_texture_desc);
 
     renderer->index_buffer = gpu_create_buffer(device, &(gpu_buffer_desc){
+        .size = PRIMITIVE_DATA_INIT_COUNT * 4,
         .type = BUFFER_VERTEX,
         .data = (udata){.data = (i8*)renderer->index_data, PRIMITIVE_DATA_INIT_COUNT * 4},
     });
