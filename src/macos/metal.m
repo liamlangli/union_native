@@ -184,3 +184,11 @@ void gpu_commit() {
     _state.device.frame_index = (_state.device.frame_index + 1) % _state.device.frame_swap_count;
     _state.device.cmd_buffer = nil;
 }
+
+gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
+    return (gpu_shader){ .id = 0 };
+}
+
+gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
+    return (gpu_pipeline){ .id = 0 };
+}
