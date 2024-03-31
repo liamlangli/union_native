@@ -1,6 +1,6 @@
 #include "metal.h"
 
-MTLPixelFormat _gpu_mtl_pixel_format(gpu_pixel_format fmt) {
+MTLPixelFormat _mtl_pixel_format(gpu_pixel_format fmt) {
     switch (fmt) {
         case PIXELFORMAT_R8:                     return MTLPixelFormatR8Unorm;
         case PIXELFORMAT_R8SN:                   return MTLPixelFormatR8Snorm;
@@ -77,12 +77,36 @@ MTLPixelFormat _gpu_mtl_pixel_format(gpu_pixel_format fmt) {
     }
 }
 
-MTLTextureType _gpu_mtl_texture_type(gpu_texture_type type) {
+MTLTextureType _mtl_texture_type(gpu_texture_type type) {
     switch (type) {
         case TEXTURE_2D: return MTLTextureType2D;
         case TEXTURE_CUBE: return MTLTextureTypeCube;
         case TEXTURE_3D: return MTLTextureType3D;
         case TEXTURE_ARRAY: return MTLTextureType2DArray;
         default: return MTLTextureType2D;
+    }
+}
+
+MTLLoadAction _mtl_load_action(gpu_load_action action) {
+    switch (action) {
+        case LOAD_ACTION_CLEAR: return MTLLoadActionClear;
+        case LOAD_ACTION_LOAD: return MTLLoadActionLoad;
+        case LOAD_ACTION_DONTCARE: return MTLLoadActionDontCare;
+        default: return MTLLoadActionDontCare;
+    }
+}
+
+MTLStoreAction _mtl_store_action(gpu_store_action action) {
+    switch (action) {
+        case STORE_ACTION_STORE: return MTLStoreActionStore;
+        case STORE_ACTION_DONTCARE: return MTLStoreActionDontCare;
+        default: return MTLStoreActionDontCare;
+    }
+}
+
+bool _mtl_stencil_enabled_format(gpu_pixel_format fmt) {
+    switch (fmt) {
+        case PIXELFORMAT_DEPTH_STENCIL: return true;
+        default: return false;
     }
 }

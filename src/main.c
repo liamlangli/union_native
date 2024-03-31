@@ -16,6 +16,11 @@ void on_launch(os_window_t* window) {
 
 void on_frame(os_window_t* window) {
     script_context_loop_tick();
+
+    static gpu_pass pass = {0};
+    gpu_begin_pass(&pass);
+    gpu_end_pass();
+    gpu_commit();
 }
 
 void on_terminate(os_window_t* window) {
