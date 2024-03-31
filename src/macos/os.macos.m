@@ -71,21 +71,21 @@ static os_on_terminate terminate_func = NULL;
         NSWindowStyleMaskResizable;
     window = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, width, height)
-        styleMask:style
-        backing:NSBackingStoreBuffered
-        defer:NO];
-    [window setTitle:[NSString stringWithUTF8String:window_title]];
-    [window setAcceptsMouseMovedEvents:YES];
+        styleMask: style
+        backing: NSBackingStoreBuffered
+        defer: NO];
+    [window setTitle:[NSString stringWithUTF8String: window_title]];
+    [window setAcceptsMouseMovedEvents: YES];
     [window center];
-    [window setRestorable:YES];
-    [window setDelegate:window_delegate];
+    [window setRestorable: YES];
+    [window setDelegate: window_delegate];
 
     // view delegate, MTKView and Metal device
     mtk_view_delegate = [[UNViewDelegate alloc] init];
     mtl_device = MTLCreateSystemDefaultDevice();
     mtk_view = [[UNMTKView alloc] init];
     [mtk_view setPreferredFramesPerSecond:60];
-    [mtk_view setDelegate:mtk_view_delegate];
+    [mtk_view setDelegate: mtk_view_delegate];
     [mtk_view setDevice: mtl_device];
     [mtk_view setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
     [mtk_view setDepthStencilPixelFormat:MTLPixelFormatDepth32Float_Stencil8];

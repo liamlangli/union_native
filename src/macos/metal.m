@@ -47,7 +47,7 @@ bool gpu_request_device(os_window_t *window) {
         return false;
     }
     _state.device.cmd_queue = [_state.device.device newCommandQueue];
-    _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
+    _state.device.cmd_buffer = nil;
     _state.device.cmd_encoder = nil;
     _state.device.cur_drawable = nil;
     _state.device.frame_index = 0;
@@ -115,7 +115,6 @@ void gpu_mtl_begin_frame(MTKView *view) {
 bool gpu_begin_pass(gpu_pass *pass) {
     assert(_state.device.cmd_encoder == nil);
     assert(_state.device.cur_drawable == nil);
-    assert(_state.device.cmd_buffer != nil);
 
     if (nil == _state.device.cmd_buffer) {
         dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
@@ -129,7 +128,7 @@ bool gpu_begin_pass(gpu_pass *pass) {
     MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
     assert(pass_desc);
     gpu_attachments *attachments = &pass->attachments;
-    if (attachments == nil) {
+    if (true) {
         // render to screen
         gpu_swapchain_mtl_t *swapchain = &_state.device.swapchain;
         if (0 == swapchain->drawable) {
@@ -137,7 +136,7 @@ bool gpu_begin_pass(gpu_pass *pass) {
         }
 
         _state.device.cur_drawable = swapchain->drawable;
-        pass_desc.colorAttachments[0].texture = swapchain->color_texture;
+        pass_desc.colorAttachments[0].texture = _state.device.cur_drawable.texture;
         pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
         pass_desc.colorAttachments[0].loadAction = _mtl_load_action(pass->action.color_action[0].load_action);
         gpu_color c = pass->action.color_action[0].clear_value;
