@@ -113,31 +113,27 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     });
 
     ustring ui_shader = io_read_file(ustring_view_STR("public/shader/ui.metal"));
-    // sg_shader shader = sg_make_shader(&(sg_shader_desc){
-    //     .vs = {
-    //         .images[0].used = true,
-    //         .entry = "vertex_main",
-    //         .source = ui_shader.data,
-    //     },
-    //     .fs = {
-    //         .entry = "fragment_main",
-    //         .source = ui_shader.data,
-    //     },
-    // });
+    gpu_shader shader = gpu_create_shader(&(gpu_shader_desc){
+        .attributes = {
+            [0] = {.name = "index", .type = ATTRIBUTE_UINT, .size = 1, .stride = 0},
+        },
+        .vertex = {
+            .entry = "vertex_main",
+            .source = ui_shader.data,
+        },
+        .fragment = {
+            .entry = "fragment_main",
+            .source = ui_shader.data,
+        },
+        .label = ustring_STR("ui_shader"),
+    });
 
-    // renderer->pipeline = sg_make_pipeline(&(sg_pipeline_desc){
-    //     .layout = {
-    //         .attrs = {
-    //             [0] = {.format = _SG_VERTEXFORMAT_FORCE_U32, .buffer_index = 0},
-    //         },
-    //     },
-    //     .shader = shader,
-    //     .depth = {
-    //         .compare = SG_COMPAREFUNC_LESS_EQUAL,
-    //         .write_enabled = true,
-    //     },
-    //     .cull_mode = SG_CULLMODE_BACK,
-    // });
+    gpu_pipeline pipeline = gpu_create_pipeline(&(gpu_pipeline_desc){
+        .primitive_type = PRIMITIVE_TRIANGLES,
+        .shader = shader,
+    });
+
+    renderer->pipeline = pipeline;
 }
 
 void ui_renderer_free(ui_renderer_t *renderer) { free(renderer->primitive_data); }
