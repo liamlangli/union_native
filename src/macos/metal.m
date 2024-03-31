@@ -1,4 +1,5 @@
 #include "gpu/gpu.h"
+#include "foundation/logger.h"
 
 // see https://clang.llvm.org/docs/LanguageExtensions.html#automatic-reference-counting
 #include <TargetConditionals.h>
@@ -24,6 +25,8 @@ typedef struct gpu_device_mtl_t {
     gpu_swapchain_mtl_t swapchain;
 
     id<MTLDevice> device;
+    id<MTLHeap> heap;
+    NSMutableArray *resources;
     id<MTLCommandQueue> cmd_queue;
     id<MTLCommandBuffer> cmd_buffer;
     id<MTLRenderCommandEncoder> cmd_encoder;
@@ -42,10 +45,30 @@ static gpu_state_mtl_t _state;
 bool gpu_request_device(os_window_t *window) {
     _state.device.semaphore = dispatch_semaphore_create(GPU_SWAP_BUFFER_COUNT);
     _state.device.device = MTLCreateSystemDefaultDevice();
+
     if (nil == _state.device.device) {
         _state.valid = false;
         return false;
     }
+
+    // MTLHeapDescriptor *heap_desc = [[MTLHeapDescriptor alloc] init];
+    // heap_desc.size = 64 * 1024 * 1024;
+    // heap_desc.storageMode = MTLStorageModeManaged;
+    // heap_desc.cpuCacheMode = MTLCPUCacheModeDefaultCache;
+    // _state.device.heap = [_state.device.device newHeapWithDescriptor: heap_desc];
+
+    uint slot_count = GPU_SWAP_BUFFER_COUNT * (
+        GPU_BUFFER_POOL_SIZE + 
+        GPU_TEXTURE_POOL_SIZE + 
+        GPU_PIPELINE_POOL_SIZE +
+        GPU_SHADER_POOL_SIZE + 
+        GPU_ATTACHMENTS_POOL_SIZE
+    );
+
+    _state.device.resources = [NSMutableArray arrayWithCapacity: slot_count];
+    [_state.device.resources addObject: [NSNull null]];
+
+    _state.device.heap = nil;
     _state.device.cmd_queue = [_state.device.device newCommandQueue];
     _state.device.cmd_buffer = nil;
     _state.device.cmd_encoder = nil;
@@ -71,10 +94,26 @@ void gpu_destroy_device() {
     dispatch_release(_state.device.semaphore);
 }
 
-int _mtl_add_resource(id res) {
-    int slot = -1;
-    return slot;
+#define _mtl_invalid_resource_id 0
+
+static int _mtl_resource_id = 1;
+int _mtl_alloc_resource_id(id resource) {
+    int id = _mtl_resource_id;
+    [_state.device.resources addObject: resource];
+    _mtl_resource_id++;
+    return id;
 }
+
+int _mtl_add_resource(id resource) {
+    if (nil == resource) return _mtl_invalid_resource_id;
+    return _mtl_alloc_resource_id(resource);
+}
+
+id _mtl_get_resource(int id) {
+    if (id == _mtl_invalid_resource_id) return nil;
+    return [_state.device.resources objectAtIndex: id];
+}
+
 gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     assert(desc->width > 0);
     assert(desc->height > 0);
@@ -89,8 +128,8 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
         mtl_desc.arrayLength = 1;
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
-    [_state.device.device newTextureWithDescriptor: mtl_desc];
-    return (gpu_texture){ .id = 0 };
+    id<MTLTexture> texture = [_state.device.device newTextureWithDescriptor: mtl_desc];
+    return (gpu_texture){ .id = _mtl_add_resource(texture) };
 }
 
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
@@ -185,7 +224,74 @@ void gpu_commit() {
     _state.device.cmd_buffer = nil;
 }
 
+id<MTLLibrary> _mtl_library_from_bytecode(udata src) {
+    NSError *err = nil;
+    dispatch_data_t data = dispatch_data_create(src.data, src.length, nil, DISPATCH_DATA_DESTRUCTOR_DEFAULT);
+    id<MTLLibrary> lib = [_state.device.device newLibraryWithData: data error: &err];
+    if (nil == lib) {
+        NSLog(@"Error: %@", err);
+        NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
+    }
+    [data release];
+    return lib;
+}
+
+id<MTLLibrary> _mtl_library_from_code(ustring src) {
+    NSError *err = nil;
+    id<MTLLibrary> lib = [_state.device.device
+        newLibraryWithSource: [NSString stringWithUTF8String: src.data]
+        options: nil
+        error: &err];
+    if (nil == lib) {
+        NSLog(@"Error: %@", err);
+        NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
+    }
+    return lib;
+}
+
 gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
+    id<MTLLibrary> vertex_lib = nil;
+    id<MTLLibrary> fragment_lib = nil;
+    id<MTLFunction> vertex_func = nil;
+    id<MTLFunction> fragment_func = nil;
+
+    if (desc->vertex.bytecode.length > 0 && desc->fragment.bytecode.length > 0) {
+        vertex_lib = _mtl_library_from_bytecode(desc->vertex.bytecode);
+        fragment_lib = _mtl_library_from_bytecode(desc->fragment.bytecode);
+        if (nil == vertex_lib || nil == fragment_lib) {
+            goto failed;
+        }
+        vertex_func = [vertex_lib newFunctionWithName: [NSString stringWithUTF8String: desc->vertex.entry.data]];
+        fragment_func = [fragment_lib newFunctionWithName: [NSString stringWithUTF8String:desc->fragment.entry.data]];
+    } else if (desc->vertex.source.length > 0 && desc->fragment.source.length > 0) {
+        vertex_lib = _mtl_library_from_code(desc->vertex.source);
+        fragment_lib = _mtl_library_from_code(desc->fragment.source);
+        if (nil == vertex_lib || nil == fragment_lib) {
+            goto failed;
+        }
+        vertex_func = [vertex_lib newFunctionWithName: [NSString stringWithUTF8String: desc->vertex.entry.data]];
+        fragment_func = [fragment_lib newFunctionWithName: [NSString stringWithUTF8String:desc->fragment.entry.data]];
+    } else {
+        goto failed;
+    }
+
+    if (nil == vertex_func) {
+        ULOG_ERROR("Failed to create vertex function");
+        goto failed;
+    }
+
+    if (nil == fragment_func) {
+        ULOG_ERROR("Failed to create fragment function");
+        goto failed;
+    }
+
+    return (gpu_shader){ .id = 0 };
+
+failed:
+    if (vertex_lib) [vertex_lib release];
+    if (fragment_lib) [fragment_lib release];
+    if (vertex_func) [vertex_func release];
+    if (fragment_func) [fragment_func release];
     return (gpu_shader){ .id = 0 };
 }
 
