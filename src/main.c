@@ -1,6 +1,7 @@
 #include "foundation/api.h"
 #include "os/os.h"
 #include "script/api.h"
+#include "gpu/gpu.h"
 
 #define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>

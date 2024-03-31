@@ -1,15 +1,18 @@
 #include "script/script_context.h"
+#include "foundation/global.h"
 #include "script/browser.h"
 #include "ui/ui_dev_tool.h"
 #include "foundation/network.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
-#include "gpu/gpu.h"
 
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <uv.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 typedef struct qjs_module {
     JSRuntime *runtime;
@@ -50,7 +53,11 @@ void script_context_init(os_window_t *window) {
     shared_module.runtime = JS_NewRuntime();
     shared_context.module = (void *)&shared_module;
     shared_context.window = window;
+#if defined(OS_MACOS) || defined (OS_IOS)
+    shared_context.db = db_open(ustring_STR("../Resources"));
+#else
     shared_context.db = db_open(ustring_STR("union"));
+#endif
     shared_context.invalid_script = true;
     ui_renderer_init(&shared_context.renderer);
     ui_state_init(&shared_context.state, &shared_context.renderer);

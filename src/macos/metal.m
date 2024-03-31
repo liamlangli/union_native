@@ -4,39 +4,49 @@
 #include <TargetConditionals.h>
 #include <AvailabilityMacros.h>
 #import <Metal/Metal.h>
+#include <assert.h>
 #include <stdlib.h>
 #import <QuartzCore/CoreAnimation.h> // needed for CAMetalDrawable
 #import "metal.h"
 
-static gpu_device_mtl_t *mtl_device = nil;
+typedef struct gpu_state_mtl_t {
+    bool valid;
+    int frame_index;
+    gpu_device_mtl_t device;
+} gpu_state_mtl_t;
+
+static gpu_state_mtl_t _state;
+
 bool gpu_request_device(os_window_t *window) {
-    mtl_device = (gpu_device_mtl_t*) malloc(sizeof(gpu_device_mtl_t));
-    mtl_device->sem = dispatch_semaphore_create(GPU_SWAP_BUFFER_COUNT);
-    mtl_device->device = MTLCreateSystemDefaultDevice();
-    mtl_device->cmd_queue = [mtl_device->device newCommandQueue];
-    mtl_device->cmd_buffer = [mtl_device->cmd_queue commandBuffer];
-    mtl_device->cmd_encoder = nil;
-    mtl_device->cur_drawable = nil;
+    _state.device.semaphore = dispatch_semaphore_create(GPU_SWAP_BUFFER_COUNT);
+    _state.device.device = MTLCreateSystemDefaultDevice();
+    if (nil == _state.device.device) {
+        _state.valid = false;
+        return false;
+    }
+    _state.device.cmd_queue = [_state.device.device newCommandQueue];
+    _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
+    _state.device.cmd_encoder = nil;
+    _state.device.cur_drawable = nil;
+    _state.device.frame_index = 0;
+    _state.device.frame_swap_count = GPU_SWAP_BUFFER_COUNT;
     for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; i++) {
-        mtl_device->uniform_buffers[i] = nil;
+        _state.device.uniform_buffers[i] = nil;
     }
     return true;
 }
 
 void gpu_destroy_device() {
-    if (mtl_device == nil) return;
     for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; i++) {
-        if (mtl_device->uniform_buffers[i]) {
-            [mtl_device->uniform_buffers[i] release];
+        if (_state.device.uniform_buffers[i]) {
+            [_state.device.uniform_buffers[i] release];
         }
     }
-    [mtl_device->cmd_encoder release];
-    [mtl_device->cmd_buffer release];
-    [mtl_device->cmd_queue release];
-    [mtl_device->device release];
-    dispatch_release(mtl_device->sem);
-    free(mtl_device);
-    mtl_device = nil;
+    [_state.device.cmd_encoder release];
+    [_state.device.cmd_buffer release];
+    [_state.device.cmd_queue release];
+    [_state.device.device release];
+    dispatch_release(_state.device.semaphore);
 }
 
 int _gpu_mtl_add_resource(id res) {
@@ -57,12 +67,59 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
         mtl_desc.arrayLength = 1;
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
-    [mtl_device->device newTextureWithDescriptor: mtl_desc];
+    [_state.device.device newTextureWithDescriptor: mtl_desc];
     return (gpu_texture){ .id = 0 };
 }
 
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
     assert(desc->size > 0);
-    id<MTLBuffer> buffer = [mtl_device->device newBufferWithLength: desc->size options: MTLResourceStorageModeShared];
+    id<MTLBuffer> buffer = [_state.device.device newBufferWithLength: desc->size options: MTLResourceStorageModeShared];
     return (gpu_buffer){ .id = _gpu_mtl_add_resource(buffer) };
+}
+
+
+bool gpu_begin_pass(gpu_pass *pass) {
+    assert(_state.device.cmd_encoder == nil);
+    assert(_state.device.cur_drawable == nil);
+    assert(_state.device.cmd_buffer != nil);
+
+    if (nil == _state.device.cmd_buffer) {
+        dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
+        _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
+        [_state.device.cmd_buffer enqueue];
+        [_state.device.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
+            dispatch_semaphore_signal(_state.device.semaphore);
+        }];
+    }
+
+    MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
+    assert(pass_desc);
+    gpu_attachments *attachments = &pass->attachments;
+    if (!attachments) {
+        // render to screen
+    }
+
+    return true;
+}
+
+void gpu_end_pass() {
+    if (nil != _state.device.cmd_encoder) {
+        [_state.device.cmd_encoder endEncoding];
+        _state.device.cmd_encoder = nil;
+    }
+
+    if (nil != _state.device.cur_drawable) {
+        [_state.device.cmd_buffer presentDrawable: _state.device.cur_drawable];
+        _state.device.cur_drawable = nil;
+    }
+}
+
+void gpu_commit() {
+    assert(nil != _state.device.cmd_buffer);
+    assert(nil == _state.device.cmd_encoder);
+
+    [_state.device.cmd_buffer commit];
+    _state.device.frame_index = (_state.device.frame_index + 1) % _state.device.frame_swap_count;
+    _state.device.cmd_buffer = nil;
+
 }

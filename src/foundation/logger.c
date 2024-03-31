@@ -37,6 +37,24 @@ logger_t *logger_global(void) {
 }
 
 void logger_input(logger_t *logger, int type, ustring message) {
+#if defined(OS_MACOS) || defined (OS_IOS)
+    if (logger->config.std_out) {
+        switch (type) {
+        case ULOG_INFO:
+            printf("[INF] %s\n", message.data);
+            break;
+        case ULOG_WARN:
+            printf("[WRN] %s\n", message.data);
+            break;
+        case ULOG_ERROR:
+            printf("[ERR] %s\n", message.data);
+            break;
+        default:
+            printf("[MSG] %s\n", message.data);
+            break;
+        }
+    }
+#else
     if (logger->config.std_out) {
         switch (type) {
         case ULOG_INFO:
@@ -53,6 +71,7 @@ void logger_input(logger_t *logger, int type, ustring message) {
             break;
         }
     }
+#endif
 
     u32 count = (u32)arrlen(logger->lines);
     u32 last_dump = logger->last_dump;

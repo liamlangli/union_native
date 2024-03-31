@@ -1,5 +1,6 @@
 
 #include "gpu/gpu.h"
+#include "gpu/gpu_const.h"
 #include "macos/metal.h"
 #include <TargetConditionals.h>
 #import <Cocoa/Cocoa.h>
@@ -41,6 +42,9 @@ static os_window_t *_window;
 static os_on_launch launch_func = NULL;
 static os_on_frame frame_func = NULL;
 static os_on_terminate terminate_func = NULL;
+
+//------------------------------------------------------------------------------
+static gpu_swapchain_mtl_t mtl_swapchain;
 
 //------------------------------------------------------------------------------
 @implementation UNApp
@@ -171,6 +175,17 @@ static os_on_terminate terminate_func = NULL;
 - (void)drawInMTKView:(nonnull MTKView*)view {
     (void)view;
     @autoreleasepool {
+        mtl_swapchain = (gpu_swapchain_mtl_t) {
+            .width = (int) [view drawableSize].width,
+            .height = (int) [view drawableSize].height,
+            .sample_count = (int) [view sampleCount],
+            .color_format = PIXELFORMAT_BGRA8,
+            .depth_stencil_format = PIXELFORMAT_DEPTH_STENCIL,
+            .drawable = [view currentDrawable],
+            .color_texture = [view multisampleColorTexture],
+            .depth_stencil_texture = [view depthStencilTexture],
+        };
+
         if (frame_func != NULL) {
             frame_func(_window);
         }
