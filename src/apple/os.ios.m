@@ -1,4 +1,3 @@
-
 #include <TargetConditionals.h>
 #import <UIKit/UIKit.h>
 
@@ -26,7 +25,7 @@ static id<MTLDevice> mtl_device;
 static id mtk_view_delegate;
 static MTKView* mtk_view;
 
-static os_window_t *_window;
+static os_window_t _window;
 static os_on_launch launch_func = NULL;
 static os_on_frame frame_func = NULL;
 static os_on_terminate terminate_func = NULL;
@@ -63,14 +62,14 @@ static id mtk_view_controller;
     [window setRootViewController:mtk_view_controller];
     [window makeKeyAndVisible];
 
-    _window->width = width;
-    _window->height = height;
-    _window->native_window = mtk_view;
-    _window->gpu_device = mtl_device;
+    _window.width = width;
+    _window.height = height;
+    _window.native_window = mtk_view;
+    _window.gpu_device = mtl_device;
 
     // call the init function
     if (launch_func) {
-        launch_func(_window);
+        launch_func(&_window);
     }
 
     return YES;
@@ -90,7 +89,7 @@ static id mtk_view_controller;
     @autoreleasepool {
         //frame_func();
         if (frame_func != NULL) {
-            frame_func(_window);
+            frame_func(&_window);
         }
     }
 }
@@ -168,14 +167,12 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
     frame_func = on_frame;
     terminate_func = on_terminate;
 
-    os_window_t* window = malloc(sizeof(os_window_t));
-    window->width = width;
-    window->height = height;
-    window->ui_scale = 2.0;
-    window->title = title;
-    _window = window;
+    _window.width = width;
+    _window.height = height;
+    _window.ui_scale = 2.0;
+    _window.title = title;
     osx_start(width, height, title.data);
-    return window;
+    return &_window;
 }
 
 ustring os_window_get_clipboard(os_window_t *window) {

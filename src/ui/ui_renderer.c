@@ -98,7 +98,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     primitive_data_desc.height = texture_height;
     primitive_data_desc.format = PIXELFORMAT_RGBA32F;
     primitive_data_desc.data = (udata){.data = (i8*)renderer->primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
-
+    
     renderer->primitive_data_texture = gpu_create_texture(&primitive_data_desc);
     renderer->primitive_data_texture_width = texture_width;
 
@@ -157,10 +157,12 @@ void ui_renderer_init(ui_renderer_t *renderer) {
                     .op_alpha = BLEND_OP_ADD,
                     .op = BLEND_OP_ADD,
                 },
+                .format = PIXELFORMAT_BGRA8
             }
         },
+        .color_count = 1,
         .index_type = INDEX_NONE,
-        .depth = {.write_enabled = true, .compare_func = COMPARE_LESS_EQUAL }
+        .depth = { .write_enabled = true, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_DEPTH_STENCIL }
     });
 
     renderer->pipeline = pipeline;

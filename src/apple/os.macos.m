@@ -1,8 +1,4 @@
 
-#include "foundation/ustring.h"
-#include "gpu/gpu.h"
-#include "gpu/gpu_const.h"
-#include "macos/metal.h"
 #include <TargetConditionals.h>
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
@@ -11,8 +7,10 @@
 #import <MetalKit/MetalKit.h>
 #import <dispatch/semaphore.h>
 
-#include "foundation/api.h"
 #include "os/os.h"
+#include "foundation/ustring.h"
+#include "gpu/gpu.h"
+#include "apple/metal.h"
 
 @interface UNApp : NSApplication
 @end
@@ -39,7 +37,7 @@ static id<MTLDevice> mtl_device;
 static id mtk_view_delegate;
 static MTKView* mtk_view;
 
-static os_window_t *_window;
+static os_window_t _window;
 static os_on_launch launch_func = NULL;
 static os_on_frame frame_func = NULL;
 static os_on_terminate terminate_func = NULL;
@@ -100,16 +98,16 @@ static os_on_terminate terminate_func = NULL;
     [NSApp activateIgnoringOtherApps:YES];
     [window makeKeyAndOrderFront:nil];
 
-    _window->width = width;
-    _window->height = height;
-    _window->native_window = mtk_view;
-    if(!gpu_request_device(_window)) {
+    _window.width = width;
+    _window.height = height;
+    _window.native_window = mtk_view;
+    if(!gpu_request_device(&_window)) {
         assert(false);
     }
 
     // call the init function
     if (launch_func) {
-        launch_func(_window);
+        launch_func(&_window);
     }
 }
 
@@ -125,7 +123,7 @@ static os_on_terminate terminate_func = NULL;
     (void)sender;
     // shutdown_func();
     if (terminate_func) {
-        terminate_func(_window);
+        terminate_func(&_window);
     }
     return YES;
 }
@@ -175,7 +173,7 @@ static os_on_terminate terminate_func = NULL;
     @autoreleasepool {
         gpu_mtl_begin_frame(view);
         if (frame_func != NULL) {
-            frame_func(_window);
+            frame_func(&_window);
         }
     }
 }
@@ -287,8 +285,8 @@ void osx_start(int w, int h, const char* title) {
     window_title = title;
     [UNApp sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    id delg = [[UNAppDelegate alloc] init];
-    [NSApp setDelegate:delg];
+    id delegate = [[UNAppDelegate alloc] init];
+    [NSApp setDelegate:delegate];
     [NSApp run];
 }
 
@@ -334,14 +332,12 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
     frame_func = on_frame;
     terminate_func = on_terminate;
 
-    os_window_t* window = malloc(sizeof(os_window_t));
-    window->width = width;
-    window->height = height;
-    window->ui_scale = 2.0;
-    window->title = title;
-    _window = window;
+    _window.width = width;
+    _window.height = height;
+    _window.ui_scale = 2.0;
+    _window.title = title;
     osx_start(width, height, title.data);
-    return window;
+    return &_window;
 }
 
 ustring os_window_get_clipboard(os_window_t *window) {
@@ -351,7 +347,6 @@ ustring os_window_get_clipboard(os_window_t *window) {
 void os_window_set_clipboard(os_window_t *window, ustring_view text) {}
 
 void os_window_close(os_window_t *window) {
-    free(window);
 }
 
 void os_window_capture_require(os_window_t *window) {
@@ -360,11 +355,4 @@ void os_window_capture_require(os_window_t *window) {
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
 
-}
-
-ustring os_get_bundle_path(ustring path) {
-    NSString* bundle_path = [[NSBundle mainBundle] bundlePath];
-    NSString* file_path = [bundle_path stringByAppendingPathComponent:[NSString stringWithUTF8String: path.data]];
-    const i8* cstr = [file_path UTF8String];
-    return ustring_str((i8*)cstr);
 }
