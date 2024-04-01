@@ -27,6 +27,7 @@ typedef struct ui_renderer_t {
     gpu_texture primitive_data_texture;
     gpu_buffer index_buffer;
     gpu_texture icon_texture;
+    gpu_binding binding;
     gpu_pipeline pipeline;
 } ui_renderer_t;
 

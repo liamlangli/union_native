@@ -170,42 +170,11 @@ void ui_renderer_render(ui_renderer_t *renderer) {
         return;
 
     script_context_t *ctx = script_context_shared();
-    // sg_apply_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
-    // glUseProgram(renderer->program);
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LEQUAL);
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
-    // glEnable(GL_BLEND);
-    // glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    // glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    // glBindVertexArray(renderer->vao);
-    // glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
-    // glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->last_index_offset * sizeof(u32), renderer->index_data);
-    // glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, NULL);
-
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
-    // GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT,
-    //                 renderer->primitive_data);
-    // glUniform1i(renderer->primitive_data_texture_location, 0);
-
-    // glActiveTexture(GL_TEXTURE1);
-    // msdf_font *font = msdf_font_system_font();
-    // glBindTexture(GL_TEXTURE_2D, font->texture_handle);
-    // glUniform1i(renderer->font_texture_location, 1);
-
-    // glActiveTexture(GL_TEXTURE2);
-    // glBindTexture(GL_TEXTURE_2D, renderer->icon_texture);
-    // glUniform1i(renderer->icon_texture_location, 2);
-
-    // glUniform3fv(renderer->window_size_location, 1, (const GLfloat *)&renderer->window_size);
-    // glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);
+    gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
+    gpu_set_pipeline(renderer->pipeline);
+    gpu_set_binding(&renderer->binding);
+    gpu_draw(0, renderer->last_index_offset, 1);
 }
 
 u32 ui_layer_write_clip(ui_layer *layer, ui_rect rect, u32 parent) {

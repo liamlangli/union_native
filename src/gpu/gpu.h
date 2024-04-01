@@ -210,15 +210,32 @@ typedef struct gpu_pass {
     gpu_attachments attachments;
 } gpu_pass;
 
+typedef struct gpu_attachments_desc {
+
+} gpu_attachments_desc;
+
 bool gpu_request_device(os_window_t *window);
-void gpu_destroy_device();
+void gpu_destroy_device(void);
 
 gpu_texture gpu_create_texture(gpu_texture_desc *desc);
 gpu_texture gpu_create_sampler(gpu_sampler_desc *desc);
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc);
 gpu_shader gpu_create_shader(gpu_shader_desc *desc);
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc);
+gpu_attachments gpu_create_attachments(gpu_attachments_desc *desc);
+
+void gpu_destroy_texture(gpu_texture texture);
+void gpu_destroy_sampler(gpu_sampler sampler);
+void gpu_destroy_buffer(gpu_buffer buffer);
+void gpu_destroy_shader(gpu_shader shader);
+void gpu_destroy_pipeline(gpu_pipeline pipeline);
+void gpu_destroy_attachments(gpu_attachments attachments);
 
 bool gpu_begin_pass(gpu_pass *pass);
-void gpu_end_pass();
-void gpu_commit();
+void gpu_set_viewport(int x, int y, int width, int height);
+void gpu_set_scissor(int x, int y, int width, int height);
+void gpu_set_pipeline(gpu_pipeline pipeline);
+void gpu_set_binding(const gpu_binding* binding);
+void gpu_draw(int base, int count, int instance_count);
+void gpu_end_pass(void);
+void gpu_commit(void);
