@@ -115,7 +115,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     ustring ui_shader = io_read_file(ustring_view_STR("public/shader/ui.metal"));
     gpu_shader shader = gpu_create_shader(&(gpu_shader_desc){
         .attributes = {
-            [0] = {.name = "index", .type = ATTRIBUTE_UINT, .size = 1, .stride = 0},
+            [0] = {.name = "index", .type = ATTRIBUTE_FORMAT_UINT, .size = 1, .stride = 0},
         },
         .vertex = {
             .entry = "vertex_main",

@@ -1,5 +1,6 @@
 #include "gpu/gpu.h"
 #include "foundation/logger.h"
+#include "gpu/gpu_const.h"
 
 // see https://clang.llvm.org/docs/LanguageExtensions.html#automatic-reference-counting
 #include <TargetConditionals.h>
@@ -296,5 +297,30 @@ failed:
 }
 
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
+    MTLVertexDescriptor *vertex_desc = [MTLVertexDescriptor vertexDescriptor];
+    for (NSUInteger attr_index = 0; attr_index < GPU_ATTRIBUTE_COUNT; ++attr_index) {
+        const gpu_vertex_attribute_state *attr_state = &desc->layout.attributes[attr_index];
+        if (attr_state->format == ATTRIBUTE_FORMAT_INVALID) {
+            break;
+        }
+        assert(attr_state->buffer_index < GPU_VERTEX_BUFFER_COUNT);
+        vertex_desc.attributes[attr_index].format = _mtl_vertex_format(attr_state->format, attr_state->size);
+        vertex_desc.attributes[attr_index].offset = attr_state->offset;
+        vertex_desc.attributes[attr_index].bufferIndex = attr_state->buffer_index;
+    }
+
+    for (NSUInteger buffer_index = 0; buffer_index < GPU_VERTEX_BUFFER_COUNT; ++buffer_index) {
+        const gpu_vertex_buffer_layout_state *buffer_state = &desc->layout.buffers[buffer_index];
+        assert(buffer_state->stride > 0);
+        vertex_desc.layouts[buffer_index].stride = buffer_state->stride;
+        vertex_desc.layouts[buffer_index].stepRate = buffer_state->step_rate;
+        vertex_desc.layouts[buffer_index].stepFunction = _mtl_vertex_step_function(buffer_state->step_func);
+        // TODO: mark instanced drawing
+    }
+
+    MTLRenderPipelineDescriptor *pip_desc = [[MTLRenderPipelineDescriptor alloc] init];
+    pip_desc.vertexDescriptor = vertex_desc;
+    // pip_desc.vertexFunction = _mtl_get_resource(desc->shader.vertex.id);
+
     return (gpu_pipeline){ .id = 0 };
 }

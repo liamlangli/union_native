@@ -2,7 +2,8 @@
 
 enum {
     GPU_SWAP_BUFFER_COUNT = 3,
-    GPU_ATTRIBUTE_COUNT = 16,
+    GPU_ATTRIBUTE_COUNT = 8,
+    GPU_VERTEX_BUFFER_COUNT = 8,
     GPU_ATTACHMENT_COUNT = 4,
     GPU_BLOCK_UNIFORM_COUNT = 16,
     GPU_BLOCK_COUNT = 4,
@@ -60,7 +61,6 @@ typedef enum gpu_pixel_format {
     PIXELFORMAT_RGBA32SI,
     PIXELFORMAT_RGBA32F,
 
-    // NOTE: when adding/removing pixel formats before DEPTH, also update sokol_app.h/_SAPP_PIXELFORMAT_*
     PIXELFORMAT_DEPTH,
     PIXELFORMAT_DEPTH_STENCIL,
 
@@ -109,15 +109,22 @@ typedef enum gpu_texture_type {
     TEXTURE_ARRAY,
 } gpu_texture_type;
 
-typedef enum gpu_attribute_type {
-    ATTRIBUTE_FLOAT,
-    ATTRIBUTE_UINT,
-    ATTRIBUTE_INT,
-    ATTRIBUTE_USHORT,
-    ATTRIBUTE_SHORT,
-    ATTRIBUTE_BYTE,
-    ATTRIBUTE_UBYTE,
-} gpu_attribute_type;
+typedef enum gpu_attribute_format {
+    ATTRIBUTE_FORMAT_INVALID = 0,
+    ATTRIBUTE_FORMAT_FLOAT,
+    ATTRIBUTE_FORMAT_HALF,
+    ATTRIBUTE_FORMAT_UINT,
+    ATTRIBUTE_FORMAT_INT,
+    ATTRIBUTE_FORMAT_USHORT,
+    ATTRIBUTE_FORMAT_SHORT,
+    ATTRIBUTE_FORMAT_BYTE,
+    ATTRIBUTE_FORMAT_UBYTE,
+} gpu_attribute_format;
+
+typedef enum gpu_vertex_step {
+    VERTEX_STEP_PER_VERTEX,
+    VERTEX_STEP_PER_INSTANCE,
+} gpu_vertex_step;
 
 typedef enum gpu_uniform_layout {
     UNIFORM_LAYOUT_AUTO,
@@ -172,6 +179,53 @@ typedef enum gpu_compare_func {
     COMPARE_GREATER_EQUAL,
     COMPARE_ALWAYS,
 } gpu_compare_func;
+
+typedef enum gpu_stencil_op {
+    STENCIL_OP_KEEP,
+    STENCIL_OP_ZERO,
+    STENCIL_OP_REPLACE,
+    STENCIL_OP_INCR_CLAMP,
+    STENCIL_OP_DECR_CLAMP,
+    STENCIL_OP_INVERT,
+    STENCIL_OP_INCR_WRAP,
+    STENCIL_OP_DECR_WRAP,
+} gpu_stencil_op;
+
+typedef enum gpu_blend_factor {
+    BLEND_FACTOR_ZERO,
+    BLEND_FACTOR_ONE,
+    BLEND_FACTOR_SRC_COLOR,
+    BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+    BLEND_FACTOR_SRC_ALPHA,
+    BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    BLEND_FACTOR_DST_COLOR,
+    BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+    BLEND_FACTOR_DST_ALPHA,
+    BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+    BLEND_FACTOR_SRC_ALPHA_SATURATED,
+    BLEND_FACTOR_BLEND_COLOR,
+    BLEND_FACTOR_ONE_MINUS_BLEND_COLOR,
+    BLEND_FACTOR_BLEND_ALPHA,
+    BLEND_FACTOR_ONE_MINUS_BLEND_ALPHA,
+} gpu_blend_factor;
+
+typedef enum gpu_blend_op {
+    BLEND_OP_ADD,
+    BLEND_OP_SUBTRACT,
+    BLEND_OP_REVERSE_SUBTRACT,
+    BLEND_OP_MIN,
+    BLEND_OP_MAX,
+} gpu_blend_op;
+
+typedef enum gpu_color_mask {
+    COLOR_MASK_NONE = 0,
+    COLOR_MASK_R = 1 << 0,
+    COLOR_MASK_G = 1 << 1,
+    COLOR_MASK_B = 1 << 2,
+    COLOR_MASK_A = 1 << 3,
+    COLOR_MASK_RGB = 0x7,
+    COLOR_MASK_ALL = 0xF,
+} gpu_color_mask;
 
 typedef enum gpu_primitive_type {
     PRIMITIVE_POINTS,

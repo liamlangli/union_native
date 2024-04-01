@@ -1,4 +1,6 @@
+#include "gpu/gpu_const.h"
 #include "metal.h"
+#include <Metal/Metal.h>
 
 MTLPixelFormat _mtl_pixel_format(gpu_pixel_format fmt) {
     switch (fmt) {
@@ -108,5 +110,98 @@ bool _mtl_stencil_enabled_format(gpu_pixel_format fmt) {
     switch (fmt) {
         case PIXELFORMAT_DEPTH_STENCIL: return true;
         default: return false;
+    }
+}
+
+MTLPrimitiveType _mtl_primitive_type(gpu_primitive_type type) {
+    switch (type) {
+        case PRIMITIVE_POINTS: return MTLPrimitiveTypePoint;
+        case PRIMITIVE_LINES: return MTLPrimitiveTypeLine;
+        case PRIMITIVE_LINE_STRIP: return MTLPrimitiveTypeLineStrip;
+        case PRIMITIVE_TRIANGLES: return MTLPrimitiveTypeTriangle;
+        case PRIMITIVE_TRIANGLE_STRIP: return MTLPrimitiveTypeTriangleStrip;
+        default: return MTLPrimitiveTypeTriangle;
+    }
+}
+
+MTLWinding _mtl_winding(gpu_face_winding winding) {
+    switch (winding) {
+        case FACE_WINDING_CW: return MTLWindingClockwise;
+        case FACE_WINDING_CCW: return MTLWindingCounterClockwise;
+        default: return MTLWindingClockwise;
+    }
+}
+
+MTLVertexFormat _mtl_vertex_format(gpu_attribute_format fmt, int size) {
+    switch (fmt) {
+        case ATTRIBUTE_FORMAT_FLOAT: {
+            switch (size) {
+                case 1: return MTLVertexFormatChar;
+                case 2: return MTLVertexFormatChar2;
+                case 4: return MTLVertexFormatChar4;
+                default: return MTLVertexFormatChar;
+            }
+        }
+        case ATTRIBUTE_FORMAT_UBYTE: {
+            switch (size) {
+                case 1: return MTLVertexFormatUChar;
+                case 2: return MTLVertexFormatUChar2;
+                case 4: return MTLVertexFormatUChar4;
+                default: return MTLVertexFormatUChar;
+            }
+        }
+        case ATTRIBUTE_FORMAT_SHORT: {
+            switch (size) {
+                case 2: return MTLVertexFormatShort;
+                case 4: return MTLVertexFormatShort2;
+                case 8: return MTLVertexFormatShort4;
+                default: return MTLVertexFormatShort;
+            }
+        }
+        case ATTRIBUTE_FORMAT_USHORT: {
+            switch (size) {
+                case 2: return MTLVertexFormatUShort;
+                case 4: return MTLVertexFormatUShort2;
+                case 8: return MTLVertexFormatUShort4;
+                default: return MTLVertexFormatUShort;
+            }
+        }
+        case ATTRIBUTE_FORMAT_INT: {
+            switch (size) {
+                case 4: return MTLVertexFormatInt;
+                case 8: return MTLVertexFormatInt2;
+                case 12: return MTLVertexFormatInt3;
+                case 16: return MTLVertexFormatInt4;
+                default: return MTLVertexFormatInt;
+            }
+        }
+        case ATTRIBUTE_FORMAT_UINT: {
+            switch (size) {
+                case 4: return MTLVertexFormatUInt;
+                case 8: return MTLVertexFormatUInt2;
+                case 12: return MTLVertexFormatUInt3;
+                case 16: return MTLVertexFormatUInt4;
+                default: return MTLVertexFormatUInt;
+            }
+        }
+        case ATTRIBUTE_FORMAT_HALF: {
+            switch (size) {
+                case 2: return MTLVertexFormatHalf;
+                case 4: return MTLVertexFormatHalf2;
+                case 8: return MTLVertexFormatHalf4;
+                default: return MTLVertexFormatHalf;
+            }
+        }
+        default:
+            assert(false);
+            return MTLVertexFormatInvalid;
+    }
+}
+
+MTLVertexStepFunction _mtl_vertex_step_function(gpu_vertex_step step) {
+    switch (step) {
+        case VERTEX_STEP_PER_VERTEX: return MTLVertexStepFunctionPerVertex;
+        case VERTEX_STEP_PER_INSTANCE: return MTLVertexStepFunctionPerInstance;
+        default: return MTLVertexStepFunctionPerVertex;
     }
 }

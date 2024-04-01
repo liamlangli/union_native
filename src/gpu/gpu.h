@@ -38,7 +38,7 @@ typedef struct gpu_buffer_desc {
 
 typedef struct gpu_attribute_desc {
     ustring name;
-    gpu_attribute_type type;
+    gpu_attribute_format type;
     int size;
     int stride;
 } gpu_attribute_desc;
@@ -90,12 +90,81 @@ typedef struct gpu_shader_desc {
     ustring label;
 } gpu_shader_desc;
 
+typedef struct gpu_vertex_buffer_layout_state {
+    int stride;
+    gpu_vertex_step step_func;
+    int step_rate;
+} gpu_vertex_buffer_layout_state;
+
+typedef struct gpu_vertex_attribute_state {
+    int buffer_index;
+    int offset;
+    int size;
+    gpu_attribute_format format;
+} gpu_vertex_attribute_state;
+
+typedef struct gpu_vertex_layout_state {
+    gpu_vertex_buffer_layout_state buffers[GPU_VERTEX_BUFFER_COUNT];
+    gpu_vertex_attribute_state attributes[GPU_ATTRIBUTE_COUNT];
+} gpu_vertex_layout_state;
+
+typedef struct gpu_stencil_face_state {
+    gpu_compare_func compare_func;
+    gpu_stencil_op fail_op;
+    gpu_stencil_op pass_op;
+    gpu_stencil_op depth_fail_op;
+} gpu_stencil_face_state;
+
+typedef struct gpu_stencil_state {
+    bool enabled;
+    gpu_stencil_face_state front;
+    gpu_stencil_face_state back;
+    u8 read_mask;
+    u8 write_mask;
+    u8 ref;
+} gpu_stencil_state;
+
+typedef struct gpu_depth_state {
+    gpu_pixel_format format;
+    gpu_compare_func compare_func;
+    bool write_enabled;
+    f32 bias, bias_slope_scale, bias_clamp;
+} gpu_depth_state;
+
+typedef struct gpu_blend_state {
+    bool enabled;
+    gpu_blend_factor src_factor;
+    gpu_blend_factor dst_factor;
+    gpu_blend_op op;
+    gpu_blend_factor src_factor_alpha;
+    gpu_blend_factor dst_factor_alpha;
+    gpu_blend_op op_alpha;
+} gpu_blend_state;
+
+typedef struct gpu_color_target_state {
+    gpu_pixel_format format;
+    gpu_color_mask color_mask;
+    gpu_blend_state blend;
+} gpu_color_target_state;
+
 typedef struct gpu_pipeline_desc {
+    gpu_shader shader;
+    gpu_vertex_layout_state layout;
+    gpu_depth_state depth;
+    gpu_stencil_state stencil;
+
+    int color_count;
+    gpu_color_target_state colors[GPU_ATTACHMENT_COUNT];
+
     gpu_primitive_type primitive_type;
+    gpu_index_type index_type;
     gpu_cull_mode cull_mode;
     gpu_face_winding face_winding;
-    gpu_index_type index_type;
-    gpu_shader shader;
+
+    int sample_count;
+    gpu_color blend_color;
+    bool alpha_to_coverage;
+    ustring label;
 } gpu_pipeline_desc;
 
 typedef struct gpu_stage_binding {
