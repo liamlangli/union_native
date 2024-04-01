@@ -254,3 +254,31 @@ MTLCullMode _mtl_cull_mode(gpu_cull_mode mode) {
         default: return MTLCullModeNone;
     }
 }
+
+MTLCompareFunction _mtl_compare_function(gpu_compare_func func) {
+    switch (func) {
+        case COMPARE_NEVER: return MTLCompareFunctionNever;
+        case COMPARE_LESS: return MTLCompareFunctionLess;
+        case COMPARE_EQUAL: return MTLCompareFunctionEqual;
+        case COMPARE_LESS_EQUAL: return MTLCompareFunctionLessEqual;
+        case COMPARE_GREATER: return MTLCompareFunctionGreater;
+        case COMPARE_NOT_EQUAL: return MTLCompareFunctionNotEqual;
+        case COMPARE_GREATER_EQUAL: return MTLCompareFunctionGreaterEqual;
+        case COMPARE_ALWAYS: return MTLCompareFunctionAlways;
+        default: return MTLCompareFunctionAlways;
+    }
+}
+
+MTLStencilOperation _mtl_stencil_operation(gpu_stencil_op op) {
+    switch (op) {
+        case STENCIL_OP_KEEP: return MTLStencilOperationKeep;
+        case STENCIL_OP_ZERO: return MTLStencilOperationZero;
+        case STENCIL_OP_REPLACE: return MTLStencilOperationReplace;
+        case STENCIL_OP_INCR_CLAMP: return MTLStencilOperationIncrementClamp;
+        case STENCIL_OP_DECR_CLAMP: return MTLStencilOperationDecrementClamp;
+        case STENCIL_OP_INVERT: return MTLStencilOperationInvert;
+        case STENCIL_OP_INCR_WRAP: return MTLStencilOperationIncrementWrap;
+        case STENCIL_OP_DECR_WRAP: return MTLStencilOperationDecrementWrap;
+        default: return MTLStencilOperationKeep;
+    }
+}

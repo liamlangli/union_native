@@ -31,7 +31,7 @@ typedef struct gpu_buffer_mtl_t {
 typedef struct gpu_pipeline_mtl_t {
     id<MTLRenderPipelineState> pso;
     id<MTLDepthStencilState> dso;
-    bool instanced;
+    bool instanced, indexed;
 
     MTLPrimitiveType primitive_type;
     MTLIndexType index_type;
@@ -168,7 +168,7 @@ void gpu_destroy_device() {
 gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     assert(desc->width > 0);
     assert(desc->height > 0);
-    MTLTextureDescriptor *mtl_desc = [[MTLTextureDescriptor alloc] init];
+    MTLTextureDescriptor *mtl_desc = [MTLTextureDescriptor new];
     mtl_desc.textureType = _mtl_texture_type(desc->type);
     mtl_desc.pixelFormat = _mtl_pixel_format(desc->format);
     mtl_desc.width = (NSUInteger)desc->width;
@@ -377,7 +377,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     }
 
     gpu_shader_mtl_t shader = _mtl_get_shader(desc->shader.id);
-    MTLRenderPipelineDescriptor *pip_desc = [[MTLRenderPipelineDescriptor alloc] init];
+    MTLRenderPipelineDescriptor *pip_desc = [MTLRenderPipelineDescriptor new];
     pip_desc.vertexDescriptor = vertex_desc;
     pip_desc.vertexFunction = shader.vertex_func;
     pip_desc.fragmentFunction = shader.fragment_func;
@@ -387,7 +387,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     pip_desc.rasterizationEnabled = YES;
     pip_desc.depthAttachmentPixelFormat = _mtl_pixel_format(desc->depth.format);
     if (desc->depth.format == PIXELFORMAT_DEPTH_STENCIL) {
-        pip_desc.depthAttachmentPixelFormat = _mtl_pixel_format(desc->depth.format);
+        pip_desc.stencilAttachmentPixelFormat = _mtl_pixel_format(desc->depth.format);
     }
 
     for (NSUInteger i = 0; i < desc->color_count; ++i) {
@@ -404,16 +404,48 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
 
     NSError *err = nil;
     id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc error: &err];
+    [pip_desc release];
+
     if (nil == pso) {
         NSLog(@"Error: %@", err);
         NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
         return (gpu_pipeline){ .id = _mtl_invalid_id };
     }
     mtl_pipeline.pso = pso;
+        
+    MTLDepthStencilDescriptor *ds_desc = [MTLDepthStencilDescriptor new];
+    ds_desc.depthCompareFunction = _mtl_compare_function(desc->depth.compare_func);
+    ds_desc.depthWriteEnabled = desc->depth.write_enabled;
+    
+    if (desc->stencil.enabled) {
+        const gpu_stencil_state *stencil = &desc->stencil;
+        ds_desc.backFaceStencil = [MTLStencilDescriptor new];
+        ds_desc.backFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->back.fail_op);
+        ds_desc.backFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->back.depth_fail_op);
+        ds_desc.backFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->back.pass_op);
+        ds_desc.backFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->back.compare_func);
+        ds_desc.backFaceStencil.readMask = stencil->read_mask;
+        ds_desc.backFaceStencil.writeMask = stencil->write_mask;
+        ds_desc.frontFaceStencil = [MTLStencilDescriptor new];
+        ds_desc.frontFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->front.fail_op);
+        ds_desc.frontFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->front.depth_fail_op);
+        ds_desc.frontFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->front.pass_op);
+        ds_desc.frontFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->front.compare_func);
+        ds_desc.frontFaceStencil.readMask = stencil->read_mask;
+        ds_desc.frontFaceStencil.writeMask = stencil->write_mask;
+    }
+    id<MTLDepthStencilState> dso = [_state.device.device newDepthStencilStateWithDescriptor: ds_desc];
+    [ds_desc release];
+    if (nil == dso) {
+        return (gpu_pipeline){ .id = _mtl_invalid_id };
+    }
+    mtl_pipeline.dso = dso;
+    
     mtl_pipeline.cull_mode = _mtl_cull_mode(desc->cull_mode);
     mtl_pipeline.winding = _mtl_winding(desc->face_winding);
     mtl_pipeline.primitive_type = _mtl_primitive_type(desc->primitive_type);
     mtl_pipeline.index_type = _mtl_index_type(desc->index_type);
+    mtl_pipeline.indexed = desc->index_type != INDEX_NONE;
     mtl_pipeline.stencil_ref = desc->stencil.ref;
     return (gpu_pipeline){ .id = _mtl_add_pipeline(mtl_pipeline) };
 }
@@ -461,15 +493,17 @@ void gpu_set_binding(const gpu_binding* binding) {
 }
 
 void gpu_draw(int base, int count, int instance_count) {
-    if (INDEX_NONE != _state.cur_pipeline.index_type) {
-        [_state.device.cmd_encoder drawIndexedPrimitives: MTLPrimitiveTypeTriangle
+    if (_state.cur_pipeline.indexed) {
+        [_state.device.cmd_encoder
+            drawIndexedPrimitives: _state.cur_pipeline.primitive_type
             indexCount: count
-            indexType: _mtl_index_type(_state.cur_pipeline.index_type)
+            indexType: _state.cur_pipeline.index_type
             indexBuffer: _state.cur_index_buffer.buffer
             indexBufferOffset: 0
             instanceCount: instance_count];
     } else {
-        [_state.device.cmd_encoder drawPrimitives: MTLPrimitiveTypeTriangle
+        [_state.device.cmd_encoder
+            drawPrimitives: _state.cur_pipeline.primitive_type
             vertexStart: base
             vertexCount: count
             instanceCount: instance_count];

@@ -61,8 +61,8 @@ void script_context_init(os_window_t *window) {
 #endif
     shared_context.invalid_script = true;
     ui_renderer_init(&shared_context.renderer);
-    // ui_state_init(&shared_context.state, &shared_context.renderer);
-    // ui_dev_tool_init(&shared_context.dev_tool);
+    ui_state_init(&shared_context.state, &shared_context.renderer);
+    ui_dev_tool_init(&shared_context.dev_tool);
 }
 
 void script_context_terminate(void) {
