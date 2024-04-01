@@ -9,8 +9,12 @@
 
 #include "os/os.h"
 #include "foundation/ustring.h"
+#include "foundation/logger.h"
 #include "gpu/gpu.h"
 #include "apple/metal.h"
+#include "script/script_context.h"
+#include "script/browser.h"
+#include "ui/ui_keycode.h"
 
 @interface UNApp : NSApplication
 @end
@@ -91,8 +95,8 @@ static os_on_terminate terminate_func = NULL;
     [mtk_view setSampleCount:(NSUInteger)1];
 
     [window setContentView:mtk_view];
-    CGSize drawable_size = { (CGFloat) width, (CGFloat) height };
-    [mtk_view setDrawableSize:drawable_size];
+    CGSize drawable_size = { (CGFloat) width * 2.f, (CGFloat) height * 2.f};
+    [mtk_view setDrawableSize: drawable_size];
     [[mtk_view layer] setMagnificationFilter:kCAFilterNearest];
     NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
     [NSApp activateIgnoringOtherApps:YES];
@@ -196,9 +200,12 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)mouseDown:(NSEvent*)event {
     (void)event;
-    // if (mouse_btn_down_func) {
-    //     mouse_btn_down_func(0);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    state->left_mouse_press = true;
+    state->left_mouse_is_pressed = true;
+    script_browser_window_mouse_down(0);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -207,24 +214,34 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)mouseUp:(NSEvent*)event {
     (void)event;
-    // if (mouse_btn_up_func) {
-    //     mouse_btn_up_func(0);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    state->left_mouse_release = true;
+    state->left_mouse_is_pressed = false;
+    script_browser_window_mouse_up(0);
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    // if (mouse_pos_func) {
-    //     const NSRect content_rect = [mtk_view frame];
-    //     const NSPoint pos = [event locationInWindow];
-    //     mouse_pos_func(pos.x, content_rect.size.height - pos.y);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    const NSRect rect = [mtk_view frame];
+    const NSPoint point = [event locationInWindow];
+    float x = (float)point.x;
+    float y = (float)(rect.size.height - point.y);
+    state->pointer_location = (float2){.x = x, .y = y};
+    script_browser_window_mouse_move(x, y);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {
     (void)event;
-    // if (mouse_btn_down_func) {
-    //     mouse_btn_down_func(1);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    state->right_mouse_press = true;
+    state->right_mouse_is_pressed = true;
+    script_browser_window_mouse_down(1);
 }
 
 - (void)rightMouseDragged:(NSEvent*)event {
@@ -233,26 +250,29 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)rightMouseUp:(NSEvent*)event {
     (void)event;
-    // if (mouse_btn_up_func) {
-    //     mouse_btn_up_func(1);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    state->right_mouse_release = true;
+    state->right_mouse_is_pressed = false;
+    script_browser_window_mouse_up(1);
 }
 
 - (void)keyDown:(NSEvent*)event {
-    // if (key_down_func) {
-    //     key_down_func([event keyCode]);
-    // }
-    // if (char_func) {
-    //     const NSString* characters = [event characters];
-    //     const NSUInteger length = [characters length];
-    //     for (NSUInteger i = 0; i < length; i++) {
-    //         const unichar codepoint = [characters characterAtIndex:i];
-    //         if ((codepoint & 0xFF00) == 0xF700) {
-    //             continue;
-    //         }
-    //         char_func(codepoint);
-    //     }
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    const NSString* characters = [event characters];
+    const NSUInteger length = [characters length];
+    for (NSUInteger i = 0; i < length; i++) {
+        const unichar code = [characters characterAtIndex:i];
+        if ((code & 0xFF00) == 0xF700) {
+            continue;
+        }
+        ULOG_INFO("code {d}", code);
+        ui_state_key_press(state, (int)code);
+        script_browser_document_key_down((int)code);
+    }
 }
 
 - (void)flagsChanged:(NSEvent*)event {
@@ -262,19 +282,25 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)keyUp:(NSEvent*)event {
-    // if (key_up_func) {
-    //     key_up_func([event keyCode]);
-    // }
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return;
+    ui_state_t *state = &ctx->state;
+    const NSString* characters = [event characters];
+    const NSUInteger length = [characters length];
+    for (NSUInteger i = 0; i < length; i++) {
+        const unichar code = [characters characterAtIndex:i];
+        if ((code & 0xFF00) == 0xF700) {
+            continue;
+        }
+        ui_state_key_release(state, (int)code >> 16);
+        script_browser_document_key_up((int)code >> 16);
+    }
 }
 
 - (void)scrollWheel:(NSEvent*)event {
-    // if (mouse_wheel_func) {
-    //     double dy = [event scrollingDeltaY];
-    //     if ([event hasPreciseScrollingDeltas]) {
-    //         dy *= 0.1;
-    //     }
-    //     mouse_wheel_func(dy);
-    // }
+    double dy = [event scrollingDeltaY];
+    double dx = [event scrollingDeltaX];
+    os_window_on_scroll(&_window, dx, dy);
 }
 @end
 
@@ -334,9 +360,9 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
 
     _window.width = width;
     _window.height = height;
-    _window.framebuffer_width = width;
-    _window.framebuffer_height = height;
-    _window.ui_scale = 1.0;
+    _window.ui_scale = 2.0;
+    _window.framebuffer_width = width * _window.ui_scale;
+    _window.framebuffer_height = height * _window.ui_scale;
     _window.title = title;
     osx_start(width, height, title.data);
     return &_window;
@@ -357,4 +383,13 @@ void os_window_capture_require(os_window_t *window) {
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
 
+}
+
+void os_window_on_scroll(os_window_t* window, double offset_x, double offset_y) {
+    script_context_t *ctx = script_context_shared();
+    ui_state_t *state = &ctx->state;
+    if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(offset_x, offset_y);
+    const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
+    state->pointer_scroll.x = (f32)(offset_x * (shift ? state->smooth_factor : 1.f));
+    state->pointer_scroll.y = (f32)(-offset_y * (shift ? state->smooth_factor : 1.f));
 }

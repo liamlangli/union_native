@@ -201,6 +201,7 @@ void script_context_loop_tick() {
     script_browser_tick();
     ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
     ui_renderer_render(&shared_context.renderer);
+    ui_state_update(&shared_context.state);
 
     int finished;
     JSContext *ctx;
