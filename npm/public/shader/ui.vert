@@ -14,7 +14,6 @@ layout(location = 0) in highp uint vertex_id; // x, y, w, h
 
 uniform sampler2D primitive_buffer;
 uniform vec3 window_size;
-uniform float time;
 
 out vec4 clip_rect;
 out vec4 color;

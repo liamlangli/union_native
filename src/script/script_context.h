@@ -1,13 +1,11 @@
 #pragma once
 
-#include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/db.h"
-#include "foundation/os.h"
+#include "os/os.h"
 #include "ui/ui_dev_tool.h"
 #include "ui/ui_state.h"
 
-#include <GLFW/glfw3.h>
 #include <stb_ds.h>
 
 typedef struct script_context_t {

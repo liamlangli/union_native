@@ -2,6 +2,7 @@
 
 #include "foundation/simd.h"
 #include "foundation/ustring.h"
+#include "gpu/gpu.h"
 
 typedef struct msdf_glyph {
     int id, index, xoffset, yoffset, xadvance, width, height, x, y;
@@ -27,7 +28,8 @@ typedef struct msdf_font {
     char_map_hm *char_map;
     kerning_map_hm *kerning_map;
     u32 line_height, size;
-    u32 texture_handle, texture_width, texture_height;
+    u32 texture_width, texture_height;
+    gpu_texture texture;
 
     u32 gpu_font_id;
     u32 gpu_font_start;

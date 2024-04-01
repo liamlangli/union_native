@@ -1,6 +1,5 @@
 #include "ui/ui_input.h"
-#include "foundation/io.h"
-#include "foundation/os.h"
+#include "os/os.h"
 #include "foundation/ustring.h"
 #include "script/script_context.h"
 #include "ui/ui_draw.h"

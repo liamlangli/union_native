@@ -7,4 +7,3 @@
 #include "foundation/sm.h"         // IWYU pragma: export
 #include "foundation/udata.h"      // IWYU pragma: export
 #include "foundation/ustring.h"    // IWYU pragma: export
-#include "foundation/os.h"         // IWYU pragma: export

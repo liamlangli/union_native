@@ -1,21 +1,22 @@
 #include "ui/ui_renderer.h"
+#include "foundation/udata.h"
+#include "foundation/ustring.h"
+#include "gpu/gpu_const.h"
+#include "ui/ui_font.h"
 #include "foundation/io.h"
 #include "foundation/logger.h"
-#include "foundation/ustring.h"
+#include "gpu/gpu.h"
 #include "script/script_context.h"
 
 #if OS_MACOS
 #include <unistd.h>
 #endif
 
-#include <GLES3/gl3.h>
-#include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <stb_ds.h>
 
-#define PRIMITVE_DATA_INIT_COUNT 262144 // 1M
+#define PRIMITIVE_DATA_INIT_COUNT 262144 // 1M
 #define UI_LAYER_1_OFFSET 237568        // size 4096
 #define UI_LAYER_2_OFFSET 241664        // size 16384
 #define UI_LAYER_3_OFFSET 258048        // size 4096
@@ -64,8 +65,8 @@ void ui_renderer_write_msdf_font(ui_renderer_t *renderer, msdf_font *font) {
 void ui_renderer_init(ui_renderer_t *renderer) {
     // 4M ui data
     // 1M for primitive buffer 3M for index data
-    renderer->primitive_data = (u32 *)malloc(PRIMITVE_DATA_INIT_COUNT * sizeof(f32) * 4);
-    renderer->index_data = (u32 *)(renderer->primitive_data + PRIMITVE_DATA_INIT_COUNT / sizeof(f32));
+    renderer->primitive_data = (u32 *)malloc(PRIMITIVE_DATA_INIT_COUNT * sizeof(f32) * 4);
+    renderer->index_data = (u32 *)(renderer->primitive_data + PRIMITIVE_DATA_INIT_COUNT / sizeof(f32));
 
     int primitive_offsets[] = {0, 237568, 241664, 258048};
     int index_offsets[] = {0, 237568 * 3, 241664 * 3, 258048 * 3};
@@ -88,94 +89,105 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     ui_renderer_write_msdf_font(renderer, ui_font_shared()->font);
 
     // gpu
-    GLint max_texture_size = 4096;
-    // glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    int max_texture_size = 4096;
 
-    GLsizei texture_width = max_texture_size;
-    GLsizei texture_height = PRIMITVE_DATA_INIT_COUNT / 4 / texture_width;
+    int texture_width = max_texture_size;
+    int texture_height = PRIMITIVE_DATA_INIT_COUNT / 4 / texture_width;
 
-    GLuint primitive_buffer_map;
-    glGenTextures(1, &primitive_buffer_map);
-    glBindTexture(GL_TEXTURE_2D, primitive_buffer_map);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // glTexParameter
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, texture_width, texture_height, 0, GL_RGBA, GL_FLOAT, NULL);
-    renderer->primitive_data_texture = primitive_buffer_map;
+    gpu_texture_desc primitive_data_desc = {0};
+    primitive_data_desc.width = texture_width;
+    primitive_data_desc.height = texture_height;
+    primitive_data_desc.format = PIXELFORMAT_RGBA32F;
+    primitive_data_desc.data = (udata){.data = (i8*)renderer->primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
+    
+    renderer->primitive_data_texture = gpu_create_texture(&primitive_data_desc);
     renderer->primitive_data_texture_width = texture_width;
 
-    GLuint icon_texture;
-    glGenTextures(1, &icon_texture);
-    glBindTexture(GL_TEXTURE_2D, icon_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // glTexParameter
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // glTexParameter
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    renderer->icon_texture = icon_texture;
+    gpu_texture_desc icon_texture_desc = {0};
+    icon_texture_desc.width = 1024;
+    icon_texture_desc.height = 1024;
+    icon_texture_desc.format = PIXELFORMAT_RGBA8;
+    renderer->icon_texture = gpu_create_texture(&icon_texture_desc);
 
-    GLuint index_buffer;
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ARRAY_BUFFER, PRIMITVE_DATA_INIT_COUNT * 3, NULL, GL_DYNAMIC_DRAW);
-    renderer->index_buffer = index_buffer;
+    renderer->index_buffer = gpu_create_buffer(&(gpu_buffer_desc){
+        .size = PRIMITIVE_DATA_INIT_COUNT * 4,
+        .type = BUFFER_VERTEX,
+        .data = (udata){.data = (i8*)renderer->index_data, PRIMITIVE_DATA_INIT_COUNT * 4},
+    });
 
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, index_buffer);
-    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, NULL);
-    glEnableVertexAttribArray(0);
-    glDisableVertexAttribArray(vao);
-    renderer->vao = vao;
+    renderer->uniform_buffer = gpu_create_buffer(&(gpu_buffer_desc){
+        .size = sizeof(float) * 4,
+        .type = BUFFER_UNIFORM,
+        .data = (udata){.data = (i8*)&renderer->window_size, sizeof(float) * 4},
+    });
 
-    ustring vert_shader_code = io_read_file(ustring_view_STR("public/shader/ui.vert"));
-    ustring frag_shader_code = io_read_file(ustring_view_STR("public/shader/ui.frag"));
-    GLuint program = glCreateProgram();
+#if defined(OS_MACOS) || defined (OS_IOS)
+    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources/public/shader/ui.metal"));
+    ustring ui_shader = io_read_file(ustring_view_from_ustring(bundle_path));
+#else
+    ustring ui_shader = io_read_file(ustring_view_STR("public/shader/ui.metal"));
+#endif
+    gpu_shader shader = gpu_create_shader(&(gpu_shader_desc){
+        .attributes = {
+            [0] = {.name = "index", .type = ATTRIBUTE_FORMAT_UINT, .size = 1, .stride = 0},
+        },
+        .vertex = {
+            .entry = "vertex_main",
+            .source = ui_shader,
+        },
+        .fragment = {
+            .entry = "fragment_main",
+            .source = ui_shader,
+        },
+        .label = ustring_STR("ui_shader"),
+    });
 
-    GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vert_shader, 1, (const GLchar *const *)&vert_shader_code.data, NULL);
-    glCompileShader(vert_shader);
+    gpu_pipeline pipeline = gpu_create_pipeline(&(gpu_pipeline_desc){
+        .layout = {
+            .attributes = {
+                [0] = {.format = ATTRIBUTE_FORMAT_UINT, .size = 1, .buffer_index = 0 },
+            },
+            .buffers = {
+                [0] = {.stride = 4, .step_rate = 1, .step_func = VERTEX_STEP_PER_VERTEX },
+            }
+        },
+        .primitive_type = PRIMITIVE_TRIANGLES,
+        .shader = shader,
+        .colors = {
+            [0] = {
+                .blend = {
+                    .enabled = true,
+                    .src_factor_alpha = BLEND_FACTOR_ONE,
+                    .dst_factor_alpha = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .src_factor = BLEND_FACTOR_SRC_ALPHA,
+                    .dst_factor = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .op_alpha = BLEND_OP_ADD,
+                    .op = BLEND_OP_ADD,
+                },
+                .format = PIXELFORMAT_BGRA8
+            }
+        },
+        .color_count = 1,
+        .index_type = INDEX_NONE,
+        .cull_mode = CULL_NONE,
+        .depth = { .write_enabled = true, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_DEPTH_STENCIL }
+    });
 
-    GLint length;
-    glGetShaderiv(vert_shader, GL_INFO_LOG_LENGTH, &length);
-    if (length > 0) {
-        char *log = (char *)malloc(length);
-        glGetShaderInfoLog(vert_shader, length, NULL, log);
-        LOG_ERROR_FMT("vert shader compile log: {}", log);
-        free(log);
-    }
+    renderer->binding = (gpu_binding){
+        .vertex.textures = {
+            [0] = renderer->primitive_data_texture,
+        },
+        .fragment.textures = {
+            [0] = ui_font_shared()->font->texture,
+            [1] = renderer->icon_texture,
+        },
+        .buffers = {
+            [0] = renderer->index_buffer,
+            [1] = renderer->uniform_buffer,
+        },
+    };
 
-    GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(frag_shader, 1, (const GLchar *const *)&frag_shader_code.data, (const GLint *)&frag_shader_code.length);
-    glCompileShader(frag_shader);
-    glGetShaderiv(frag_shader, GL_INFO_LOG_LENGTH, &length);
-    if (length > 0) {
-        char *log = (char *)malloc(length);
-        glGetShaderInfoLog(frag_shader, length, NULL, log);
-        LOG_ERROR_FMT("frag shader compile log: {}", log);
-        free(log);
-    }
-
-    glAttachShader(program, vert_shader);
-    glAttachShader(program, frag_shader);
-    glLinkProgram(program);
-
-    // check error
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    if (length > 0) {
-        char *log = (char *)malloc(length);
-        glGetProgramInfoLog(program, length, NULL, log);
-        LOG_ERROR_FMT("program link log: {}", log);
-        free(log);
-    }
-
-    renderer->window_size_location = glGetUniformLocation(program, "window_size");
-    renderer->primitive_data_texture_location = glGetUniformLocation(program, "primitive_buffer");
-    renderer->font_texture_location = glGetUniformLocation(program, "font_texture");
-    renderer->icon_texture_location = glGetUniformLocation(program, "icon_texture");
-    renderer->program = program;
+    renderer->pipeline = pipeline;
 }
 
 void ui_renderer_free(ui_renderer_t *renderer) { free(renderer->primitive_data); }
@@ -204,6 +216,10 @@ void ui_renderer_merge_layers(ui_renderer_t *renderer) {
     renderer->last_primitive_offset = renderer->primitive_offset;
     renderer->last_index_offset = renderer->index_offset;
     ui_renderer_clear(renderer);
+
+    gpu_update_buffer(renderer->uniform_buffer, (udata){.data = (i8 *)&renderer->window_size, sizeof(float) * 4});
+    gpu_update_buffer(renderer->index_buffer, (udata){.data = (i8 *)renderer->index_data, renderer->last_index_offset * 4});
+    gpu_update_texture(renderer->primitive_data_texture, (udata){.data = (i8 *)renderer->primitive_data, renderer->last_primitive_offset * 4 * sizeof(f32)});
 }
 
 void ui_renderer_render(ui_renderer_t *renderer) {
@@ -212,43 +228,11 @@ void ui_renderer_render(ui_renderer_t *renderer) {
         return;
 
     script_context_t *ctx = script_context_shared();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
-    glUseProgram(renderer->program);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glEnable(GL_BLEND);
-    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    glBindVertexArray(renderer->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->index_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->last_index_offset * sizeof(u32), renderer->index_data);
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, NULL);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderer->primitive_data_texture);
-    GLsizei height = (GLsizei)ceil((f64)renderer->primitive_offset / (f64)renderer->primitive_data_texture_width);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, renderer->primitive_data_texture_width, height, GL_RGBA, GL_FLOAT,
-                    renderer->primitive_data);
-    glUniform1i(renderer->primitive_data_texture_location, 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    msdf_font *font = msdf_font_system_font();
-    glBindTexture(GL_TEXTURE_2D, font->texture_handle);
-    glUniform1i(renderer->font_texture_location, 1);
-
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, renderer->icon_texture);
-    glUniform1i(renderer->icon_texture_location, 2);
-
-    glUniform3fv(renderer->window_size_location, 1, (const GLfloat *)&renderer->window_size);
-    glDrawArrays(GL_TRIANGLES, 0, renderer->last_index_offset);
+    gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
+    gpu_set_pipeline(renderer->pipeline);
+    gpu_set_binding(&renderer->binding);
+    gpu_draw(0, renderer->last_index_offset, 1);
 }
 
 u32 ui_layer_write_clip(ui_layer *layer, ui_rect rect, u32 parent) {

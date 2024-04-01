@@ -2,6 +2,7 @@
 
 #include "foundation/global.h"
 #include "ui/ui_renderer.h"
+#include "ui/ui_font.h"
 
 enum UI_PRIMITIVE_TYPE {
     UI_PRIMITIVE_TYPE_RECTANGLE = (1 << 26),
