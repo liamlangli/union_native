@@ -205,3 +205,35 @@ MTLVertexStepFunction _mtl_vertex_step_function(gpu_vertex_step step) {
         default: return MTLVertexStepFunctionPerVertex;
     }
 }
+
+MTLBlendOperation _mtl_blend_operation(gpu_blend_op op) {
+    switch (op) {
+        case BLEND_OP_ADD: return MTLBlendOperationAdd;
+        case BLEND_OP_SUBTRACT: return MTLBlendOperationSubtract;
+        case BLEND_OP_REVERSE_SUBTRACT: return MTLBlendOperationReverseSubtract;
+        case BLEND_OP_MIN: return MTLBlendOperationMin;
+        case BLEND_OP_MAX: return MTLBlendOperationMax;
+        default: return MTLBlendOperationAdd;
+    }
+}
+
+MTLBlendFactor _mtl_blend_factor(gpu_blend_factor factor) {
+    switch (factor) {
+        case BLEND_FACTOR_ZERO: return MTLBlendFactorZero;
+        case BLEND_FACTOR_ONE: return MTLBlendFactorOne;
+        case BLEND_FACTOR_SRC_COLOR: return MTLBlendFactorSourceColor;
+        case BLEND_FACTOR_ONE_MINUS_SRC_COLOR: return MTLBlendFactorOneMinusSourceColor;
+        case BLEND_FACTOR_DST_COLOR: return MTLBlendFactorDestinationColor;
+        case BLEND_FACTOR_ONE_MINUS_DST_COLOR: return MTLBlendFactorOneMinusDestinationColor;
+        case BLEND_FACTOR_SRC_ALPHA: return MTLBlendFactorSourceAlpha;
+        case BLEND_FACTOR_ONE_MINUS_SRC_ALPHA: return MTLBlendFactorOneMinusSourceAlpha;
+        case BLEND_FACTOR_DST_ALPHA: return MTLBlendFactorDestinationAlpha;
+        case BLEND_FACTOR_ONE_MINUS_DST_ALPHA: return MTLBlendFactorOneMinusDestinationAlpha;
+        case BLEND_FACTOR_SRC_ALPHA_SATURATED: return MTLBlendFactorSourceAlphaSaturated;
+        case BLEND_FACTOR_BLEND_COLOR: return MTLBlendFactorBlendColor;
+        case BLEND_FACTOR_ONE_MINUS_BLEND_COLOR: return MTLBlendFactorOneMinusBlendColor;
+        case BLEND_FACTOR_BLEND_ALPHA: return MTLBlendFactorBlendAlpha;
+        case BLEND_FACTOR_ONE_MINUS_BLEND_ALPHA: return MTLBlendFactorOneMinusBlendAlpha;
+        default: return MTLBlendFactorZero;
+    }
+}

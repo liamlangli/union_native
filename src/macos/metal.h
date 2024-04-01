@@ -15,5 +15,7 @@ MTLPrimitiveType _mtl_primitive_type(gpu_primitive_type type);
 MTLWinding _mtl_winding(gpu_face_winding winding);
 MTLVertexFormat _mtl_vertex_format(gpu_attribute_format fmt, int size);
 MTLVertexStepFunction _mtl_vertex_step_function(gpu_vertex_step step);
+MTLBlendOperation _mtl_blend_operation(gpu_blend_op op);
+MTLBlendFactor _mtl_blend_factor(gpu_blend_factor factor);
 
 bool _mtl_stencil_enabled_format(gpu_pixel_format fmt);
