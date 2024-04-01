@@ -18,7 +18,7 @@ static gpu_pass pass = {
     .action = {
         .color_action = {
             [0] = {
-                .clear_value = (gpu_color){.r=0.1, .g=0.2, .b=0.3, .a=1}
+                .clear_value = (gpu_color){.r=0.94, .g=0.945, .b=0.947, .a=1}
             }
         },
     }

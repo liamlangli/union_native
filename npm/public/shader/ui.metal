@@ -64,7 +64,7 @@ float4 rect_vertex(float4 r, uint corner_id) {
 vertex vertex_output vertex_main(
     vertex_data in [[stage_in]],
     texture2d<float, access::read> primitive_buffer [[texture(0)]],
-    constant ui_uniform &uniforms [[buffer(0)]]
+    constant ui_uniform &uniforms [[buffer(1)]]
 ) {
     vertex_output out;
 

@@ -332,7 +332,7 @@ id<MTLLibrary> _mtl_library_from_bytecode(udata src) {
         NSLog(@"Error: %@", err);
         NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
     }
-    [data release];
+    dispatch_release(data);
     return lib;
 }
 

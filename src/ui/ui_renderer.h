@@ -26,6 +26,7 @@ typedef struct ui_renderer_t {
     u32 primitive_data_texture_width;
     gpu_texture primitive_data_texture;
     gpu_buffer index_buffer;
+    gpu_buffer uniform_buffer;
     gpu_texture icon_texture;
     gpu_binding binding;
     gpu_pipeline pipeline;

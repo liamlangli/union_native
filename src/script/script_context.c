@@ -54,13 +54,15 @@ void script_context_init(os_window_t *window) {
     shared_context.module = (void *)&shared_module;
     shared_context.window = window;
 #if defined(OS_MACOS) || defined (OS_IOS)
-    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources"));
+    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources/db"));
     shared_context.db = db_open(bundle_path);
 #else
     shared_context.db = db_open(ustring_STR("union"));
 #endif
     shared_context.invalid_script = true;
     ui_renderer_init(&shared_context.renderer);
+    shared_context.renderer.window_size = (float4){.x = window->width, .y = window->height, .z = 1.0f, .w = 1.0f};
+    shared_context.state.window_rect = (ui_rect){0, 0, window->width, window->height};
     ui_state_init(&shared_context.state, &shared_context.renderer);
     ui_dev_tool_init(&shared_context.dev_tool);
 }

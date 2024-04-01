@@ -115,6 +115,12 @@ void ui_renderer_init(ui_renderer_t *renderer) {
         .data = (udata){.data = (i8*)renderer->index_data, PRIMITIVE_DATA_INIT_COUNT * 4},
     });
 
+    renderer->uniform_buffer = gpu_create_buffer(&(gpu_buffer_desc){
+        .size = sizeof(float) * 4,
+        .type = BUFFER_UNIFORM,
+        .data = (udata){.data = (i8*)&renderer->window_size, sizeof(float) * 4},
+    });
+
 #if defined(OS_MACOS) || defined (OS_IOS)
     ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources/public/shader/ui.metal"));
     ustring ui_shader = io_read_file(ustring_view_from_ustring(bundle_path));
@@ -177,6 +183,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
         },
         .buffers = {
             [0] = renderer->index_buffer,
+            [1] = renderer->uniform_buffer,
         },
     };
 
@@ -210,6 +217,7 @@ void ui_renderer_merge_layers(ui_renderer_t *renderer) {
     renderer->last_index_offset = renderer->index_offset;
     ui_renderer_clear(renderer);
 
+    gpu_update_buffer(renderer->uniform_buffer, (udata){.data = (i8 *)&renderer->window_size, sizeof(float) * 4});
     gpu_update_buffer(renderer->index_buffer, (udata){.data = (i8 *)renderer->index_data, renderer->last_index_offset * 4});
     gpu_update_texture(renderer->primitive_data_texture, (udata){.data = (i8 *)renderer->primitive_data, renderer->last_primitive_offset * 4 * sizeof(f32)});
 }
