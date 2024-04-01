@@ -24,7 +24,7 @@ ustring io_read_file(ustring_view path) {
 
     fclose(file);
 
-    return ustring_str(buffer);
+    return (ustring){.data = buffer, .length = size, .null_terminated = true };
 }
 
 u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {

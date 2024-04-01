@@ -5,15 +5,15 @@ struct ui_uniform {
     float4 window_size;
 };
 
-const uint UI_PRIM_RECTANGLE = 1u;
-const uint UI_PRIM_TRIANGLE = 2u;
-const uint UI_PRIM_TRIANGLE_ADVANCED = 3u;
-const uint GLYPH_MASK = 0x80000000u;
+#define UI_PRIM_RECTANGLE 1u
+#define UI_PRIM_TRIANGLE 2u
+#define UI_PRIM_TRIANGLE_ADVANCED 3u
+#define GLYPH_MASK 0x80000000u
 
-const uint UI_PRIM_GLYPH = 32u;
-const uint UI_PRIM_GLYPH_CODE = 33u;
+#define UI_PRIM_GLYPH 32u
+#define UI_PRIM_GLYPH_CODE 33u
 
-const int UI_PRIM_TRIANGLE_ADVANCED_ICON = 4u;
+#define UI_PRIM_TRIANGLE_ADVANCED_ICON 4u
 
 struct vertex_data {
     uint vertex_id [[attribute(0)]];
@@ -58,12 +58,14 @@ float4 decode_color(uint c) {
 }
 
 float4 rect_vertex(float4 r, uint corner_id) {
-    return float4(r.x + ((corner_idx == 1u || corner_idx == 3u) ? r.z : 0.), r.y + ((corner_idx == 2u || corner_idx == 3u) ? r.w : 0.), 0., 1.);
+    return float4(r.x + ((corner_id == 1u || corner_id == 3u) ? r.z : 0.), r.y + ((corner_id == 2u || corner_id == 3u) ? r.w : 0.), 0., 1.);
 }
 
 vertex vertex_output vertex_main(
     vertex_data in [[stage_in]],
-    texture2d<float, access::read> primitive_buffer [[texture(0)]]) {
+    texture2d<float, access::read> primitive_buffer [[texture(0)]],
+    constant ui_uniform &uniforms [[buffer(0)]]
+) {
     vertex_output out;
 
     uint vertex_id = in.vertex_id;
@@ -72,22 +74,22 @@ vertex vertex_output vertex_main(
 
     if ((vertex_id & GLYPH_MASK) != 0u) {
         // draw glyph
-        uint corner_id = decode_corner_idx(vertex_id);
+        uint corner_id = decode_corner_id(vertex_id);
         uint header_offset = decode_header_offset(vertex_id);
         uint header_ptr = ptr - header_offset - 1u;
 
-        float4 glyph_data = fetch_primitive_buffer(ptr);
-        float4 glyph_header = fetch_primitive_buffer(header_ptr);
+        float4 glyph_data = fetch_primitive_buffer(primitive_buffer, ptr);
+        float4 glyph_header = fetch_primitive_buffer(primitive_buffer, header_ptr);
         float glpyh_scale = glyph_data.w;
 
         uint font_ptr = as_type<uint>(glyph_header.z);
-        float4 font_data = fetch_primitive_buffer(font_ptr);
+        float4 font_data = fetch_primitive_buffer(primitive_buffer, font_ptr);
         uint glyph_ptr = font_ptr + 2u + as_type<uint>(glyph_data.y) * 2u;
         float2 font_texture_size = font_data.xy;
 
         float2 glyph_origin = glyph_header.xy;
-        float4 glyph_sample_rect = fetch_primitive_buffer(glyph_ptr);
-        float4 glyph_sample_data = fetch_primitive_buffer(glyph_ptr + 1u);
+        float4 glyph_sample_rect = fetch_primitive_buffer(primitive_buffer, glyph_ptr);
+        float4 glyph_sample_data = fetch_primitive_buffer(primitive_buffer, glyph_ptr + 1u);
 
         float4 primitive_rect = float4(glyph_origin + float2(glyph_data.x, glyph_sample_data.y * glpyh_scale), glyph_sample_rect.zw * glpyh_scale);
 
@@ -102,46 +104,47 @@ vertex vertex_output vertex_main(
     } else {
 
         out.type = decode_primitive_type(vertex_id);
-        if (type == UI_PRIM_RECTANGLE) {
+        if (out.type == UI_PRIM_RECTANGLE) {
 
-            uint corner_id = decode_corner_idx(vertex_id);
-            float4 primitive_data = fetch_primitive_buffer(ptr);
-            float4 rect_data = fetch_primitive_buffer(ptr + 1u);
+            uint corner_id = decode_corner_id(vertex_id);
+            float4 primitive_data = fetch_primitive_buffer(primitive_buffer, ptr);
+            float4 rect_data = fetch_primitive_buffer(primitive_buffer, ptr + 1u);
 
             v = rect_vertex(primitive_data, corner_id);
-            color = decode_color(as_type<uint>(rect_data.x));
+            out.color = decode_color(as_type<uint>(rect_data.x));
             uint raw_clip = uint(rect_data.y);
-            clip = raw_clip == 0u ? 0u : ptr - raw_clip;
+            out.clip = raw_clip == 0u ? 0u : ptr - raw_clip;
 
         } else if (out.type == UI_PRIM_TRIANGLE) {
 
-            float4 primitive_data = fetch_primitive_buffer(ptr);
-            v.xy = primitive_data.xy;
-            color = decode_color(as_type<uint>(primitive_data.z));
-            uint raw_clip = as_type<uint>(primitive_data.w);
-            clip = raw_clip == 0u ? 0u : ptr - raw_clip;
-
-        } else {
-
-            float4 primitive_data = fetch_primitive_buffer(ptr);
+            float4 primitive_data = fetch_primitive_buffer(primitive_buffer, ptr);
             v.xy = primitive_data.xy;
             out.color = decode_color(as_type<uint>(primitive_data.z));
             uint raw_clip = as_type<uint>(primitive_data.w);
             out.clip = raw_clip == 0u ? 0u : ptr - raw_clip;
 
-            float4 sample_data = fetch_primitive_buffer(ptr + 1u);
+        } else {
+
+            float4 primitive_data = fetch_primitive_buffer(primitive_buffer, ptr);
+            v.xy = primitive_data.xy;
+            out.color = decode_color(as_type<uint>(primitive_data.z));
+            uint raw_clip = as_type<uint>(primitive_data.w);
+            out.clip = raw_clip == 0u ? 0u : ptr - raw_clip;
+
+            float4 sample_data = fetch_primitive_buffer(primitive_buffer, ptr + 1u);
             out.sample_point = sample_data.xy;
 
             out.type = as_type<uint>(sample_data.z);
         }
     }
 
-    if (clip != 0u) {
-        out.clip_rect = fetch_primitive_buffer(clip);
+    if (out.clip != 0u) {
+        out.clip_rect = fetch_primitive_buffer(primitive_buffer, out.clip);
     }
 
     out.screen_point = v.xy;
 
+    float2 window_size = uniforms.window_size.xy;
     out.position = float4(v.x * 2.0 - window_size.x, window_size.y - v.y * 2.0, 0.0, 1.0);
     out.position.xy /= window_size.xy;
     return out;
@@ -162,19 +165,17 @@ fragment float4 fragment_main(
     texture2d<float> icon_texture [[texture(1)]])
 {
     if (in.clip != 0u && !contains(in.screen_point, in.clip_rect)) discard_fragment();
-
     sampler linear_sampler(mag_filter::linear, min_filter::linear);
-    switch (in.type) {
-        case UI_PRIM_GLYPH:
-            float3 msdf = texture(font_texture, sample_point).xyz;
-            float sd = median(msdf.r, msdf.g, msdf.b);
-            float w = fwidth(sd);
-            float opacity = smoothstep(0.5 - w, 0.5 + w, sd);
-            return float4(color.xyz, opacity);
-        case UI_PRIM_TRIANGLE_ADVANCED_ICON:
-            return icon_texture.sample(linear_sampler, in.sample_point);
-        default:
-            return in.color;
+    if (in.type == UI_PRIM_GLYPH) {
+        float3 msdf = font_texture.sample(linear_sampler, in.sample_point).xyz;
+        float sd = median(msdf.r, msdf.g, msdf.b);
+        float w = fwidth(sd);
+        float opacity = smoothstep(0.5 - w, 0.5 + w, sd);
+        return float4(in.color.xyz, opacity);
+    } else if (in.type == UI_PRIM_TRIANGLE_ADVANCED_ICON) {
+        return icon_texture.sample(linear_sampler, in.sample_point);
+    } else {
+        return in.color;
     }
 }
 

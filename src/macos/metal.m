@@ -351,6 +351,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     MTLVertexDescriptor *vertex_desc = [MTLVertexDescriptor vertexDescriptor];
     gpu_pipeline_mtl_t mtl_pipeline;
     bool vertex_buffer_enabled[GPU_VERTEX_BUFFER_COUNT];
+    memset(vertex_buffer_enabled, 0, sizeof(vertex_buffer_enabled));
     for (NSUInteger attr_index = 0; attr_index < GPU_ATTRIBUTE_COUNT; ++attr_index) {
         const gpu_vertex_attribute_state *attr_state = &desc->layout.attributes[attr_index];
         if (attr_state->format == ATTRIBUTE_FORMAT_INVALID) {

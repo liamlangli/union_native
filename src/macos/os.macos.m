@@ -1,4 +1,5 @@
 
+#include "foundation/ustring.h"
 #include "gpu/gpu.h"
 #include "gpu/gpu_const.h"
 #include "macos/metal.h"
@@ -359,4 +360,11 @@ void os_window_capture_require(os_window_t *window) {
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
 
+}
+
+ustring os_get_bundle_path(ustring path) {
+    NSString* bundle_path = [[NSBundle mainBundle] bundlePath];
+    NSString* file_path = [bundle_path stringByAppendingPathComponent:[NSString stringWithUTF8String: path.data]];
+    const i8* cstr = [file_path UTF8String];
+    return ustring_str((i8*)cstr);
 }

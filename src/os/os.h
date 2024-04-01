@@ -49,6 +49,8 @@ extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);
 
 extern bool os_file_exists(ustring path);
+extern ustring os_cwd();
+extern ustring os_get_bundle_path(ustring path);
 
 extern void os_time_init();
 extern long os_time();
