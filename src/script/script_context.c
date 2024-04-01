@@ -54,7 +54,8 @@ void script_context_init(os_window_t *window) {
     shared_context.module = (void *)&shared_module;
     shared_context.window = window;
 #if defined(OS_MACOS) || defined (OS_IOS)
-    shared_context.db = db_open(ustring_STR("../Resources"));
+    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources"));
+    shared_context.db = db_open(bundle_path);
 #else
     shared_context.db = db_open(ustring_STR("union"));
 #endif
