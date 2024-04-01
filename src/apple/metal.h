@@ -22,4 +22,5 @@ MTLCullMode _mtl_cull_mode(gpu_cull_mode mode);
 MTLCompareFunction _mtl_compare_function(gpu_compare_func func);
 MTLStencilOperation _mtl_stencil_operation(gpu_stencil_op op);
 
+bool _mtl_pixel_format_is_pvrtc(gpu_pixel_format fmt);
 bool _mtl_stencil_enabled_format(gpu_pixel_format fmt);

@@ -334,6 +334,8 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
 
     _window.width = width;
     _window.height = height;
+    _window.framebuffer_width = width;
+    _window.framebuffer_height = height;
     _window.ui_scale = 2.0;
     _window.title = title;
     osx_start(width, height, title.data);

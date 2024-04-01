@@ -1,3 +1,4 @@
+#include "foundation/udata.h"
 #include "gpu/gpu.h"
 #include "foundation/logger.h"
 #include "gpu/gpu_const.h"
@@ -22,6 +23,9 @@ typedef struct gpu_shader_mtl_t {
 
 typedef struct gpu_texture_mtl_t {
     id<MTLTexture> texture;
+    NSUInteger width, height, depth;
+    gpu_pixel_format format;
+    gpu_texture_type type;
 } gpu_texture_mtl_t;
 
 typedef struct gpu_buffer_mtl_t {
@@ -180,15 +184,65 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
     id<MTLTexture> texture = [_state.device.device newTextureWithDescriptor: mtl_desc];
-    gpu_texture_mtl_t mtl_texture = (gpu_texture_mtl_t){ .texture = texture };
-    return (gpu_texture){ .id = _mtl_add_texture(mtl_texture) };
+    gpu_texture_mtl_t mtl_texture = (gpu_texture_mtl_t){
+        .texture = texture,
+        .width = mtl_desc.width,
+        .height = mtl_desc.height,
+        .depth = mtl_desc.depth,
+        .format = desc->format,
+        .type = desc->type
+    };
+    gpu_texture result = { .id = _mtl_add_texture(mtl_texture) };
+    
+    if (desc->data.length > 0) {
+        gpu_update_texture(result, desc->data);
+    }
+
+    return result;
+}
+
+void gpu_update_texture(gpu_texture texture, udata data) {
+    gpu_texture_mtl_t mtl_texture = _mtl_get_texture(texture.id);
+    int width = (int)mtl_texture.width;
+    int height = (int)mtl_texture.height;
+    gpu_pixel_format format = mtl_texture.format;
+
+    int bytes_per_row = 0;
+    int bytes_per_slice = 0;
+    if (!_mtl_pixel_format_is_pvrtc(format)) {
+        bytes_per_row = gpu_pixel_format_row_pitch(format, width, 1);
+        bytes_per_slice = gpu_pixel_format_surface_pitch(format, width, height, 1);
+    }
+
+    MTLRegion region;
+    int bytes_per_image;
+    if (mtl_texture.type == TEXTURE_3D) {
+        region = MTLRegionMake3D(0, 0, 0, width, height, mtl_texture.depth);
+        bytes_per_image = bytes_per_slice;
+    } else {
+        region = MTLRegionMake2D(0, 0, width, height);
+        bytes_per_image = 0;
+    }
+
+    [mtl_texture.texture replaceRegion: MTLRegionMake2D(0, 0, mtl_texture.width, mtl_texture.height)
+        mipmapLevel: 0
+        withBytes: data.data
+        bytesPerRow: (NSUInteger)bytes_per_row];
 }
 
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
     assert(desc->size > 0);
-    id<MTLBuffer> buffer = [_state.device.device newBufferWithLength: desc->size options: MTLResourceStorageModeShared];
+    id<MTLBuffer> buffer = [_state.device.device newBufferWithLength: desc->size options: MTLResourceStorageModeManaged];
     gpu_buffer_mtl_t mtl_buffer = (gpu_buffer_mtl_t){ .buffer = buffer };
     return (gpu_buffer){ .id = _mtl_add_buffer(mtl_buffer) };
+}
+
+void gpu_update_buffer(gpu_buffer buffer, udata data) {
+    gpu_buffer_mtl_t mtl_buffer = _mtl_get_buffer(buffer.id);
+    memcpy([mtl_buffer.buffer contents], data.data, data.length);
+#if defined(OS_MACOS)
+    [mtl_buffer.buffer didModifyRange: NSMakeRange(0, data.length)];
+#endif
 }
 
 void gpu_mtl_begin_frame(MTKView *view) {
@@ -480,16 +534,37 @@ void gpu_set_pipeline(gpu_pipeline pipeline) {
     gpu_pipeline_mtl_t mtl_pipeline = _mtl_get_pipeline(pipeline.id);
     _state.cur_pipeline = mtl_pipeline;
 
-    // gpu_color color = mtl_pi
     [_state.device.cmd_encoder setCullMode: mtl_pipeline.cull_mode];
     [_state.device.cmd_encoder setFrontFacingWinding: mtl_pipeline.winding];
-    [_state.device.cmd_encoder setStencilReferenceValue: mtl_pipeline.stencil_ref];
+//    [_state.device.cmd_encoder setStencilReferenceValue: mtl_pipeline.stencil_ref];
     [_state.device.cmd_encoder setRenderPipelineState: mtl_pipeline.pso];
     [_state.device.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
 }
 
 void gpu_set_binding(const gpu_binding* binding) {
-    _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
+    assert(binding);
+    for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
+        if (binding->buffers[i].id == _mtl_invalid_id) break;
+        gpu_buffer_mtl_t buffer = _mtl_get_buffer(binding->buffers[i].id);
+        NSUInteger offset = (NSUInteger)binding->buffer_offsets[i];
+        [_state.device.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
+    }
+
+    if (binding->index_buffer.id != _mtl_invalid_id) {
+        _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
+    }
+
+    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+        if (binding->vertex.textures[i].id == _mtl_invalid_id) break;
+        gpu_texture_mtl_t texture = _mtl_get_texture(binding->vertex.textures[i].id);
+        [_state.device.cmd_encoder setVertexTexture: texture.texture atIndex: i];
+    }
+
+    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+        if (binding->fragment.textures[i].id == _mtl_invalid_id) break;
+        gpu_texture_mtl_t texture = _mtl_get_texture(binding->fragment.textures[i].id);
+        [_state.device.cmd_encoder setFragmentTexture: texture.texture atIndex: i];
+    }
 }
 
 void gpu_draw(int base, int count, int instance_count) {

@@ -231,6 +231,9 @@ void gpu_destroy_shader(gpu_shader shader);
 void gpu_destroy_pipeline(gpu_pipeline pipeline);
 void gpu_destroy_attachments(gpu_attachments attachments);
 
+void gpu_update_texture(gpu_texture texture, udata data);
+void gpu_update_buffer(gpu_buffer buffer, udata data);
+
 bool gpu_begin_pass(gpu_pass *pass);
 void gpu_set_viewport(int x, int y, int width, int height);
 void gpu_set_scissor(int x, int y, int width, int height);
@@ -239,3 +242,8 @@ void gpu_set_binding(const gpu_binding* binding);
 void gpu_draw(int base, int count, int instance_count);
 void gpu_end_pass(void);
 void gpu_commit(void);
+
+int gpu_pixel_format_row_count(gpu_pixel_format format, int height);
+int gpu_pixel_format_size(gpu_pixel_format format);
+int gpu_pixel_format_surface_pitch(gpu_pixel_format format, int width, int height, int row_alignment);
+int gpu_pixel_format_row_pitch(gpu_pixel_format format, int width, int row_alignment);

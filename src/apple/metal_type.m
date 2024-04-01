@@ -113,6 +113,17 @@ bool _mtl_stencil_enabled_format(gpu_pixel_format fmt) {
     }
 }
 
+bool _mtl_pixel_format_is_pvrtc(gpu_pixel_format fmt) {
+    switch (fmt) {
+        case PIXELFORMAT_PVRTC_RGB_2BPP:
+        case PIXELFORMAT_PVRTC_RGB_4BPP:
+        case PIXELFORMAT_PVRTC_RGBA_2BPP:
+        case PIXELFORMAT_PVRTC_RGBA_4BPP:
+            return true;
+        default: return false;
+    }
+}
+
 MTLPrimitiveType _mtl_primitive_type(gpu_primitive_type type) {
     switch (type) {
         case PRIMITIVE_POINTS: return MTLPrimitiveTypePoint;

@@ -1,4 +1,5 @@
 #include "ui/ui_renderer.h"
+#include "foundation/udata.h"
 #include "foundation/ustring.h"
 #include "gpu/gpu_const.h"
 #include "ui/ui_font.h"
@@ -162,8 +163,22 @@ void ui_renderer_init(ui_renderer_t *renderer) {
         },
         .color_count = 1,
         .index_type = INDEX_NONE,
+        .cull_mode = CULL_NONE,
         .depth = { .write_enabled = true, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_DEPTH_STENCIL }
     });
+
+    renderer->binding = (gpu_binding){
+        .vertex.textures = {
+            [0] = renderer->primitive_data_texture,
+        },
+        .fragment.textures = {
+            [0] = ui_font_shared()->font->texture,
+            [1] = renderer->icon_texture,
+        },
+        .buffers = {
+            [0] = renderer->index_buffer,
+        },
+    };
 
     renderer->pipeline = pipeline;
 }
@@ -194,6 +209,9 @@ void ui_renderer_merge_layers(ui_renderer_t *renderer) {
     renderer->last_primitive_offset = renderer->primitive_offset;
     renderer->last_index_offset = renderer->index_offset;
     ui_renderer_clear(renderer);
+
+    gpu_update_buffer(renderer->index_buffer, (udata){.data = (i8 *)renderer->index_data, renderer->last_index_offset * 4});
+    gpu_update_texture(renderer->primitive_data_texture, (udata){.data = (i8 *)renderer->primitive_data, renderer->last_primitive_offset * 4 * sizeof(f32)});
 }
 
 void ui_renderer_render(ui_renderer_t *renderer) {
