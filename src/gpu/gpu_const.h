@@ -238,6 +238,7 @@ typedef enum gpu_primitive_type {
 } gpu_primitive_type;
 
 typedef enum gpu_index_type {
+    INDEX_NONE = 0,
     INDEX_UINT16,
     INDEX_UINT32,
 } gpu_index_type;

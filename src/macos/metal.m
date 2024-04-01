@@ -30,8 +30,19 @@ typedef struct gpu_buffer_mtl_t {
 
 typedef struct gpu_pipeline_mtl_t {
     id<MTLRenderPipelineState> pso;
+    id<MTLDepthStencilState> dso;
     bool instanced;
+
+    MTLPrimitiveType primitive_type;
+    MTLIndexType index_type;
+    MTLCullMode cull_mode;
+    MTLWinding winding;
+    u32 stencil_ref;
 } gpu_pipeline_mtl_t;
+
+typedef struct gpu_pass_mtl_t {
+    int width, height;
+} gpu_pass_mtl_t;
 
 typedef struct gpu_swapchain_mtl_t {
     int width, height, sample_count;
@@ -65,6 +76,10 @@ typedef struct gpu_state_mtl_t {
     bool valid;
     int frame_index;
     gpu_device_mtl_t device;
+
+    gpu_pipeline_mtl_t cur_pipeline;
+    gpu_pass_mtl_t cur_pass;
+    gpu_buffer_mtl_t cur_index_buffer;
 } gpu_state_mtl_t;
 
 static gpu_state_mtl_t _state;
@@ -193,6 +208,7 @@ bool gpu_begin_pass(gpu_pass *pass) {
     assert(_state.device.cmd_encoder == nil);
     assert(_state.device.cur_drawable == nil);
 
+    gpu_pass_action action = pass->action;
     if (nil == _state.device.cmd_buffer) {
         dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
         _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
@@ -200,6 +216,35 @@ bool gpu_begin_pass(gpu_pass *pass) {
         [_state.device.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
             dispatch_semaphore_signal(_state.device.semaphore);
         }];
+    }
+    
+    MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
+    gpu_attachments attachments = pass->attachments;
+    if (attachments.id == _mtl_invalid_id) {
+        _state.device.cur_drawable = _state.device.swapchain.drawable;
+        pass_desc.colorAttachments[0].texture = _state.device.cur_drawable.texture;
+        pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+        pass_desc.colorAttachments[0].loadAction = _mtl_load_action(action.color_action[0].load_action);
+        gpu_color c = action.color_action[0].clear_value;
+        pass_desc.colorAttachments[0].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
+    
+        if (_state.device.swapchain.depth_stencil_texture) {
+            pass_desc.depthAttachment.texture = _state.device.swapchain.depth_stencil_texture;
+            pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
+            pass_desc.depthAttachment.loadAction = _mtl_load_action(action.depth_action.load_action);
+            pass_desc.depthAttachment.clearDepth = action.depth_action.clear_value;
+            if (_mtl_stencil_enabled_format(_state.device.swapchain.depth_stencil_format)) {
+                pass_desc.stencilAttachment.texture = _state.device.swapchain.depth_stencil_texture;
+                pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
+                pass_desc.stencilAttachment.loadAction = _mtl_load_action(action.stencil_action.load_action);
+                pass_desc.stencilAttachment.clearStencil = action.stencil_action.clear_value;
+            }
+        }
+    }
+
+    _state.device.cmd_encoder = [_state.device.cmd_buffer renderCommandEncoderWithDescriptor: pass_desc];
+    if (nil == _state.device.cmd_encoder) {
+        return false;
     }
     return true;
 }
@@ -305,6 +350,7 @@ failed:
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     MTLVertexDescriptor *vertex_desc = [MTLVertexDescriptor vertexDescriptor];
     gpu_pipeline_mtl_t mtl_pipeline;
+    bool vertex_buffer_enabled[GPU_VERTEX_BUFFER_COUNT];
     for (NSUInteger attr_index = 0; attr_index < GPU_ATTRIBUTE_COUNT; ++attr_index) {
         const gpu_vertex_attribute_state *attr_state = &desc->layout.attributes[attr_index];
         if (attr_state->format == ATTRIBUTE_FORMAT_INVALID) {
@@ -314,15 +360,16 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         vertex_desc.attributes[attr_index].format = _mtl_vertex_format(attr_state->format, attr_state->size);
         vertex_desc.attributes[attr_index].offset = attr_state->offset;
         vertex_desc.attributes[attr_index].bufferIndex = attr_state->buffer_index;
+        vertex_buffer_enabled[attr_state->buffer_index] = true;
     }
 
     for (NSUInteger buffer_index = 0; buffer_index < GPU_VERTEX_BUFFER_COUNT; ++buffer_index) {
+        if (!vertex_buffer_enabled[buffer_index]) continue;
         const gpu_vertex_buffer_layout_state *buffer_state = &desc->layout.buffers[buffer_index];
         assert(buffer_state->stride > 0);
         vertex_desc.layouts[buffer_index].stride = buffer_state->stride;
         vertex_desc.layouts[buffer_index].stepRate = buffer_state->step_rate;
         vertex_desc.layouts[buffer_index].stepFunction = _mtl_vertex_step_function(buffer_state->step_func);
-        // TODO: mark instanced drawing
         if (buffer_state->step_func == VERTEX_STEP_PER_INSTANCE) {
             mtl_pipeline.instanced = true;
         }
@@ -333,7 +380,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     pip_desc.vertexDescriptor = vertex_desc;
     pip_desc.vertexFunction = shader.vertex_func;
     pip_desc.fragmentFunction = shader.fragment_func;
-    pip_desc.rasterSampleCount = desc->sample_count;
+    pip_desc.rasterSampleCount = desc->sample_count > 1 ? desc->sample_count : 1;
     pip_desc.alphaToCoverageEnabled = desc->alpha_to_coverage;
     pip_desc.alphaToOneEnabled = NO;
     pip_desc.rasterizationEnabled = YES;
@@ -362,5 +409,68 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         return (gpu_pipeline){ .id = _mtl_invalid_id };
     }
     mtl_pipeline.pso = pso;
+    mtl_pipeline.cull_mode = _mtl_cull_mode(desc->cull_mode);
+    mtl_pipeline.winding = _mtl_winding(desc->face_winding);
+    mtl_pipeline.primitive_type = _mtl_primitive_type(desc->primitive_type);
+    mtl_pipeline.index_type = _mtl_index_type(desc->index_type);
+    mtl_pipeline.stencil_ref = desc->stencil.ref;
     return (gpu_pipeline){ .id = _mtl_add_pipeline(mtl_pipeline) };
+}
+
+void gpu_set_viewport(int x, int y, int width, int height) {
+    assert(nil != _state.device.cmd_encoder);
+    MTLViewport viewport = {
+        .originX = (double)x,
+        .originY = (double)y,
+        .width = (double)width,
+        .height = (double)height,
+        .znear = 0.0,
+        .zfar = 1.0,
+    };
+    [_state.device.cmd_encoder setViewport: viewport];
+}
+
+void gpu_set_scissor(int x, int y, int width, int height) {
+    assert(nil != _state.device.cmd_encoder);
+    MTLScissorRect scissor = {
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+    };
+    [_state.device.cmd_encoder setScissorRect: scissor];
+}
+
+void gpu_set_pipeline(gpu_pipeline pipeline) {
+    assert(nil != _state.device.cmd_encoder);
+
+    gpu_pipeline_mtl_t mtl_pipeline = _mtl_get_pipeline(pipeline.id);
+    _state.cur_pipeline = mtl_pipeline;
+
+    // gpu_color color = mtl_pi
+    [_state.device.cmd_encoder setCullMode: mtl_pipeline.cull_mode];
+    [_state.device.cmd_encoder setFrontFacingWinding: mtl_pipeline.winding];
+    [_state.device.cmd_encoder setStencilReferenceValue: mtl_pipeline.stencil_ref];
+    [_state.device.cmd_encoder setRenderPipelineState: mtl_pipeline.pso];
+    [_state.device.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
+}
+
+void gpu_set_binding(const gpu_binding* binding) {
+    _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
+}
+
+void gpu_draw(int base, int count, int instance_count) {
+    if (INDEX_NONE != _state.cur_pipeline.index_type) {
+        [_state.device.cmd_encoder drawIndexedPrimitives: MTLPrimitiveTypeTriangle
+            indexCount: count
+            indexType: _mtl_index_type(_state.cur_pipeline.index_type)
+            indexBuffer: _state.cur_index_buffer.buffer
+            indexBufferOffset: 0
+            instanceCount: instance_count];
+    } else {
+        [_state.device.cmd_encoder drawPrimitives: MTLPrimitiveTypeTriangle
+            vertexStart: base
+            vertexCount: count
+            instanceCount: instance_count];
+    }
 }

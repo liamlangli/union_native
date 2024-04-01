@@ -237,3 +237,20 @@ MTLBlendFactor _mtl_blend_factor(gpu_blend_factor factor) {
         default: return MTLBlendFactorZero;
     }
 }
+
+MTLIndexType _mtl_index_type(gpu_index_type type) {
+    switch (type) {
+        case INDEX_UINT16: return MTLIndexTypeUInt16;
+        case INDEX_UINT32: return MTLIndexTypeUInt32;
+        default: return MTLIndexTypeUInt16;
+    }
+}
+
+MTLCullMode _mtl_cull_mode(gpu_cull_mode mode) {
+    switch (mode) {
+        case CULL_NONE: return MTLCullModeNone;
+        case CULL_FRONT: return MTLCullModeFront;
+        case CULL_BACK: return MTLCullModeBack;
+        default: return MTLCullModeNone;
+    }
+}

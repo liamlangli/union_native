@@ -1,4 +1,5 @@
 #include "ui/ui_renderer.h"
+#include "gpu/gpu_const.h"
 #include "ui/ui_font.h"
 #include "foundation/io.h"
 #include "foundation/logger.h"
@@ -129,8 +130,31 @@ void ui_renderer_init(ui_renderer_t *renderer) {
     });
 
     gpu_pipeline pipeline = gpu_create_pipeline(&(gpu_pipeline_desc){
+        .layout = {
+            .attributes = {
+                [0] = {.format = ATTRIBUTE_FORMAT_UINT, .size = 1, .buffer_index = 0 },
+            },
+            .buffers = {
+                [0] = {.stride = 4, .step_rate = 1, .step_func = VERTEX_STEP_PER_VERTEX },
+            }
+        },
         .primitive_type = PRIMITIVE_TRIANGLES,
         .shader = shader,
+        .colors = {
+            [0] = {
+                .blend = {
+                    .enabled = true,
+                    .src_factor_alpha = BLEND_FACTOR_ONE,
+                    .dst_factor_alpha = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .src_factor = BLEND_FACTOR_SRC_ALPHA,
+                    .dst_factor = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .op_alpha = BLEND_OP_ADD,
+                    .op = BLEND_OP_ADD,
+                },
+            }
+        },
+        .index_type = INDEX_NONE,
+        .depth = {.write_enabled = true, .compare_func = COMPARE_LESS_EQUAL }
     });
 
     renderer->pipeline = pipeline;

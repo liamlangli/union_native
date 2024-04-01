@@ -17,5 +17,7 @@ MTLVertexFormat _mtl_vertex_format(gpu_attribute_format fmt, int size);
 MTLVertexStepFunction _mtl_vertex_step_function(gpu_vertex_step step);
 MTLBlendOperation _mtl_blend_operation(gpu_blend_op op);
 MTLBlendFactor _mtl_blend_factor(gpu_blend_factor factor);
+MTLIndexType _mtl_index_type(gpu_index_type type);
+MTLCullMode _mtl_cull_mode(gpu_cull_mode mode);
 
 bool _mtl_stencil_enabled_format(gpu_pixel_format fmt);
