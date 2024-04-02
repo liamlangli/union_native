@@ -192,17 +192,11 @@ int script_eval_uri(ustring_view uri) {
 }
 
 void script_context_loop_tick() {
-    if (shared_context.invalid_script) {
-        ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
-        ui_renderer_render(&shared_context.renderer);
-        return;
-    }
-
-    script_browser_tick();
+    if (!shared_context.invalid_script) script_browser_tick();
     ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
     ui_renderer_render(&shared_context.renderer);
     ui_state_update(&shared_context.state);
-
+    
     int finished;
     JSContext *ctx;
     while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {

@@ -200,12 +200,7 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)mouseDown:(NSEvent*)event {
     (void)event;
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-    state->left_mouse_press = true;
-    state->left_mouse_is_pressed = true;
-    script_browser_window_mouse_down(0);
+    os_window_on_mouse_btn(&_window, MOUSE_BUTTON_LEFT, BUTTON_ACTION_PRESS);
 }
 
 - (void)mouseDragged:(NSEvent*)event {
@@ -214,12 +209,7 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)mouseUp:(NSEvent*)event {
     (void)event;
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-    state->left_mouse_release = true;
-    state->left_mouse_is_pressed = false;
-    script_browser_window_mouse_up(0);
+    os_window_on_mouse_btn(&_window, MOUSE_BUTTON_LEFT, BUTTON_ACTION_RELEASE);
 }
 
 - (void)mouseMoved:(NSEvent*)event {
@@ -236,12 +226,7 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)rightMouseDown:(NSEvent*)event {
     (void)event;
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-    state->right_mouse_press = true;
-    state->right_mouse_is_pressed = true;
-    script_browser_window_mouse_down(1);
+    os_window_on_mouse_btn(&_window, MOUSE_BUTTON_RIGHT, BUTTON_ACTION_PRESS);
 }
 
 - (void)rightMouseDragged:(NSEvent*)event {
@@ -250,12 +235,7 @@ static os_on_terminate terminate_func = NULL;
 
 - (void)rightMouseUp:(NSEvent*)event {
     (void)event;
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-    state->right_mouse_release = true;
-    state->right_mouse_is_pressed = false;
-    script_browser_window_mouse_up(1);
+    os_window_on_mouse_btn(&_window, MOUSE_BUTTON_RIGHT, BUTTON_ACTION_RELEASE);
 }
 
 - (void)keyDown:(NSEvent*)event {
@@ -270,15 +250,11 @@ static os_on_terminate terminate_func = NULL;
             continue;
         }
         ULOG_INFO("code {d}", code);
-        ui_state_key_press(state, (int)code);
-        script_browser_document_key_down((int)code);
+        os_window_on_key_action(&_window, (int)code, BUTTON_ACTION_PRESS);
     }
 }
 
 - (void)flagsChanged:(NSEvent*)event {
-    // if (key_up_func) {
-    //     key_up_func([event keyCode]);
-    // }
 }
 
 - (void)keyUp:(NSEvent*)event {
@@ -292,8 +268,7 @@ static os_on_terminate terminate_func = NULL;
         if ((code & 0xFF00) == 0xF700) {
             continue;
         }
-        ui_state_key_release(state, (int)code >> 16);
-        script_browser_document_key_up((int)code >> 16);
+        os_window_on_key_action(&_window, (int)code, BUTTON_ACTION_RELEASE);
     }
 }
 
@@ -375,21 +350,9 @@ ustring os_window_get_clipboard(os_window_t *window) {
 void os_window_set_clipboard(os_window_t *window, ustring_view text) {}
 
 void os_window_close(os_window_t *window) {
+
 }
 
 void os_window_capture_require(os_window_t *window) {
     window->capture_required = true;
-}
-
-void os_window_on_resize(os_window_t *window, int width, int height) {
-
-}
-
-void os_window_on_scroll(os_window_t* window, double offset_x, double offset_y) {
-    script_context_t *ctx = script_context_shared();
-    ui_state_t *state = &ctx->state;
-    if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(offset_x, offset_y);
-    const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
-    state->pointer_scroll.x = (f32)(offset_x * (shift ? state->smooth_factor : 1.f));
-    state->pointer_scroll.y = (f32)(-offset_y * (shift ? state->smooth_factor : 1.f));
 }

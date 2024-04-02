@@ -10,6 +10,17 @@ enum CURSOR_TYPE {
     CURSOR_ResizeV = 0x00036006
 };
 
+typedef enum {
+    MOUSE_BUTTON_LEFT = 0,
+    MOUSE_BUTTON_RIGHT = 1,
+    MOUSE_BUTTON_MIDDLE = 2
+} MOUSE_BUTTON;
+
+typedef enum {
+    BUTTON_ACTION_PRESS = 0,
+    BUTTON_ACTION_RELEASE = 1
+} BUTTON_ACTION;
+
 typedef struct os_window_t {
     ustring title;
     int width;
@@ -43,8 +54,11 @@ extern void os_window_set_cursor(os_window_t *window, int cursor_type);
 extern void os_window_close(os_window_t *window);
 extern void os_window_capture_require(os_window_t *window);
 
-extern void os_window_on_scroll(os_window_t *window, f64 xoffset, f64 yoffset);
+extern void os_window_on_scroll(os_window_t *window, f64 x, f64 y);
 extern void os_window_on_resize(os_window_t *window, int width, int height);
+extern void os_window_on_mouse_move(os_window_t *window, f64 x, f64 y);
+extern void os_window_on_mouse_btn(os_window_t *window, MOUSE_BUTTON button, BUTTON_ACTION action);
+extern void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action);
 
 extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);

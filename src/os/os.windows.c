@@ -13,102 +13,6 @@ static void error_callback(int error, const char* description) {
     ULOG_ERROR_FMT("Error: {}", description);
 }
 
-static void os_window_on_mouse_button(os_window_t* window, int button, int action, int mods) {
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-
-    // if (action == GLFW_PRESS) {
-    //     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-    //         state->left_mouse_press = true;
-    //         state->left_mouse_is_pressed = true;
-    //         script_browser_window_mouse_down(0);
-    //         state->pointer_start = state->pointer_location;
-    //     } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-    //         state->right_mouse_press = true;
-    //         state->right_mouse_is_pressed = true;
-    //         script_browser_window_mouse_down(1);
-    //     } else {
-    //         state->middle_mouse_press = true;
-    //         state->middle_mouse_is_pressed = true;
-    //         script_browser_window_mouse_down(2);
-    //     }
-    // } else if (action == GLFW_RELEASE) {
-    //     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-    //         state->left_mouse_release = true;
-    //         state->left_mouse_is_pressed = false;
-    //         script_browser_window_mouse_up(0);
-    //     } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-    //         state->right_mouse_release = true;
-    //         state->right_mouse_is_pressed = false;
-    //         script_browser_window_mouse_up(1);
-    //     } else {
-    //         state->middle_mouse_release = true;
-    //         state->middle_mouse_is_pressed = false;
-    //         script_browser_window_mouse_up(2);
-    //     }
-    // }
-}
-
-static void os_window_on_scroll(os_window_t* window, double offset_x, double offset_y) {
-    script_context_t *ctx = script_context_shared();
-    ui_state_t *state = &ctx->state;
-    if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(offset_x, offset_y);
-    const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
-    state->pointer_scroll.x = (f32)(offset_x * (shift ? state->smooth_factor : 1.f));
-    state->pointer_scroll.y = (f32)(-offset_y * (shift ? state->smooth_factor : 1.f));
-}
-
-static void os_window_on_key_action(os_window_t* window, int key, int scancode, int action, int mods) {
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
-
-    // if (action == GLFW_PRESS) {
-    //     ui_state_key_press(state, key);
-    //     script_browser_document_key_down(key);
-    // } else if (action == GLFW_RELEASE) {
-    //     ui_state_key_release(state, key);
-    //     script_browser_document_key_up(key);
-    // }
-
-    // const bool control_pressed = ui_state_is_key_pressed(state, KEY_LEFT_CONTROL) ||
-    //     ui_state_is_key_pressed(state, KEY_RIGHT_CONTROL) ||
-    //     ui_state_is_key_pressed(state, KEY_LEFT_SUPER) ||
-    //     ui_state_is_key_pressed(state, KEY_RIGHT_SUPER);
-
-    // const bool alt_pressed = ui_state_is_key_pressed(state, KEY_LEFT_ALT) ||
-    //     ui_state_is_key_pressed(state, KEY_RIGHT_ALT);
-
-    // if (action == GLFW_RELEASE && ((control_pressed && alt_pressed && key == KEY_I) || key == KEY_F12)) {
-    //     ui_dev_tool_set_visible(&ctx->dev_tool, !ctx->dev_tool.visible);
-    //     ULOG_INFO("toggle dev tool");
-    // }
-
-    // if (control_pressed && ui_state_is_key_pressed(state, KEY_Q)) {
-    //     glfwSetWindowShouldClose((GLFWwindow*)window->native_window, GLFW_TRUE);
-    // }
-}
-
-void os_window_on_resize(os_window_t *window, int width, int height) {
-    // script_context_t *ctx = script_context_shared();
-    // window->width = width;
-    // window->height = height;
-    // glfwGetFramebufferSize(window->native_window, &window->framebuffer_width, &window->framebuffer_height);
-    // window->display_ratio = (f64)window->framebuffer_height / (f64)window->height;
-    // f32 ui_width = (f32)(width / window->ui_scale * window->display_ratio);
-    // f32 ui_height = (f32)(height / window->ui_scale * window->display_ratio);
-    // ctx->renderer.window_size.x = ui_width;
-    // ctx->renderer.window_size.y = ui_height;
-    // ctx->state.window_rect = (ui_rect){
-    //     .x = 0.f,
-    //     .y = 0.f,
-    //     .w = ui_width,
-    //     .h = ui_height
-    // };
-    // script_browser_window_resize(width, height);
-}
-
 static ustring_view fps_str;
 #define FPS_MA 10
 static double last_time[FPS_MA];
@@ -155,25 +59,6 @@ static void os_window_tick(os_window_t *window) {
     // sprintf((void*)status_str.base.data, "h: %d, a: %d, f: %d, l: %d", state->hover, state->active, state->focus, state->left_mouse_is_pressed);
 }
 
-// static void glfw_on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
-//     os_window_t *os_window = glfwGetWindowUserPointer(window);
-//     os_window_on_mouse_button(os_window, button, action, mods);
-// }
-
-// static void glfw_on_scroll(GLFWwindow *window, double offset_x, double offset_y) {
-//     os_window_t *os_window = glfwGetWindowUserPointer(window);
-//     os_window_on_scroll(os_window, offset_x, offset_y);
-// }
-
-// static void glfw_on_key_action(GLFWwindow *window, int key, int scancode, int action, int mods) {
-//     os_window_t *os_window = glfwGetWindowUserPointer(window);
-//     os_window_on_key_action(os_window, key, scancode, action, mods);
-// }
-
-// static void glfw_on_resize(GLFWwindow *window, int width, int height) {
-//     os_window_t *os_window = glfwGetWindowUserPointer(window);
-//     os_window_on_resize(os_window, width, height);
-// }
 
 os_window_t* os_window_create(ustring title, int width, int height) {
 
