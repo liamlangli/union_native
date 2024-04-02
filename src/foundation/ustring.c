@@ -58,9 +58,11 @@ ustring ustring_view_sub_ustring(ustring_view *v, u32 from, u32 to) {
 
 ustring ustring_view_to_ustring(ustring_view *v) {
     ustring s;
+    if (!v->base.null_terminated) {
+        ustring_view_set_null_terminated(v);
+    }
     s.data = v->base.data + v->start;
     s.length = v->length;
-    s.data[s.length] = 0;
     s.null_terminated = 1;
     return s;
 }

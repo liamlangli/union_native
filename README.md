@@ -4,17 +4,15 @@ union_native
 > Cross-Platform script driven application framework.
 
 ## Core Components
-- Native window management. [`GLFW3`]
-- Render system. [`OpenGL`/`WebGPU`/`Metal`]
+- Native window management.
+- Script graphics api. [`webgpu`]
 - Event loop [`libuv`]
 - Data Storage [`leveldb`]
 
 ## Graphics API
-|Platform/GraphicsAPI|GLES3/WebGL2|WebGPU|Metal|
-|:----:|:------:|:---:|:---:|
-|Window|complete|  WIP|     |
-| MacOS|complete|  WIP|  WIP|
-| Linux|complete|  WIP|     |
+- [`complete`] Metal on MacOS.
+- [`WIP`] D3D12 on Windows.
+- [`WIP`] vulkan on Linux.
 
 ## Install
 ```bash

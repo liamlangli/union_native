@@ -198,14 +198,9 @@ msdf_font *msdf_font_system_font() {
         hmput(system_font.kerning_map, key, k_data[2]);
     }
 
-#if defined(OS_MACOS) || defined (OS_IOS)
-    ustring image_path = os_get_bundle_path(ustring_STR("Contents/Resources/public/font/Lato-Regular.png"));
-#else
-    ustring image_path = ustring_STR("public/font/Lato-Regular.png");
-#endif
-
+    ustring image_path = os_get_bundle_path(ustring_STR("public/font/Lato-Regular.png"));
     int width, height, channel;
-    u8 *data = io_load_image(ustring_view_from_ustring(image_path), &width, &height, &channel, 4);
+    u8 *data = io_load_image(image_path, &width, &height, &channel, 4);
     
     gpu_texture_desc desc = { .width = width, .height = height };
     desc.format = PIXELFORMAT_RGBA8;

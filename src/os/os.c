@@ -90,3 +90,9 @@ void os_window_on_resize(os_window_t *window, int width, int height) {
     };
     script_browser_window_resize(width, height);
 }
+
+#if !defined(OS_MACOS) && !defined(OS_IOS)
+ustring os_get_bundle_path(ustring path) {
+    return path;
+}
+#endif

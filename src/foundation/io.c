@@ -6,9 +6,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-ustring io_read_file(ustring_view path) {
-    ustring_view_set_null_terminated(&path);
-    const char *raw_path = path.base.data + path.start;
+ustring io_read_file(ustring path) {
+    const char *raw_path = path.data;
     FILE *file = fopen(raw_path, "rb");
     if (!file) {
         return ustring_str("");
@@ -27,23 +26,20 @@ ustring io_read_file(ustring_view path) {
     return (ustring){.data = buffer, .length = (u32)size, .null_terminated = true };
 }
 
-u8 *io_load_image(ustring_view path, int *width, int *height, int *channel, int request_channel) {
-    ustring_view_set_null_terminated(&path);
-    return stbi_load(path.base.data, width, height, channel, request_channel);
+u8 *io_load_image(ustring path, int *width, int *height, int *channel, int request_channel) {
+    return stbi_load(path.data, width, height, channel, request_channel);
 }
 
 u8 *io_load_image_memory(udata data, int *width, int *height, int *channel, int request_channel) {
     return stbi_load_from_memory((const u8 *)data.data, data.length, width, height, channel, request_channel);
 }
 
-int io_save_png(ustring_view path, int width, int height, int channel, u8 *data) {
-    ustring_view_set_null_terminated(&path);
-    return stbi_write_png(path.base.data, width, height, channel, data, width * channel);
+int io_save_png(ustring path, int width, int height, int channel, u8 *data) {
+    return stbi_write_png(path.data, width, height, channel, data, width * channel);
 }
 
-int io_save_jpg(ustring_view path, int width, int height, int channel, u8 *data) {
-    ustring_view_set_null_terminated(&path);
-    return stbi_write_jpg(path.base.data, width, height, channel, data, 100);
+int io_save_jpg(ustring path, int width, int height, int channel, u8 *data) {
+    return stbi_write_jpg(path.data, width, height, channel, data, 100);
 }
 
 static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',

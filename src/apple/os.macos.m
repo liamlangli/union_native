@@ -138,6 +138,7 @@ static os_on_terminate terminate_func = NULL;
     NSApp.activationPolicy = NSApplicationActivationPolicyRegular;
     [NSApp activateIgnoringOtherApps:YES];
     [window makeKeyAndOrderFront:nil];
+    [window setAppearance: [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark]];
 
     _window.width = width;
     _window.height = height;

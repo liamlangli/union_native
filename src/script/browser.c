@@ -382,7 +382,7 @@ static JSValue js_set_image_src(JSContext *ctx, JSValueConst this_val, JSValueCo
         if (strncmp(path, "http", 4) == 0) {
             assert(false);
         } else {
-            image->data = io_load_image(ustring_view_STR(path), &image->width, &image->height, &image->channel, 4);
+            image->data = io_load_image(ustring_str((i8*)path), &image->width, &image->height, &image->channel, 4);
         }
     }
 

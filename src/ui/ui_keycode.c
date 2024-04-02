@@ -88,6 +88,12 @@ u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift) {
             case KEY_TAB:
                 key = '\t';
                 break;
+            case KEY_LEFT_PARENTHESIS:
+                key = '(';
+                break;
+            case KEY_RIGHT_PARENTHESIS:
+                key = ')';
+                break;
             default:
                 valid = false;
                 break;

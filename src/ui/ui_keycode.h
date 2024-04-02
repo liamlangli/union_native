@@ -9,6 +9,8 @@
 enum KEYCODE {
     KEY_SPACE = 32,
     KEY_APOSTROPHE = 39 /* ' */,
+    KEY_LEFT_PARENTHESIS = 40 /* ( */,
+    KEY_RIGHT_PARENTHESIS = 41 /* ) */,
     KEY_COMMA = 44 /* */,
     KEY_MINUS = 45 /* - */,
     KEY_PERIOD = 46 /* . */,

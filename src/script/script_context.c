@@ -1,5 +1,6 @@
 #include "script/script_context.h"
 #include "foundation/global.h"
+#include "foundation/ustring.h"
 #include "script/browser.h"
 #include "ui/ui_dev_tool.h"
 #include "foundation/network.h"
@@ -53,12 +54,10 @@ void script_context_init(os_window_t *window) {
     shared_module.runtime = JS_NewRuntime();
     shared_context.module = (void *)&shared_module;
     shared_context.window = window;
-#if defined(OS_MACOS) || defined (OS_IOS)
-    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources/db"));
+
+    ustring bundle_path = os_get_bundle_path(ustring_STR("db"));
     shared_context.db = db_open(bundle_path);
-#else
-    shared_context.db = db_open(ustring_STR("union"));
-#endif
+
     shared_context.invalid_script = true;
     ui_renderer_init(&shared_context.renderer);
     shared_context.renderer.window_size = (float4){.x = window->width, .y = window->height, .z = 1.0f, .w = 1.0f};
@@ -181,7 +180,7 @@ int script_eval_uri(ustring_view uri) {
         url_dump(url);
         net_download_async(url, on_remote_script_download);
     } else {
-        ustring content = io_read_file(uri);
+        ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
         shared_context.invalid_script = script_eval(content, uri) != 0;
         ustring_free(&content);
     }

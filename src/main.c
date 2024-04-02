@@ -1,4 +1,5 @@
 #include "foundation/api.h"
+#include "foundation/ustring.h"
 #include "gpu/gpu_const.h"
 #include "os/os.h"
 #include "script/api.h"
@@ -12,7 +13,8 @@
 void on_launch(os_window_t* window) {
     logger_init(logger_global());
     script_context_init(window);
-    // script_eval_uri(uri);
+    ustring_view uri = ustring_view_from_ustring(ustring_STR("public/index.js"));
+    script_eval_uri(uri);
 }
 
 static gpu_pass pass = {
@@ -23,7 +25,7 @@ static gpu_pass pass = {
             }
         },
         .depth_action = {
-            .store_action = STORE_ACTION_DONTCARE,
+            .store_action = STORE_ACTION_DONTCARE
         }
     }
 };

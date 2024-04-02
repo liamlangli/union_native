@@ -121,12 +121,8 @@ void ui_renderer_init(ui_renderer_t *renderer) {
         .data = (udata){.data = (i8*)&renderer->window_size, sizeof(float) * 4},
     });
 
-#if defined(OS_MACOS) || defined (OS_IOS)
-    ustring bundle_path = os_get_bundle_path(ustring_STR("Contents/Resources/public/shader/ui.metal"));
-    ustring ui_shader = io_read_file(ustring_view_from_ustring(bundle_path));
-#else
-    ustring ui_shader = io_read_file(ustring_view_STR("public/shader/ui.metal"));
-#endif
+    ustring ui_shader = io_read_file(os_get_bundle_path(ustring_STR("public/shader/ui.metal")));
+
     gpu_shader shader = gpu_create_shader(&(gpu_shader_desc){
         .attributes = {
             [0] = {.name = "index", .type = ATTRIBUTE_FORMAT_UINT, .size = 1, .stride = 0},
