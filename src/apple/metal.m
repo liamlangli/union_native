@@ -41,6 +41,7 @@ typedef struct gpu_pipeline_mtl_t {
     MTLIndexType index_type;
     MTLCullMode cull_mode;
     MTLWinding winding;
+    MTLPixelFormat depth_stencil_format;
     u32 stencil_ref;
 } gpu_pipeline_mtl_t;
 
@@ -251,7 +252,7 @@ void gpu_mtl_begin_frame(MTKView *view) {
         .height = (int) [view drawableSize].height,
         .sample_count = (int) [view sampleCount],
         .color_format = PIXELFORMAT_BGRA8,
-        .depth_stencil_format = PIXELFORMAT_DEPTH_STENCIL,
+        .depth_stencil_format = PIXELFORMAT_NONE,
         .drawable = [view currentDrawable],
         .color_texture = [view multisampleColorTexture],
         .depth_stencil_texture = [view depthStencilTexture],
@@ -466,35 +467,38 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         return (gpu_pipeline){ .id = _mtl_invalid_id };
     }
     mtl_pipeline.pso = pso;
+    
+    if (desc->depth.format != PIXELFORMAT_NONE) {
+        MTLDepthStencilDescriptor *ds_desc = [MTLDepthStencilDescriptor new];
+        ds_desc.depthCompareFunction = _mtl_compare_function(desc->depth.compare_func);
+        ds_desc.depthWriteEnabled = desc->depth.write_enabled;
         
-    MTLDepthStencilDescriptor *ds_desc = [MTLDepthStencilDescriptor new];
-    ds_desc.depthCompareFunction = _mtl_compare_function(desc->depth.compare_func);
-    ds_desc.depthWriteEnabled = desc->depth.write_enabled;
-    
-    if (desc->stencil.enabled) {
-        const gpu_stencil_state *stencil = &desc->stencil;
-        ds_desc.backFaceStencil = [MTLStencilDescriptor new];
-        ds_desc.backFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->back.fail_op);
-        ds_desc.backFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->back.depth_fail_op);
-        ds_desc.backFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->back.pass_op);
-        ds_desc.backFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->back.compare_func);
-        ds_desc.backFaceStencil.readMask = stencil->read_mask;
-        ds_desc.backFaceStencil.writeMask = stencil->write_mask;
-        ds_desc.frontFaceStencil = [MTLStencilDescriptor new];
-        ds_desc.frontFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->front.fail_op);
-        ds_desc.frontFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->front.depth_fail_op);
-        ds_desc.frontFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->front.pass_op);
-        ds_desc.frontFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->front.compare_func);
-        ds_desc.frontFaceStencil.readMask = stencil->read_mask;
-        ds_desc.frontFaceStencil.writeMask = stencil->write_mask;
+        if (desc->stencil.enabled) {
+            const gpu_stencil_state *stencil = &desc->stencil;
+            ds_desc.backFaceStencil = [MTLStencilDescriptor new];
+            ds_desc.backFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->back.fail_op);
+            ds_desc.backFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->back.depth_fail_op);
+            ds_desc.backFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->back.pass_op);
+            ds_desc.backFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->back.compare_func);
+            ds_desc.backFaceStencil.readMask = stencil->read_mask;
+            ds_desc.backFaceStencil.writeMask = stencil->write_mask;
+            ds_desc.frontFaceStencil = [MTLStencilDescriptor new];
+            ds_desc.frontFaceStencil.stencilFailureOperation = _mtl_stencil_operation(stencil->front.fail_op);
+            ds_desc.frontFaceStencil.depthFailureOperation = _mtl_stencil_operation(stencil->front.depth_fail_op);
+            ds_desc.frontFaceStencil.depthStencilPassOperation = _mtl_stencil_operation(stencil->front.pass_op);
+            ds_desc.frontFaceStencil.stencilCompareFunction = _mtl_compare_function(stencil->front.compare_func);
+            ds_desc.frontFaceStencil.readMask = stencil->read_mask;
+            ds_desc.frontFaceStencil.writeMask = stencil->write_mask;
+        }
+        id<MTLDepthStencilState> dso = [_state.device.device newDepthStencilStateWithDescriptor: ds_desc];
+        [ds_desc release];
+        if (nil == dso) {
+            return (gpu_pipeline){ .id = _mtl_invalid_id };
+        }
+        mtl_pipeline.dso = dso;
     }
-    id<MTLDepthStencilState> dso = [_state.device.device newDepthStencilStateWithDescriptor: ds_desc];
-    [ds_desc release];
-    if (nil == dso) {
-        return (gpu_pipeline){ .id = _mtl_invalid_id };
-    }
-    mtl_pipeline.dso = dso;
-    
+
+    mtl_pipeline.depth_stencil_format = _mtl_pixel_format(desc->depth.format);
     mtl_pipeline.cull_mode = _mtl_cull_mode(desc->cull_mode);
     mtl_pipeline.winding = _mtl_winding(desc->face_winding);
     mtl_pipeline.primitive_type = _mtl_primitive_type(desc->primitive_type);
@@ -536,9 +540,10 @@ void gpu_set_pipeline(gpu_pipeline pipeline) {
 
     [_state.device.cmd_encoder setCullMode: mtl_pipeline.cull_mode];
     [_state.device.cmd_encoder setFrontFacingWinding: mtl_pipeline.winding];
-//    [_state.device.cmd_encoder setStencilReferenceValue: mtl_pipeline.stencil_ref];
     [_state.device.cmd_encoder setRenderPipelineState: mtl_pipeline.pso];
-    [_state.device.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
+    if (mtl_pipeline.depth_stencil_format != MTLPixelFormatInvalid) {
+        [_state.device.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
+    }
 }
 
 void gpu_set_binding(const gpu_binding* binding) {

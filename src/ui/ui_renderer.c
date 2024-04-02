@@ -170,7 +170,7 @@ void ui_renderer_init(ui_renderer_t *renderer) {
         .color_count = 1,
         .index_type = INDEX_NONE,
         .cull_mode = CULL_NONE,
-        .depth = { .write_enabled = true, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_DEPTH_STENCIL }
+        .depth = { .write_enabled = false, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_NONE },
     });
 
     renderer->binding = (gpu_binding){

@@ -1,4 +1,5 @@
 #include "foundation/api.h"
+#include "gpu/gpu_const.h"
 #include "os/os.h"
 #include "script/api.h"
 #include "gpu/gpu.h"
@@ -21,6 +22,9 @@ static gpu_pass pass = {
                 .clear_value = (gpu_color){.r=0.21, .g=0.212, .b=0.223, .a=1}
             }
         },
+        .depth_action = {
+            .store_action = STORE_ACTION_DONTCARE,
+        }
     }
 };
 

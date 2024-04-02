@@ -41,6 +41,43 @@ static id<MTLDevice> mtl_device;
 static id mtk_view_delegate;
 static MTKView* mtk_view;
 
+int osx_key_map(int k) {
+    switch (k) {
+        case 51: return KEY_BACKSPACE;
+        case 53: return KEY_ESCAPE;
+        case 123: return KEY_LEFT;
+        case 124: return KEY_RIGHT;
+        case 125: return KEY_DOWN;
+        case 126: return KEY_UP;
+        case 36: return KEY_ENTER;
+        case 48: return KEY_TAB;
+        case 49: return KEY_SPACE;
+        case 117: return KEY_DELETE;
+        case 115: return KEY_HOME;
+        case 119: return KEY_END;
+        case 116: return KEY_PAGE_UP;
+        case 121: return KEY_PAGE_DOWN;
+        case 122: return KEY_F1;
+        case 120: return KEY_F2;
+        case 99: return KEY_F3;
+        case 118: return KEY_F4;
+        case 96: return KEY_F5;
+        case 97: return KEY_F6;
+        case 98: return KEY_F7;
+        case 100: return KEY_F8;
+        case 101: return KEY_F9;
+        case 109: return KEY_F10;
+        case 103: return KEY_F11;
+        case 111: return KEY_F12;
+        case 59: return KEY_LEFT_CONTROL;
+        case 57: return KEY_LEFT_SHIFT;
+        case 60: return KEY_RIGHT_SHIFT;
+        case 58: return KEY_LEFT_ALT;
+        case 56: return KEY_LEFT_SUPER;
+        default: return -1;
+    }
+}
+
 static os_window_t _window;
 static os_on_launch launch_func = NULL;
 static os_on_frame frame_func = NULL;
@@ -87,11 +124,11 @@ static os_on_terminate terminate_func = NULL;
     mtk_view_delegate = [[UNViewDelegate alloc] init];
     mtl_device = MTLCreateSystemDefaultDevice();
     mtk_view = [[UNMTKView alloc] init];
-    [mtk_view setPreferredFramesPerSecond:60];
+    [mtk_view setPreferredFramesPerSecond: 60];
     [mtk_view setDelegate: mtk_view_delegate];
     [mtk_view setDevice: mtl_device];
-    [mtk_view setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
-    [mtk_view setDepthStencilPixelFormat:MTLPixelFormatDepth32Float_Stencil8];
+    [mtk_view setColorPixelFormat: MTLPixelFormatBGRA8Unorm];
+    [mtk_view setDepthStencilPixelFormat: MTLPixelFormatInvalid];
     [mtk_view setSampleCount:(NSUInteger)1];
 
     [window setContentView:mtk_view];
@@ -249,9 +286,12 @@ static os_on_terminate terminate_func = NULL;
         if ((code & 0xFF00) == 0xF700) {
             continue;
         }
-        ULOG_INFO("code {d}", code);
-        os_window_on_key_action(&_window, (int)code, BUTTON_ACTION_PRESS);
+        int c = (int)code;
+        if (c >= 'a' && c <= 'z') c -= 32;
+        os_window_on_key_action(&_window, c, BUTTON_ACTION_PRESS);
     }
+    int k = osx_key_map([event keyCode]);
+    if (k != -1) os_window_on_key_action(&_window, k, BUTTON_ACTION_PRESS);
 }
 
 - (void)flagsChanged:(NSEvent*)event {
@@ -268,8 +308,12 @@ static os_on_terminate terminate_func = NULL;
         if ((code & 0xFF00) == 0xF700) {
             continue;
         }
-        os_window_on_key_action(&_window, (int)code, BUTTON_ACTION_RELEASE);
+        int c = (int)code;
+        if (c >= 'a' && c <= 'z') c -= 32;
+        os_window_on_key_action(&_window, c, BUTTON_ACTION_RELEASE);
     }
+    int k = osx_key_map([event keyCode]);
+    if (k != -1) os_window_on_key_action(&_window, k, BUTTON_ACTION_RELEASE);
 }
 
 - (void)scrollWheel:(NSEvent*)event {
