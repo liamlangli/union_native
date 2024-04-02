@@ -13,7 +13,7 @@ include_directories(
     /opt/homebrew/include
     ${THIRD_PARTY}/quickjs/include
     ${THIRD_PARTY}/mimalloc/include)
-link_directories(/usr/local/lib /opt/homebrew/lib)
+list(APPEND LINK_DIR /usr/local/lib /opt/homebrew/lib)
 
 if (WIN32)
     list(APPEND LINK_DIR /usr/lib)
@@ -40,5 +40,4 @@ else() # LINUX
 endif()
 
 message(STATUS "OS: ${PLATFORM}")
-
 link_directories(${LINK_DIR})
