@@ -1,19 +1,16 @@
 #include "foundation/api.h"
-#include "foundation/ustring.h"
-#include "gpu/gpu_const.h"
 #include "os/os.h"
 #include "script/api.h"
 #include "gpu/gpu.h"
 
 #define STB_DS_IMPLEMENTATION
 #include <stb_ds.h>
-
 #include <uv.h>
 
 void on_launch(os_window_t* window) {
     logger_init(logger_global());
     script_context_init(window);
-    ustring_view uri = ustring_view_from_ustring(ustring_STR("public/index.js"));
+    ustring_view uri = ustring_view_from_ustring(ustring_STR("public/simple.js"));
     script_eval_uri(uri);
 }
 

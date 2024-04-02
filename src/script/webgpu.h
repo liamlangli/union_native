@@ -2,4 +2,5 @@
 
 #include "os/os.h"
 
-void webgpu_init(os_window_t *window);
+void webgpu_register(void);
+void webgpu_cleanup(void);

@@ -1,7 +1,6 @@
-import { ColorRGBA, Engine, EngineEvent, EventHub, GFXDevice, GPUAction, GPUActionType } from "@union_native/core";
+import { ColorRGBA, Engine, EngineEvent, EventHub, GFXBackend, GPUAction, GPUActionType, gfx_request_device } from "@union_native/core";
 
-const device = new GFXDevice();
-const encoder = device.encoder;
+const device = gfx_request_device({ backend: GFXBackend.WebGPU });
 const engine = new Engine();
 
 const action = {
@@ -11,9 +10,6 @@ const action = {
 } as GPUAction;
 
 function frame() {
-    encoder.set_viewport(0, 0, device.width, device.height);
-    encoder.clear(action);
-    encoder.commit();
 }
 
 EventHub.on(EngineEvent.Frame, frame);
