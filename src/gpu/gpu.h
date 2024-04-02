@@ -210,8 +210,17 @@ typedef struct gpu_pass {
     gpu_attachments attachments;
 } gpu_pass;
 
-typedef struct gpu_attachments_desc {
+typedef struct gpu_attachment_desc {
+    gpu_texture texture;
+    int mip_level;
+    int slice;
+} gpu_attachment_desc;
 
+typedef struct gpu_attachments_desc {
+    gpu_attachment_desc colors[GPU_ATTACHMENT_COUNT];
+    gpu_attachment_desc depth;
+    gpu_attachment_desc stencil;
+    ustring label;
 } gpu_attachments_desc;
 
 bool gpu_request_device(os_window_t *window);
