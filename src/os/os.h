@@ -59,6 +59,7 @@ extern void os_window_on_resize(os_window_t *window, int width, int height);
 extern void os_window_on_mouse_move(os_window_t *window, f64 x, f64 y);
 extern void os_window_on_mouse_btn(os_window_t *window, MOUSE_BUTTON button, BUTTON_ACTION action);
 extern void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action);
+extern bool os_window_is_key_pressed(os_window_t* window, int key);
 
 extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
 extern ustring os_window_get_clipboard(os_window_t *window);

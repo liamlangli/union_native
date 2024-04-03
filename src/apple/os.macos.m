@@ -57,24 +57,8 @@ int osx_key_map(int k) {
         case 119: return KEY_END;
         case 116: return KEY_PAGE_UP;
         case 121: return KEY_PAGE_DOWN;
-        case 122: return KEY_F1;
-        case 120: return KEY_F2;
-        case 99: return KEY_F3;
-        case 118: return KEY_F4;
-        case 96: return KEY_F5;
-        case 97: return KEY_F6;
-        case 98: return KEY_F7;
-        case 100: return KEY_F8;
-        case 101: return KEY_F9;
-        case 109: return KEY_F10;
-        case 103: return KEY_F11;
-        case 111: return KEY_F12;
-        case 59: return KEY_LEFT_CONTROL;
-        case 57: return KEY_LEFT_SHIFT;
-        case 60: return KEY_RIGHT_SHIFT;
-        case 58: return KEY_LEFT_ALT;
-        case 56: return KEY_LEFT_SUPER;
-        default: return -1;
+        default:
+            return -1;
     }
 }
 
@@ -296,6 +280,43 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)flagsChanged:(NSEvent*)event {
+    NSEventModifierFlags flags = [event modifierFlags];
+    bool command_pressed = os_window_is_key_pressed(&_window, KEY_LEFT_SUPER);
+    bool control_pressed = os_window_is_key_pressed(&_window, KEY_LEFT_CONTROL);
+    bool shift_pressed = os_window_is_key_pressed(&_window, KEY_LEFT_SHIFT);
+    bool alt_pressed = os_window_is_key_pressed(&_window, KEY_LEFT_ALT);
+    
+    if (flags & NSEventModifierFlagCommand && !command_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_SUPER, BUTTON_ACTION_PRESS);
+    }
+
+    if (!(flags & NSEventModifierFlagCommand) && command_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_SUPER, BUTTON_ACTION_RELEASE);
+    }
+
+    if (flags & NSEventModifierFlagControl && !control_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_CONTROL, BUTTON_ACTION_PRESS);
+    }
+
+    if (!(flags & NSEventModifierFlagControl) && control_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_CONTROL, BUTTON_ACTION_RELEASE);
+    }
+
+    if (flags & NSEventModifierFlagShift && !shift_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_SHIFT, BUTTON_ACTION_PRESS);
+    }
+
+    if (!(flags & NSEventModifierFlagShift) && shift_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_SHIFT, BUTTON_ACTION_RELEASE);
+    }
+
+    if (flags & NSEventModifierFlagOption && !alt_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_ALT, BUTTON_ACTION_PRESS);
+    }
+
+    if (!(flags & NSEventModifierFlagOption) && alt_pressed) {
+        os_window_on_key_action(&_window, KEY_LEFT_ALT, BUTTON_ACTION_RELEASE);
+    }
 }
 
 - (void)keyUp:(NSEvent*)event {

@@ -76,6 +76,12 @@ void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action)
     }
 }
 
+bool os_window_is_key_pressed(os_window_t* window, int key) {
+    script_context_t *ctx = script_context_shared();
+    if (ctx == NULL) return false;
+    return ui_state_is_key_pressed(&ctx->state, key);
+}
+
 void os_window_on_resize(os_window_t *window, int width, int height) {
     script_context_t *ctx = script_context_shared();
     window->width = width;

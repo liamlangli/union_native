@@ -1,11 +1,12 @@
 #include "script/script_context.h"
+#include "script/browser.h"
+#include "script/webgpu.h"
 #include "foundation/global.h"
 #include "foundation/ustring.h"
-#include "script/browser.h"
-#include "ui/ui_dev_tool.h"
 #include "foundation/network.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
+#include "ui/ui_dev_tool.h"
 
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
@@ -88,6 +89,7 @@ void script_context_destroy(void) {
 }
 
 void script_context_cleanup(void) {
+    script_webgpu_cleanup();
     script_browser_cleanup();
     script_context_destroy();
 }
@@ -95,6 +97,7 @@ void script_context_cleanup(void) {
 void script_context_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
     script_browser_register();
+    script_webgpu_register();
 }
 
 int script_eval(ustring source, ustring_view filename) {
@@ -181,6 +184,10 @@ int script_eval_uri(ustring_view uri) {
         net_download_async(url, on_remote_script_download);
     } else {
         ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
+        if (content.length == 0) {
+            ULOG_WARN_FMT("failed to read file: {v}", uri);
+            return -1;
+        }
         shared_context.invalid_script = script_eval(content, uri) != 0;
         ustring_free(&content);
     }
