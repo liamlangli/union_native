@@ -1,16 +1,9 @@
-import { ColorRGBA, Engine, EngineEvent, EventHub, GFXBackend, GPUAction, GPUActionType, gfx_request_device } from "@union_native/core";
+import { gpu_request_device } from "@union_native/core/src/gpu";
 
-const device = gfx_request_device({ backend: GFXBackend.WebGPU });
-const engine = new Engine();
-
-const action = {
-    clear_color: new ColorRGBA(0.1, 0.1, 0.1, 1),
-    clear_depth: 1,
-    type: GPUActionType.ClearAll
-} as GPUAction;
-
-function frame() {
+async function main() {
+    console.log('simple example.');
+    const result = await gpu_request_device({ force_webgpu: true });
+    console.log('resolved');
 }
 
-EventHub.on(EngineEvent.Frame, frame);
-engine.start();
+main().then(console.log);

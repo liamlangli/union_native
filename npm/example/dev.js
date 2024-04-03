@@ -4,10 +4,7 @@ import http from 'node:http';
 
 let ctx = await context({
     entryPoints: [
-        'src/index.ts',
         'src/simple.ts',
-        'src/terrain.ts',
-        'src/gv.ts'
     ],
     bundle: true,
     sourcemap: "inline",

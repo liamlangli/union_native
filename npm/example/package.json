@@ -10,8 +10,7 @@
     "prod": "node build.js"
   },
   "devDependencies": {
-    "esbuild": "^0.19.8",
-    "esbuild-plugin-glsl": "^1.2.2",
+    "esbuild": "^0.20.2",
     "typescript": "^5.3.2"
   },
   "dependencies": {
