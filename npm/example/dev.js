@@ -1,7 +1,22 @@
 import { context } from 'esbuild';
-import glsl from 'esbuild-plugin-glsl';
 import http from 'node:http';
 
+
+const no_side_effects = {
+    name: 'no-side-effects',
+    setup(build){
+        build.onResolve({ filter: /.*/ }, async args => {
+            if (args.pluginData) return // Ignore this if we called ourselves
+
+            const { path, ...rest } = args
+            rest.pluginData = true // Avoid infinite recursion
+            const result = await build.resolve(path, rest)
+
+            result.sideEffects = false
+            return result
+        })
+    }
+}
 let ctx = await context({
     entryPoints: [
         'src/simple.ts',
@@ -11,9 +26,7 @@ let ctx = await context({
     sourcesContent: true,
     outdir: "../public",
     external: ['acorn'],
-    plugins: [
-        glsl({minify: true, resolveIncludes: true})
-    ]
+    plugins: [ no_side_effects ]
 });
 
 let { host, port } = await ctx.serve({ servedir: '../public' });
@@ -43,6 +56,6 @@ http.createServer((request, response) => {
     })
 
     request.pipe(proxy_request, { end: true });
-}).listen(3000)
+}).listen(3003)
 
-console.log(`listen at ${host}:${3000}`);
+console.log(`listen at ${host}:${3003}`);

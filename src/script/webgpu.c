@@ -8,22 +8,43 @@
     if (ctx == NULL || rt == NULL)                                                                                             \
         return;
 
-static JSValue script_webgpu_request_adapter_resolve(JSContext *ctx, int argc, JSValueConst *argv) {
-    JSValue resolve = argv[0];
-    if (JS_IsFunction(ctx, resolve)) {
-        ULOG_INFO("resolve adapter");
-        JSValue adapter = JS_NewObject(ctx);
-        JS_Call(ctx, resolve, JS_UNDEFINED, 1, &adapter);
-        JS_FreeValue(ctx, adapter);
+
+static JSValue script_adapter_request_device(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    // Create a new promise
+    JSValue resolver[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolver);
+
+    if (JS_IsException(promise) || !JS_IsFunction(ctx, resolver[0]) || !JS_IsFunction(ctx, resolver[1])) {
+        JS_FreeValue(ctx, promise);
+        return JS_EXCEPTION;
     }
-    return JS_UNDEFINED;
+    JSValue device = JS_NewObject(ctx);
+    JS_Call(ctx, resolver[0], JS_UNDEFINED, 1, &device);
+    JS_FreeValue(ctx, device);
+    JS_FreeValue(ctx, resolver[0]);
+    JS_FreeValue(ctx, resolver[1]);
+    return promise;
 }
+
+static const JSCFunctionListEntry js_adapter_proto_funcs[] = {
+    JS_CFUNC_DEF("requestDevice", 0, script_adapter_request_device)
+};
 
 static JSValue script_webgpu_request_adapter(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     // Create a new promise
-    JSValue cbs[2];
-    JSValue promise = JS_NewPromiseCapability(ctx, cbs);
-    JS_EnqueueJob(ctx, &script_webgpu_request_adapter_resolve, 1, cbs);
+    JSValue resolver[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolver);
+
+    if (JS_IsException(promise) || !JS_IsFunction(ctx, resolver[0]) || !JS_IsFunction(ctx, resolver[1])) {
+        JS_FreeValue(ctx, promise);
+        return JS_EXCEPTION;
+    }
+    JSValue adapter = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, adapter, js_adapter_proto_funcs, count_of(js_adapter_proto_funcs));
+    JS_Call(ctx, resolver[0], JS_UNDEFINED, 1, &adapter);
+    JS_FreeValue(ctx, adapter);
+    JS_FreeValue(ctx, resolver[0]);
+    JS_FreeValue(ctx, resolver[1]);
     return promise;
 }
 
