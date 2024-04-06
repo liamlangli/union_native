@@ -4,7 +4,7 @@
 #include "foundation/udata.h"
 #include "foundation/ustring.h"
 
-#include <uv.h>
+#include <libuv/uv.h>
 
 typedef struct url_t {
     bool valid;

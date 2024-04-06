@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #if defined(ENABLE_MIMALLOC)
-    #include <mimalloc.h>
+    #include <mimalloc/mimalloc.h>
 
     // Standard C allocation
     #define malloc(n)               mi_malloc(n)

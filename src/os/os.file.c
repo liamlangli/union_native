@@ -1,6 +1,6 @@
 #include "os.h"
 
-#include <uv.h>
+#include <libuv/uv.h>
 
 extern bool os_file_exists(ustring path) {
     uv_fs_t req;
