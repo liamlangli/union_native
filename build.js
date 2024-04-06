@@ -24,7 +24,7 @@ const deps = [
         git: 'https://github.com/microsoft/mimalloc.git',
         head: '43ce4bd7fd34bcc730c1c7471c99995597415488',
         libs: ['libmimalloc.a'],
-        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON ..`,
+        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log`,
         build_toolchain: 'cmake',
     },
     { 
@@ -32,7 +32,7 @@ const deps = [
         git: 'https://github.com/google/leveldb.git',
         head: '99b3c03b3284f5886f9ef9a4ef703d57373e61be',
         libs: ['libleveldb.a'],
-        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=OFF ..`,
+        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=OFF .. > ./cmake.log`,
         build_toolchain: 'cmake',
     },
     {
@@ -40,7 +40,7 @@ const deps = [
         git: 'https://github.com/libuv/libuv.git',
         head: 'e9f29cb984231524e3931aa0ae2c5dae1a32884e',
         libs: ['libuv.a'],
-        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DBUILD_TESTING=OFF ..`,
+        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DBUILD_TESTING=OFF .. > ./cmake.log`,
         build_toolchain: 'cmake',
     }
 ]
