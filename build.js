@@ -27,14 +27,6 @@ const deps = [
         build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log`,
         build_toolchain: 'cmake',
     },
-    { 
-        name: 'leveldb',
-        git: 'https://github.com/google/leveldb.git',
-        head: '99b3c03b3284f5886f9ef9a4ef703d57373e61be',
-        libs: ['libleveldb.a'],
-        build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF -DBUILD_SHARED_LIBS=OFF .. > ./cmake.log`,
-        build_toolchain: 'cmake',
-    },
     {
         name: 'libuv',
         git: 'https://github.com/libuv/libuv.git',
