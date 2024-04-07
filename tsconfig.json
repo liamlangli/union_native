@@ -12,11 +12,7 @@
             "DOM",
             "ESNext",
             "webworker"
-        ],
-        "typeRoots": [
-            "src/type.d.ts"
         ]
     },
-    "include": ["src/*.ts", "src/**/*.ts"],
     "exclude": ["node_modules"]
 }

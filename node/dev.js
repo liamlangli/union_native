@@ -1,7 +1,6 @@
 import { context } from 'esbuild';
 import http from 'node:http';
 
-
 const no_side_effects = {
     name: 'no-side-effects',
     setup(build){
@@ -19,17 +18,16 @@ const no_side_effects = {
 }
 let ctx = await context({
     entryPoints: [
-        'src/simple.ts',
+        "node/src/simple.ts",
     ],
     bundle: true,
     sourcemap: "inline",
     sourcesContent: true,
-    outdir: "../public",
-    external: ['acorn'],
+    outdir: "node/public",
     plugins: [ no_side_effects ]
 });
 
-let { host, port } = await ctx.serve({ servedir: '../public' });
+let { host, port } = await ctx.serve({ servedir: "node/public" });
 
 http.createServer((request, response) => {
     const options = {

@@ -18,15 +18,11 @@ const no_side_effects = {
 
 build({
     entryPoints: [
-        'src/simple.ts',
+        'node/src/simple.ts',
     ],
     bundle: true,
-    outdir: "../public",
+    outdir: "node/public",
     treeShaking: true,
-    format: 'iife',
-    // minify: true,
-    // minifyIdentifiers: true,
-    // minifySyntax: true,
     plugins: [no_side_effects],
 });
 

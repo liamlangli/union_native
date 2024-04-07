@@ -7,17 +7,18 @@ union_native
 - Native window management.
 - Script graphics api. [`webgpu`]
 - Event loop [`libuv`]
-- Data Storage [`leveldb`]
-
-## Graphics API
-- [`complete`] Metal on MacOS.
-- [`WIP`] D3D12 on Windows.
-- [`WIP`] vulkan on Linux.
-
-## Install
-```bash
-npm install @union_native/un
-```
+- Native graphics api. [`vulkan`, `metal`, `d3d12`]
 
 ## Build
-Follow the instructions in [doc/Build.md](doc/Build.md) to build the project.
+```shell
+# download dep repos
+node build.js download
+
+# compile deps
+node build.js compile
+# or
+node build.js --debug compile
+
+# build with cmake
+mkdir build && cd build && cmake .. && make
+```
