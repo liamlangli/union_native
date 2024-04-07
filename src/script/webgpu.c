@@ -28,6 +28,10 @@ void _webgpu_register_constants(JSContext *ctx) {
 }
 
 static JSValue _gpu_texture_magic_get(JSContext *ctx, JSValueConst this_val, int magic) {
+    switch (magic) {
+        case 0: return JS_NewInt32(ctx, 0);
+        case 1: return JS_NewInt32(ctx, 0);
+    }
     return JS_UNDEFINED;
 }
 
@@ -121,7 +125,9 @@ static JSValue script_webgpu_gpu_context_set_configure(JSContext *ctx, JSValueCo
 }
 
 static JSValue _context_get_current_texture(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    return JS_UNDEFINED;
+    JSValue texture = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, texture, js_texture_proto_funcs, count_of(js_texture_proto_funcs));
+    return texture;
 }
 
 static const JSCFunctionListEntry js_gpu_context_proto_funcs[] = {
