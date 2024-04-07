@@ -46,9 +46,9 @@ function download() {
     for (const dep of deps) {
         const dep_path = path.join(source_path, dep.name);
         if (fs.existsSync(dep_path)) {
-            console.log(`Skipping ${dep.name} download`)
+            console.log(`skip ${dep.name} download`)
         } else {
-            console.log(`Downloading ${dep.name} source`)
+            console.log(`downloading ${dep.name} source`)
             const cmd = `git clone ${dep.git} ${dep_path}`;
             execSync(cmd, { stdio: 'inherit' });
         }
@@ -61,9 +61,9 @@ function download() {
         }).trim();
         
         if (head === dep.head) {
-            console.log(`Head matched. Skipping ${dep.name} checkout`)
+            console.log(`head matched. skip ${dep.name} checkout`)
         } else {
-            console.log(`Checking out ${dep.name} to ${dep.head}`)
+            console.log(`check out ${dep.name} to ${dep.head}`)
             const cmd = `git checkout ${dep.head}`;
             execSync(cmd, { cwd : dep_path, stdio: 'inherit' });
         }
@@ -101,7 +101,7 @@ function clean() {
 
 function compile() {
     if (!fs.existsSync(source_path)) {
-        console.log('Source not found. Run download first')
+        console.log('source not found. run download first')
         process.exit(1);
     }
 
@@ -115,7 +115,7 @@ function compile() {
 
     for (const dep of deps) {
         const dep_path = path.join(source_path, dep.name);
-        console.log(`Building ${dep.name}`)
+        console.log(`compile ${dep.name}`)
         if (dep.build_toolchain === 'make') {
             execSync(dep.build_cmd, { cwd: dep_path });
         } else if (dep.build_toolchain === 'cmake') {
@@ -156,7 +156,7 @@ function compile() {
 // parse arguments
 const args = process.argv.slice(2)
 if (args.length === 0) {
-    console.log('Usage: node build.js [--debug] download|compile')
+    console.log('usage: node build.js [--debug] download|compile')
     process.exit(1)
 } else {
     for (const arg of args) {
@@ -176,7 +176,7 @@ if (args.length === 0) {
     } else if (cmd === 'clean') {
         clean();
     } else {
-        console.log(`Unknown command: ${cmd}`)
+        console.log(`unknown command: ${cmd}`)
         process.exit(1)
     }
 }

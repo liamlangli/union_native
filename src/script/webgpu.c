@@ -77,6 +77,7 @@ static JSValue script_adapter_request_device(JSContext *ctx, JSValueConst this_v
     JSValue device = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, device, js_device_proto_funcs, count_of(js_device_proto_funcs));
     JS_Call(ctx, resolver[0], JS_UNDEFINED, 1, &device);
+    JS_FreeValue(ctx, device);
 
     JS_FreeValue(ctx, resolver[0]);
     JS_FreeValue(ctx, resolver[1]);
