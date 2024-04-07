@@ -128,27 +128,27 @@ function compile() {
         }
 
         // copy include folder to include_path
+        const include_dst = path.join(include_path, dep.name);
+        if (fs.existsSync(include_dst)) {
+            fs.rmSync(include_dst, { recursive: true });
+        }
+        fs.mkdirSync(include_dst, { recursive: true });
         if (dep.build_toolchain === 'cmake') {
-            const include_dst= path.join(include_path, dep.name);
-            if (fs.existsSync(include_dst)) {
-                fs.rmSync(include_dst, { recursive: true });
-            }
-            fs.mkdirSync(include_dst, { recursive: true });
             const src = path.join(dep_path, 'include');
             const dst = path.join(include_dst);
             cpFolderSync(src, dst);
         } else if (dep.build_toolchain === 'make') {
             for (const include of dep.includes) {
                 const src = path.join(dep_path, include);
-                const dest = path.join(include_path, include);
-                fs.copyFileSync(src, dest);
+                const dst = path.join(include_dst, include);
+                fs.copyFileSync(src, dst);
             }
         }
 
         for (const lib of dep.libs) {
             const src = path.join(dep_path, dep.build_toolchain === 'cmake' ? 'build' : '', lib);
-            const dest = path.join(lib_path, lib);
-            fs.copyFileSync(src, dest);
+            const dst = path.join(lib_path, lib);
+            fs.copyFileSync(src, dst);
         }
     }
 }
