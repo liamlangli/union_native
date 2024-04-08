@@ -16,6 +16,7 @@ const no_side_effects = {
         })
     }
 }
+
 let ctx = await context({
     entryPoints: [
         "node/src/simple.ts",

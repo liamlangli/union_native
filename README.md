@@ -1,7 +1,7 @@
-union_native
-==========
+@unionengine/native
+-------------------
 
-> Cross-Platform script driven application framework.
+> script driven application framework.
 
 ## Core Components
 - Native window management.
