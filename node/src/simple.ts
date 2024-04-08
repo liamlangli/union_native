@@ -1,8 +1,8 @@
-import { gpu_request_device } from "@union_native/core/src/gpu";
+import { gpu_request_device } from "@unionengine/core";
 
 async function main() {
     console.log('simple example.');
-    gpu_request_device({ force_webgpu: true }).then(() => {}).catch(() => {});
+    await gpu_request_device({force_webgpu: true});
 }
 
 main().then();
