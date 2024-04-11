@@ -24,4 +24,4 @@ typedef struct ui_dev_tool_t {
 void ui_dev_tool_init(ui_dev_tool_t* dev_tool);
 void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible);
 
-void ui_dev_tool(ui_state_t *state, ui_dev_tool_t* dev_tool);
+void ui_dev_tool(ui_dev_tool_t* dev_tool);

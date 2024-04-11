@@ -38,18 +38,20 @@ typedef struct ui_state_t {
     f64 smooth_factor;
 } ui_state_t;
 
-void ui_state_init(ui_state_t *state, ui_renderer_t *renderer);
+void ui_state_init();
 
-bool ui_state_set_active(ui_state_t *state, u32 id);
-void ui_state_clear_active(ui_state_t *state);
+void ui_state_set_size(u32 width, u32 height);
+bool ui_state_set_active(u32 id);
+void ui_state_clear_active();
 
-bool ui_state_set_focus(ui_state_t *state, u32 id);
-void ui_state_clear_focus(ui_state_t *state);
+bool ui_state_set_focus(u32 id);
+void ui_state_clear_focus();
 
-void ui_state_key_press(ui_state_t *state, int key);
-void ui_state_key_release(ui_state_t *state, int key);
-bool ui_state_is_key_press(ui_state_t *state, int key);
-bool ui_state_is_key_pressed(ui_state_t *state, int key);
+void ui_state_delete_key_press(int key);
+void ui_state_key_press(int key);
+void ui_state_key_release(int key);
+bool ui_state_is_key_press(int key);
+bool ui_state_is_key_pressed(int key);
 
-bool ui_state_update(ui_state_t *state);
-bool ui_state_hovering(ui_state_t *state, ui_rect rect, int layer_index);
+bool ui_state_update();
+bool ui_state_hovering(ui_rect rect, int layer_index);

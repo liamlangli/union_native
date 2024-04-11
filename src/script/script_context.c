@@ -7,6 +7,8 @@
 #include "foundation/logger.h"
 #include "foundation/io.h"
 #include "ui/ui_dev_tool.h"
+#include "ui/ui_renderer.h"
+#include "ui/ui_state.h"
 
 #include <quickjs/quickjs.h>
 #include <stb_ds.h>
@@ -60,10 +62,10 @@ void script_context_init(os_window_t *window) {
     shared_context.db = db_open(bundle_path);
 
     shared_context.invalid_script = true;
-    ui_renderer_init(&shared_context.renderer);
-    shared_context.renderer.window_size = (float4){.x = window->width, .y = window->height, .z = 1.0f, .w = 1.0f};
-    shared_context.state.window_rect = (ui_rect){0, 0, window->width, window->height};
-    ui_state_init(&shared_context.state, &shared_context.renderer);
+    ui_renderer_init();
+    ui_renderer_set_size(window->width, window->height);
+    ui_state_set_size(window->width, window->height);
+    ui_state_init();
     ui_dev_tool_init(&shared_context.dev_tool);
 }
 
@@ -73,7 +75,7 @@ void script_context_terminate(void) {
     JS_FreeRuntime(shared_module.runtime);
     shared_module.runtime = NULL;
 
-    ui_renderer_free(&shared_context.renderer);
+    ui_renderer_free();
     db_close(shared_context.db);
 }
 
@@ -199,9 +201,9 @@ int script_eval_uri(ustring_view uri) {
 
 void script_context_loop_tick() {
     if (!shared_context.invalid_script) script_browser_tick();
-    ui_dev_tool(&shared_context.state, &shared_context.dev_tool);
-    ui_renderer_render(&shared_context.renderer);
-    ui_state_update(&shared_context.state);
+    ui_dev_tool(&shared_context.dev_tool);
+    ui_renderer_render();
+    ui_state_update();
     
     int finished;
     JSContext *ctx;

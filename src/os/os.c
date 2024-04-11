@@ -20,7 +20,7 @@ void os_window_on_scroll(os_window_t* window, double x, double y) {
     script_context_t *ctx = script_context_shared();
     ui_state_t *state = &ctx->state;
     if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(x, y);
-    const bool shift = ui_state_is_key_pressed(state, KEY_LEFT_SHIFT) || ui_state_is_key_pressed(state, KEY_RIGHT_SHIFT);
+    const bool shift = ui_state_is_key_pressed(KEY_LEFT_SHIFT) || ui_state_is_key_pressed(KEY_RIGHT_SHIFT);
     state->pointer_scroll.x = (f32)(x * (shift ? state->smooth_factor : 1.f));
     state->pointer_scroll.y = (f32)(-y * (shift ? state->smooth_factor : 1.f));
 }
@@ -68,10 +68,10 @@ void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action)
     ui_state_t *state = &ctx->state;
 
     if (action == BUTTON_ACTION_PRESS) {
-        ui_state_key_press(state, key);
+        ui_state_key_press(key);
         script_browser_document_key_down(key);
     } else if (action == BUTTON_ACTION_RELEASE) {
-        ui_state_key_release(state, key);
+        ui_state_key_release(key);
         script_browser_document_key_up(key);
     }
 }

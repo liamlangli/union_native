@@ -60,43 +60,40 @@ ui_rect rect = context->state.window_rect;
 
 void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible) {
     script_context_t *context = script_context_shared();
-    ui_state_t *state = &context->state;
     dev_tool->visible = visible;
 
     if (!visible) {
         dev_tool->rect = (ui_rect){ 0, 0, 0, 0 };
-        ui_state_clear_active(state);
-        ui_state_clear_focus(state);
+        ui_state_clear_active();
+        ui_state_clear_focus();
         return;
     }
 
     ui_dev_tool_resize(dev_tool);
     if (dev_tool->tab == DEVTOOL_CONSOLE) {
-        ui_state_set_focus(state, console_input.element.id);
+        ui_state_set_focus(console_input.element.id);
     }
 }
 
-void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
-void ui_dev_tool_source(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
-void ui_dev_tool_network(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
-void ui_dev_tool_graphics(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
-void ui_dev_tool_memory(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
-void ui_dev_tool_performance(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_source(ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_network(ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_graphics(ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_memory(ui_dev_tool_t* dev_tool, ui_rect rect);
+void ui_dev_tool_performance(ui_dev_tool_t* dev_tool, ui_rect rect);
 
-void ui_dev_tool(ui_state_t *state, ui_dev_tool_t* dev_tool) {
+void ui_dev_tool(ui_dev_tool_t* dev_tool) {
     if (!dev_tool->visible)
         return;
 
     ui_dev_tool_resize(dev_tool);
-
     script_context_t *context = script_context_shared();
-    ui_renderer_t* renderer = &context->renderer;
 
-    fill_round_rect(renderer, 0, ui_theme_shared()->bg, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
-    stroke_round_rect(renderer, 0, ui_theme_shared()->panel_1, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
+    fill_round_rect(0, ui_theme_shared()->bg, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
+    stroke_round_rect(0, ui_theme_shared()->panel_1, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
     switch (dev_tool->tab) {
     case DEVTOOL_CONSOLE:
-        ui_dev_tool_console(state, dev_tool, dev_tool->rect);
+        ui_dev_tool_console(dev_tool, dev_tool->rect);
         break;
     default:
         break;
@@ -109,15 +106,12 @@ static ustring command_exit = ustring_STR("exit");
 static ustring command_capture = ustring_STR("gpu.capture");
 #define DEV_TOOL_INPUT_HEIGHT 32.f
 
-void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rect) {
-    ui_renderer_t *renderer = state->renderer;
-    ui_layer *layer = &renderer->layers[0];
-
+void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     ui_rect input_rect = rect;
     input_rect.h = DEV_TOOL_INPUT_HEIGHT;
     input_rect.y = rect.y + rect.h - input_rect.h;
     input_rect = ui_rect_shrink(input_rect, 4.f, 4.f);
-    if (ui_input(state, &console_input, ui_theme_shared()->panel_0, input_rect, 0, 0)) {
+    if (ui_input(&console_input, ui_theme_shared()->panel_0, input_rect, 0, 0)) {
         ustring_view text = console_input.label.text;
         if (ustring_view_start_with_ustring(text, command_open)) {
             int start = command_open.length;
@@ -150,7 +144,7 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
     ui_rect clip_rect = scroll_view_rect;
     clip_rect.y += 3.f;
     clip_rect.h -= 3.f;
-    u32 clip = ui_layer_write_clip(layer, clip_rect, 0);
+    u32 clip = ui_layer_write_clip(0, clip_rect, 0);
 
     logger_t *logger = logger_global();
     u32 line_count = (u32)arrlen(logger->lines);
@@ -174,8 +168,8 @@ void ui_dev_tool_console(ui_state_t *state, ui_dev_tool_t* dev_tool, ui_rect rec
     for (int i = start; i < start + count; i++) {
         ui_label_t *label = &console_labels[i];
         ui_label_update_text(label, ustring_view_from_ustring(logger->lines[i].line));
-        ui_label(state, label, ui_theme_shared()->text, label_rect, 0, clip);
+        ui_label(label, ui_theme_shared()->text, label_rect, 0, clip);
         label_rect.y += console_view.item_height;
     }
-    ui_scroll_view(state, &console_view, scroll_view_rect, 0, clip);
+    ui_scroll_view(&console_view, scroll_view_rect, 0, clip);
 }

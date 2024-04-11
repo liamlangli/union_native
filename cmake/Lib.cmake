@@ -1,0 +1,7 @@
+if (ENABLE_LIBRARY_BUILD)
+    set(LIBRARY_NAME_UI ${PROJECT_NAME}_ui)
+    set(LIBRARY_SOURCES ${UI_SOURCES})
+    add_library(${LIBRARY_NAME_UI} ${UI_SOURCES})
+    set_target_properties(${LIBRARY_NAME_UI} PROPERTIES UNITY_BUILD ON)
+    set_target_properties(${LIBRARY_NAME_UI} PROPERTIES UNITY_BUILD_MODE GROUP)
+endif()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "foundation/global.h"
 #include "foundation/simd.h"
 #include "foundation/ustring.h"
 #include "gpu/gpu.h"
@@ -35,8 +36,8 @@ typedef struct msdf_font {
     u32 gpu_font_start;
 } msdf_font;
 
-msdf_font *msdf_font_load(ustring json_path, ustring image_path);
-msdf_font *msdf_font_system_font();
+UN_EXPORT msdf_font *msdf_font_load(ustring json_path, ustring image_path);
+UN_EXPORT msdf_font *msdf_font_system_font();
 
 float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring_view text, f32 *offsets);
 msdf_glyph msdf_font_get_glyph(msdf_font *font, int index);

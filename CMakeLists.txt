@@ -69,5 +69,6 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 include(${CMAKE_SOURCE_DIR}/cmake/UnityBuild.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/Link.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Lib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/PostBuild.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Install.cmake)

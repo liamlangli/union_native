@@ -28,7 +28,7 @@
 #define false 0
 #define true 1
 
-#define EXPORT
+#define UN_EXPORT __attribute__((visibility("default")))
 #define FORCE_INLINE static inline
 
 typedef char *string;

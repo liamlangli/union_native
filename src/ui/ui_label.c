@@ -66,15 +66,15 @@ f32 ui_label_cursor_offset(ui_label_t *label) {
     return ui_label_offset_at(label, label->cursor_index);
 }
 
-void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
+void ui_label(ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
     if (label->text.length == 0) return;
     ui_rect clip_rect;
     ui_renderer_t *renderer = state->renderer;
-    ui_layer *layer = &renderer->layers[layer_index];
+    
     f32 scale = label->scale;
 
     if (clip != 0) {
-        clip_rect = ui_layer_read_clip(layer, clip);
+        clip_rect = ui_layer_read_clip(layer_index, clip);
         if (ui_rect_clip(rect, clip_rect) == CLIP_RESULT_DISCARD) return;
     }
 
@@ -87,8 +87,8 @@ void ui_label(ui_state_t *state, ui_label_t *label, ui_style style, ui_rect rect
         selection_rect.w = ui_label_offset_at(label, MACRO_MAX(s, c)) - selection_rect.x + origin.x;
         selection_rect.y = origin.y;
         selection_rect.h = label->text_size.y;
-        fill_rect(renderer, layer_index, ui_theme_shared()->text_selected, selection_rect, clip);
+        fill_rect(layer_index, ui_theme_shared()->text_selected, selection_rect, clip);
     }
 
-    draw_glyph(renderer, layer_index, origin, ui_font_shared(), label->text, clip, scale, label->text_style);
+    draw_glyph(layer_index, origin, ui_font_shared(), label->text, clip, scale, label->text_style);
 }
