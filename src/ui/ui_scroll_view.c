@@ -14,6 +14,7 @@ void ui_scroll_view_init(ui_scroll_view_t *scroll_view, u32 item_height) {
 
 void ui_scroll_view(ui_scroll_view_t *view, ui_rect rect, u32 layer_index, u32 clip) {
     const u32 id = view->element.id;
+    ui_state_t *state = ui_state_get();
 
     const bool hover = state->hover == id;
     const bool active = state->active == id;
@@ -44,7 +45,7 @@ void ui_scroll_view(ui_scroll_view_t *view, ui_rect rect, u32 layer_index, u32 c
     const ui_theme_t *theme = ui_theme_shared();
     ui_style style = theme->scroll_bar;
     style.color = active ? theme->scroll_bar.active_color : hover ? theme->scroll_bar.hover_color : theme->scroll_bar.color;
-    fill_round_rect(state->renderer, layer_index, style, bar_rect, active || hover ? 2.f : 1.0f, clip, TRIANGLE_SOLID);
+    fill_round_rect(layer_index, style, bar_rect, active || hover ? 2.f : 1.0f, clip, TRIANGLE_SOLID);
 
     if (hover && ui_state_hovering(bar_rect, layer_index) && state->left_mouse_press) {
         ui_state_set_active(id);

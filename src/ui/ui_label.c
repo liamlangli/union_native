@@ -69,8 +69,7 @@ f32 ui_label_cursor_offset(ui_label_t *label) {
 void ui_label(ui_label_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip) {
     if (label->text.length == 0) return;
     ui_rect clip_rect;
-    ui_renderer_t *renderer = state->renderer;
-    
+
     f32 scale = label->scale;
 
     if (clip != 0) {

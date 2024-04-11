@@ -19,6 +19,8 @@ void ui_state_init() {
     ustring_view_reserve(&_state.edit_str, 32);
 }
 
+ui_state_t *ui_state_get() { return &_state; }
+
 void ui_state_reset_mouse_state() {
     _state.left_mouse_release = false;
     _state.left_mouse_press = false;
@@ -26,6 +28,10 @@ void ui_state_reset_mouse_state() {
     _state.right_mouse_release = false;
     _state.middle_mouse_press = false;
     _state.middle_mouse_release = false;
+}
+
+void ui_state_set_size(u32 width, u32 height) {
+    _state.window_rect = (ui_rect){.x = 0, .y = 0, .w = (f32)width, .h = (f32)height};
 }
 
 bool ui_state_update() {
@@ -42,15 +48,15 @@ bool ui_state_update() {
     _state.pointer_scroll = float2_zero();
 
     ui_state_reset_mouse_state();
-    for (int i = 0, l = (int)hmlen(_state.key_press); i < l; i++) {
+    for (i32 i = 0, l = (i32)hmlen(_state.key_press); i < l; i++) {
         hmdel(_state.key_press, _state.key_press[i].key);
     }
 
-    for (int i = 0, l = (int)hmlen(_state.key_release); i < l; i++) {
+    for (i32 i = 0, l = (i32)hmlen(_state.key_release); i < l; i++) {
         hmdel(_state.key_release, _state.key_release[i].key);
     }
 
-    for (int i = 0, l = (int)hmlen(_state.key_pressed); i < l; i++) {
+    for (i32 i = 0, l = (i32)hmlen(_state.key_pressed); i < l; i++) {
         ui_key_map_t *pair = &_state.key_pressed[i];
         if (_state.time - pair->value > LONG_PRESS_TIME) {
             hmput(_state.key_press, pair->key, _state.time);
@@ -68,38 +74,97 @@ bool ui_state_update() {
     return updated;
 }
 
-bool ui_state_hovering(ui_rect rect, int layer_index) {
+bool ui_state_hovering(ui_rect rect, i32 layer_index) {
     if (layer_index < _state.next_hover_layer_index || layer_index < _state.hover_layer)
         return false;
     return ui_rect_contains(rect, _state.pointer_location);
 }
 
-void ui_state_delete_key_press(int key) { hmdel(_state.key_press, key); }
+void ui_state_delete_key_press(i32 key) { hmdel(_state.key_press, key); }
 
-void ui_state_key_press(int key) {
+void ui_state_key_press(i32 key) {
     hmput(_state.key_press, key, _state.time);
     hmput(_state.key_pressed, key, _state.time);
 }
 
-void ui_state_key_release(int key) {
+void ui_state_key_release(i32 key) {
     hmput(_state.key_release, key, _state.time);
     hmdel(_state.key_pressed, key);
 }
 
-bool ui_state_is_key_press(int key) { return hmgeti(_state.key_press, key) != -1; }
+bool ui_state_is_key_press(i32 key) { return hmgeti(_state.key_press, key) != -1; }
 
-bool ui_state_is_key_pressed(int key) { return hmgeti(_state.key_pressed, key) != -1; }
+bool ui_state_is_key_pressed(i32 key) { return hmgeti(_state.key_pressed, key) != -1; }
 
-bool ui_state_is_key_release(int key) { return hmgeti(_state.key_release, key) != -1; }
+bool ui_state_is_key_release(i32 key) { return hmgeti(_state.key_release, key) != -1; }
 
-bool ui_state_set_active(u32 id) {
+bool ui_state_set_active(i32 id) {
     if (_state.active == -1) {
         _state.last_active = _state.active;
-        _state.active = (int)id;
+        _state.active = id;
         return true;
     }
     return false;
 }
+
+void ui_state_mouse_down(i32 button) {
+    if (button == MOUSE_BUTTON_LEFT) {
+        _state.left_mouse_press = true;
+        _state.left_mouse_is_pressed = true;
+        _state.pointer_start = _state.pointer_location;
+    } else if (button == MOUSE_BUTTON_RIGHT) {
+        _state.right_mouse_press = true;
+        _state.right_mouse_is_pressed = true;
+    } else {
+        _state.middle_mouse_press = true;
+        _state.middle_mouse_is_pressed = true;
+    }
+}
+
+void ui_state_mouse_up(i32 button) {
+    if (button == MOUSE_BUTTON_LEFT) {
+        _state.left_mouse_release = true;
+        _state.left_mouse_is_pressed = false;
+    } else if (button == MOUSE_BUTTON_RIGHT) {
+        _state.right_mouse_release = true;
+        _state.right_mouse_is_pressed = false;
+    } else {
+        _state.middle_mouse_release = true;
+        _state.middle_mouse_is_pressed = false;
+    }
+}
+
+bool ui_state_is_mouse_down(i32 button) {
+    if (button == MOUSE_BUTTON_LEFT) {
+        return _state.left_mouse_press;
+    } else if (button == MOUSE_BUTTON_RIGHT) {
+        return _state.right_mouse_press;
+    } else {
+        return _state.middle_mouse_press;
+    }
+}
+
+bool ui_state_is_mouse_pressed(i32 button) {
+    if (button == MOUSE_BUTTON_LEFT) {
+        return _state.left_mouse_is_pressed;
+    } else if (button == MOUSE_BUTTON_RIGHT) {
+        return _state.right_mouse_is_pressed;
+    } else {
+        return _state.middle_mouse_is_pressed;
+    }
+}
+
+void ui_state_set_mouse_location(f32 x, f32 y) {
+    float2 point = (float2){x, y};
+    _state.pointer_delta = float2_sub(point, _state.pointer_start);
+    _state.pointer_location = point;
+    _state.pointer_offset = float2_sub(_state.pointer_location, _state.pointer_start);
+}
+
+i32 ui_state_get_active() { return _state.active; }
+i32 ui_state_get_last_active() { return _state.last_active; }
+i32 ui_state_get_focus() { return _state.focus; }
+i32 ui_state_get_hover() { return _state.hover; }
 
 void ui_state_clear_active() {
     _state.last_active = _state.active;
@@ -108,8 +173,8 @@ void ui_state_clear_active() {
     _state.cursor_type = CURSOR_Default;
 }
 
-bool ui_state_set_focus(u32 id) {
-    _state.focus = (int)id;
+bool ui_state_set_focus(i32 id) {
+    _state.focus = (i32)id;
     return true;
 }
 

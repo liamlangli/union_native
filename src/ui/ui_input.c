@@ -51,6 +51,7 @@ void ui_input_handle_edit(ui_input_t *input) {
     const int end = input->label.cursor_index;
     const int from = MACRO_MIN(start, end);
     const int to = MACRO_MAX(start, end);
+    ui_state_t *state = ui_state_get();
 
     if (ui_state_is_key_press(KEY_BACKSPACE)) {
         if (control_pressed) {
@@ -162,6 +163,7 @@ bool ui_input(ui_input_t *input, ui_style style, ui_rect rect, u32 layer_index, 
     u32 id = input->element.id;
 
     ui_style draw_style;
+    ui_state_t *state = ui_state_get();
 
     bool hover = ui_state_hovering(rect, layer_index);
     bool active = state->active == id;
@@ -231,11 +233,11 @@ bool ui_input(ui_input_t *input, ui_style style, ui_rect rect, u32 layer_index, 
 
     ui_style fill_style = style;
     fill_style.color = hover && state->hover == id && state->active == -1 ? style.hover_color : style.color;
-    fill_round_rect_pre_corner(state->renderer, 0, fill_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
+    fill_round_rect_pre_corner(0, fill_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
 
     if (input->outline && (state->active == id || state->focus == id || state->hover == id)) {
         ui_style outline_style = (ui_style){.color = style.outline_color, .line_width = 2.f, .line_feather = 1.f};
-        stroke_round_rect_pre_corner(state->renderer, 0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
+        stroke_round_rect_pre_corner(0, outline_style, rect, input->radiuses, clip, TRIANGLE_SOLID);
     }
 
     ui_label(&input->label, ui_theme_shared()->text, rect, layer_index, clip);
