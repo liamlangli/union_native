@@ -11,7 +11,7 @@ typedef struct ui_rect {
     f32 x, y, w, h;
 } ui_rect;
 
-enum UIALIGNMENT {
+enum {
     CENTER_VERTICAL = 1,
     CENTER_HORIZONTAL = 1 << 1,
     CENTER = CENTER_VERTICAL | CENTER_HORIZONTAL,
@@ -89,4 +89,4 @@ static inline ui_style ui_style_from_hex(u32 color, u32 hover_color, u32 active_
     return style;
 }
 
-ui_rect ui_constraint_layout(ui_constraint *constraint, ui_rect parent);
+UN_EXPORT ui_rect ui_constraint_layout(ui_constraint *constraint, ui_rect parent);

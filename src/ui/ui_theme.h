@@ -21,4 +21,4 @@ typedef struct ui_theme_t {
     ui_style dev_tool_input;
 } ui_theme_t;
 
-ui_theme_t *ui_theme_shared();
+UN_EXPORT ui_theme_t *ui_theme_shared();

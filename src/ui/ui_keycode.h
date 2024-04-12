@@ -131,4 +131,4 @@ enum KEYCODE {
     KEY_MENU = 348,
 };
 
-u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift);
+UN_EXPORT u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift);

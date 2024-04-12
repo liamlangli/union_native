@@ -63,7 +63,7 @@ typedef struct ui_font_glyph_vertex {
     f32 x, y, w, h, xoffset, yoffset, xadvance, page;
 } ui_font_glyph_vertex;
 
-void ui_layer_write_index(u32 layer_index, u32 index);
+UN_EXPORT void ui_layer_write_index(u32 layer_index, u32 index);
 u32 ui_layer_write_rect_vertex(u32 layer_index, ui_rect_vertex vertex);
 u32 ui_layer_write_triangle_vertex(u32 layer_index, ui_triangle_vertex vertex, bool advanced);
 u32 ui_layer_write_glyph_header(u32 layer_index, ui_glyph_header header);
@@ -74,8 +74,8 @@ ui_rect ui_layer_read_clip(u32 layer_index, u32 clip);
 void ui_layer_clear(ui_layer *layer);
 
 // renderer func
-void ui_renderer_init();
-void ui_renderer_free();
-void ui_renderer_render();
-void ui_renderer_set_size(u32 width, u32 height);
+UN_EXPORT void ui_renderer_init();
+UN_EXPORT void ui_renderer_free();
+UN_EXPORT void ui_renderer_render();
+UN_EXPORT void ui_renderer_set_size(u32 width, u32 height);
 

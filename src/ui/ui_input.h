@@ -12,5 +12,5 @@ typedef struct ui_input_t {
     ui_style cursor_style;
 } ui_input_t;
 
-void ui_input_init(ui_input_t *input, ustring_view text);
-bool ui_input(ui_input_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip);
+UN_EXPORT void ui_input_init(ui_input_t *input, ustring_view text);
+UN_EXPORT bool ui_input(ui_input_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip);

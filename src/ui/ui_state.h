@@ -38,31 +38,31 @@ typedef struct ui_state_t {
     f64 smooth_factor;
 } ui_state_t;
 
-void ui_state_init();
+UN_EXPORT void ui_state_init();
 ui_state_t *ui_state_get();
 
-void ui_state_set_size(u32 width, u32 height);
-bool ui_state_set_active(i32 id);
-i32 ui_state_get_active();
-i32 ui_state_get_last_active();
-i32 ui_state_get_focus();
-i32 ui_state_get_hover();
-void ui_state_clear_active();
-void ui_state_set_mouse_location(f32 x, f32 y);
+UN_EXPORT void ui_state_set_size(u32 width, u32 height);
+UN_EXPORT bool ui_state_set_active(i32 id);
+UN_EXPORT i32 ui_state_get_active();
+UN_EXPORT i32 ui_state_get_last_active();
+UN_EXPORT i32 ui_state_get_focus();
+UN_EXPORT i32 ui_state_get_hover();
+UN_EXPORT void ui_state_clear_active();
+UN_EXPORT void ui_state_set_mouse_location(f32 x, f32 y);
 
-bool ui_state_set_focus(i32 id);
-void ui_state_clear_focus();
+UN_EXPORT bool ui_state_set_focus(i32 id);
+UN_EXPORT void ui_state_clear_focus();
 
-void ui_state_delete_key_press(i32 key);
-void ui_state_key_press(i32 key);
-void ui_state_key_release(i32 key);
-bool ui_state_is_key_press(i32 key);
-bool ui_state_is_key_pressed(i32 key);
+UN_EXPORT void ui_state_delete_key_press(i32 key);
+UN_EXPORT void ui_state_key_press(i32 key);
+UN_EXPORT void ui_state_key_release(i32 key);
+UN_EXPORT bool ui_state_is_key_press(i32 key);
+UN_EXPORT bool ui_state_is_key_pressed(i32 key);
 
-void ui_state_mouse_down(i32 button);
-void ui_state_mouse_up(i32 button);
-bool ui_state_is_mouse_down(i32 button);
-bool ui_state_is_mouse_pressed(i32 button);
+UN_EXPORT void ui_state_mouse_down(i32 button);
+UN_EXPORT void ui_state_mouse_up(i32 button);
+UN_EXPORT bool ui_state_is_mouse_down(i32 button);
+UN_EXPORT bool ui_state_is_mouse_pressed(i32 button);
 
-bool ui_state_update();
-bool ui_state_hovering(ui_rect rect, i32 layer_index);
+UN_EXPORT bool ui_state_update();
+UN_EXPORT bool ui_state_hovering(ui_rect rect, i32 layer_index);
