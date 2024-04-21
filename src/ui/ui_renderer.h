@@ -2,7 +2,10 @@
 
 #include "foundation/global.h"
 #include "ui/ui_type.h"
-#include "gpu/gpu.h"
+
+#ifdef UI_NATIVE
+    #include "gpu/gpu.h"
+#endif
 
 #define MAX_UI_LAYERS 4
 
@@ -21,9 +24,10 @@ typedef struct ui_renderer_t {
     u32 index_offset, primitive_offset;
     u32 last_index_offset, last_primitive_offset;
     u32 preserved_primitive_offset;
-
-    // gpu side
     float4 window_size;
+
+#ifdef UI_NATIVE
+    // gpu side
     u32 primitive_data_texture_width;
     gpu_texture primitive_data_texture;
     gpu_buffer index_buffer;
@@ -31,6 +35,7 @@ typedef struct ui_renderer_t {
     gpu_texture icon_texture;
     gpu_binding binding;
     gpu_pipeline pipeline;
+#endif
 } ui_renderer_t;
 
 typedef struct ui_rect_vertex {
@@ -76,6 +81,9 @@ void ui_layer_clear(ui_layer *layer);
 // renderer func
 UN_EXPORT void ui_renderer_init();
 UN_EXPORT void ui_renderer_free();
-UN_EXPORT void ui_renderer_render();
 UN_EXPORT void ui_renderer_set_size(u32 width, u32 height);
+
+#ifdef UI_NATIVE
+UN_EXPORT void ui_renderer_render();
+#endif
 

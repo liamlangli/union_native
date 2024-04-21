@@ -87,6 +87,10 @@ function compile() {
         .readdirSync(ui_path)
         .filter((file) => file.endsWith(".c"))
         .map((file) => path.join(ui_path, file));
+
+    // add ustring deps
+    ui_sources.push(path.join(src_path, "foundation/ustring.c"));
+
     // compile all source to one wasm with cmake file in cmake/ui.cmake
     const clang = `${wasi_path}/bin/clang\
     --sysroot=${sysroot_path}\
@@ -103,7 +107,7 @@ function compile() {
     execSync(clang);
 
     // compress wasm to brotli
-    const br = `brotli ${build_path}/ui.wasm -o ${build_path}/ui.wasm.br`;
+    const br = `brotli ${build_path}/ui.wasm -f -o ${build_path}/ui.wasm.br`;
     console.log(br);
     execSync(br);
 }

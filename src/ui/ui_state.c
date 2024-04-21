@@ -1,8 +1,6 @@
 #include "ui/ui_state.h"
 #include "os/os.h"
 
-#include <stb_ds.h>
-
 #define LONG_PRESS_TIME 0.5
 #define LONG_PRESS_COLD_DOWN 0.02
 
@@ -48,21 +46,8 @@ bool ui_state_update() {
     _state.pointer_scroll = float2_zero();
 
     ui_state_reset_mouse_state();
-    for (i32 i = 0, l = (i32)hmlen(_state.key_press); i < l; i++) {
-        hmdel(_state.key_press, _state.key_press[i].key);
-    }
-
-    for (i32 i = 0, l = (i32)hmlen(_state.key_release); i < l; i++) {
-        hmdel(_state.key_release, _state.key_release[i].key);
-    }
-
-    for (i32 i = 0, l = (i32)hmlen(_state.key_pressed); i < l; i++) {
-        ui_key_map_t *pair = &_state.key_pressed[i];
-        if (_state.time - pair->value > LONG_PRESS_TIME) {
-            hmput(_state.key_press, pair->key, _state.time);
-            pair->value = _state.time - LONG_PRESS_TIME + LONG_PRESS_COLD_DOWN;
-        }
-    }
+    memset(_state.key_press, 0, sizeof(_state.key_press));
+    memset(_state.key_release, 0, sizeof(_state.key_release));
 
     bool updated = _state.defer_update_frame_index > 0;
     if (updated)
@@ -80,23 +65,23 @@ bool ui_state_hovering(ui_rect rect, i32 layer_index) {
     return ui_rect_contains(rect, _state.pointer_location);
 }
 
-void ui_state_delete_key_press(i32 key) { hmdel(_state.key_press, key); }
+void ui_state_delete_key_press(i32 key) { _state.key_press[key] = 0; }
 
 void ui_state_key_press(i32 key) {
-    hmput(_state.key_press, key, _state.time);
-    hmput(_state.key_pressed, key, _state.time);
+    _state.key_press[key] = 1;
+    _state.key_pressed[key] = 1;
 }
 
 void ui_state_key_release(i32 key) {
-    hmput(_state.key_release, key, _state.time);
-    hmdel(_state.key_pressed, key);
+    _state.key_release[key] = 1;
+    _state.key_pressed[key] = 0;
 }
 
-bool ui_state_is_key_press(i32 key) { return hmgeti(_state.key_press, key) != -1; }
+bool ui_state_is_key_press(i32 key) { return _state.key_press[key] == 1; }
 
-bool ui_state_is_key_pressed(i32 key) { return hmgeti(_state.key_pressed, key) != -1; }
+bool ui_state_is_key_pressed(i32 key) { return _state.key_pressed[key] == 1; }
 
-bool ui_state_is_key_release(i32 key) { return hmgeti(_state.key_release, key) != -1; }
+bool ui_state_is_key_release(i32 key) { return _state.key_release[key] == 1; }
 
 bool ui_state_set_active(i32 id) {
     if (_state.active == -1) {

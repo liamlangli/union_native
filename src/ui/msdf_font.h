@@ -5,35 +5,28 @@
 #include "foundation/ustring.h"
 #include "gpu/gpu.h"
 
+#define MAX_GLYPH_COUNT 256
+
 typedef struct msdf_glyph {
+    bool valid;
     int id, index, xoffset, yoffset, xadvance, width, height, x, y;
     u32 gpu_index;
 } msdf_glyph;
 
-typedef struct kerning_key {
-    int first, second;
-} kerning_key;
-
-typedef struct kerning_map_hm {
-    kerning_key key;
-    int value;
-} kerning_map_hm;
-
-typedef struct char_map_hm {
-    int key;
-    msdf_glyph value;
-} char_map_hm;
-
 typedef struct msdf_font {
     ustring name;
-    char_map_hm *char_map;
-    kerning_map_hm *kerning_map;
+    msdf_glyph glyphs[MAX_GLYPH_COUNT];
+    int kernings[MAX_GLYPH_COUNT][MAX_GLYPH_COUNT];
     u32 line_height, size;
-    u32 texture_width, texture_height;
-    gpu_texture texture;
 
-    u32 gpu_font_id;
     u32 gpu_font_start;
+    u32 gpu_font_id;
+
+    u32 texture_width, texture_height;
+
+#ifdef UI_NATIVE
+    gpu_texture texture;
+#endif
 } msdf_font;
 
 UN_EXPORT msdf_font *msdf_font_load(ustring json_path, ustring image_path);

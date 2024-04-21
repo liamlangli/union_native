@@ -8,8 +8,6 @@
 #include "ui/ui_state.h"
 #include "ui/ui_theme.h"
 
-#include <stb_ds.h>
-
 void ui_input_init(ui_input_t *input, ustring_view text) {
     ui_label_init(&input->label, text);
     ui_element_init(&input->element);
@@ -93,11 +91,15 @@ void ui_input_handle_edit(ui_input_t *input) {
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(KEY_C)) {
+#ifdef UI_NATIVE
             os_window_set_clipboard(script_context_shared()->window, input->label.text);
+#endif
             ui_state_delete_key_press(KEY_C);
         }
         if (ui_state_is_key_press(KEY_X)) {
+#ifdef UI_NATIVE
             os_window_set_clipboard(script_context_shared()->window, ustring_view_sub_view(&input->label.text, from, to));
+#endif
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;
             input->label.start_index = from;
@@ -106,6 +108,7 @@ void ui_input_handle_edit(ui_input_t *input) {
             ui_state_delete_key_press(KEY_X);
         }
         if (ui_state_is_key_press(KEY_V)) {
+#ifdef UI_NATIVE
             if (from != to)
                 ustring_view_erase(&input->label.text, from, to);
             ustring pasted = os_window_get_clipboard(script_context_shared()->window);
@@ -115,6 +118,7 @@ void ui_input_handle_edit(ui_input_t *input) {
             input->label.render_selected = false;
             ui_label_compute_size_and_offset(&input->label);
             ui_state_delete_key_press(KEY_V);
+#endif
         }
     } else {
         if (ui_state_is_key_press(KEY_LEFT)) {

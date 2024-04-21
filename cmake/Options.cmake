@@ -1,6 +1,5 @@
 set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable group based unity build")
 set(ENABLE_MIMALLOC ON CACHE BOOL "Enable mimalloc")
-set(ENABLE_LIBRARY_BUILD OFF CACHE BOOL "Enable library build")
 
 set(SCRIPT_BACKEND "QuickJS" CACHE STRING "Script backend")
 set_property(CACHE SCRIPT_BACKEND PROPERTY STRINGS "QuickJS" "JavaScriptCore")
@@ -23,4 +22,5 @@ else()
     set(UN_BUILD_TYPE "release")
 endif()
 
+add_definitions(-DUI_NATIVE)
 message(STATUS "Script backend: ${SCRIPT_BACKEND}")

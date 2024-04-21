@@ -14,8 +14,6 @@
 
 #include <stdlib.h>
 
-#include <stb_ds.h>
-
 #define PRIMITIVE_DATA_INIT_COUNT 262144 // 1M
 #define UI_LAYER_1_OFFSET 237568        // size 4096
 #define UI_LAYER_2_OFFSET 241664        // size 16384
@@ -34,7 +32,7 @@ void ui_renderer_write_msdf_font(msdf_font *font) {
     font->gpu_font_start = offset >> 2;
     const u32 glyph_stride = 8;
     const u32 font_stride = 8;
-    const u32 glyph_count = (int)hmlen(font->char_map);
+    const u32 glyph_count = MAX_GLYPH_COUNT;
     const u32 primitive_end = offset + font_stride + glyph_count * glyph_stride;
 
     _renderer.preserved_primitive_offset = primitive_end;
@@ -46,7 +44,7 @@ void ui_renderer_write_msdf_font(msdf_font *font) {
     ui_font_glyph_vertex vertex = {0};
     ui_font_glyph_vertex *glyph_start = (ui_font_glyph_vertex *)((f32 *)font_start + font_stride);
     for (int i = 0; i < glyph_count; ++i) {
-        msdf_glyph g = font->char_map[i].value;
+        msdf_glyph g = font->glyphs[i];
         const u32 index = i;
         vertex.x = (f32)g.x;
         vertex.y = (f32)g.y;
@@ -55,7 +53,7 @@ void ui_renderer_write_msdf_font(msdf_font *font) {
         vertex.xoffset = (f32)g.xoffset;
         vertex.yoffset = (f32)g.yoffset;
         glyph_start[i] = vertex;
-        font->char_map[i].value.gpu_index = i;
+        font->glyphs[i].gpu_index = i;
     }
 
     _renderer.primitive_offset = primitive_end;
@@ -90,6 +88,7 @@ void ui_renderer_init() {
     ui_renderer_write_msdf_font(ui_font_shared()->font);
 
     // gpu
+#ifdef UI_NATIVE
     int max_texture_size = 4096;
 
     int texture_width = max_texture_size;
@@ -185,6 +184,7 @@ void ui_renderer_init() {
     };
 
     _renderer.pipeline = pipeline;
+#endif
 }
 
 void ui_renderer_free() { free(_renderer.primitive_data); }
@@ -213,12 +213,9 @@ void ui_renderer_merge_layers() {
     _renderer.last_primitive_offset = _renderer.primitive_offset;
     _renderer.last_index_offset = _renderer.index_offset;
     ui_renderer_clear();
-
-    gpu_update_buffer(_renderer.uniform_buffer, (udata){.data = (i8 *)&_renderer.window_size, sizeof(float) * 4});
-    gpu_update_buffer(_renderer.index_buffer, (udata){.data = (i8 *)_renderer.index_data, _renderer.last_index_offset * 4});
-    gpu_update_texture(_renderer.primitive_data_texture, (udata){.data = (i8 *)_renderer.primitive_data, _renderer.last_primitive_offset * 4 * sizeof(f32)});
 }
 
+#ifdef UI_NATIVE
 void ui_renderer_render() {
     ui_renderer_merge_layers();
     if (_renderer.last_index_offset <= 0)
@@ -226,11 +223,16 @@ void ui_renderer_render() {
 
     script_context_t *ctx = script_context_shared();
 
+    gpu_update_buffer(_renderer.uniform_buffer, (udata){.data = (i8 *)&_renderer.window_size, sizeof(float) * 4});
+    gpu_update_buffer(_renderer.index_buffer, (udata){.data = (i8 *)_renderer.index_data, _renderer.last_index_offset * 4});
+    gpu_update_texture(_renderer.primitive_data_texture, (udata){.data = (i8 *)_renderer.primitive_data, _renderer.last_primitive_offset * 4 * sizeof(f32)});
+
     gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     gpu_set_pipeline(_renderer.pipeline);
     gpu_set_binding(&_renderer.binding);
     gpu_draw(0, _renderer.last_index_offset, 1);
 }
+#endif
 
 u32 ui_layer_write_clip(u32 layer_index, ui_rect rect, u32 parent) {
     ui_layer *layer = &_renderer.layers[layer_index];

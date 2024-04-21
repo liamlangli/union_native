@@ -1,14 +1,12 @@
 #include "ui_keycode.h"
 
-#include <stb_ds.h>
-
-u32 ui_keycode_parse(ustring_view *view, ui_key_map_t *keys, bool shift) {
+u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift) {
     ustring_view_clear(view);
     u32 valid_char_count = 0;
-    for (int i = 0, l = (int)hmlen(keys); i < l; i++) {
-        int key = keys[i].key;
-        if (key == 0)
+    for (int i = 0, l = MAX_KEY_COUNT; i < l; i++) {
+        if (keys[i] == 0)
             continue;
+        int key = i;
         if (key >= KEY_A && key <= KEY_Z) {
             if (!shift) {
                 key = key - KEY_A + KEY_LOWER_CASE_A;

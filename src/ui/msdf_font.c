@@ -1,18 +1,12 @@
 #include "ui/msdf_font.h"
 #include "foundation/io.h"
-#include "foundation/ustring.h"
 #include "foundation/udata.h"
+#include "foundation/ustring.h"
 #include "gpu/gpu_const.h"
 #include "os/os.h"
 
-#include <stb_ds.h>
-
 msdf_font *msdf_alloc() {
     msdf_font *font = (msdf_font *)malloc(sizeof(msdf_font));
-    font->char_map = NULL;
-    font->kerning_map = NULL;
-    hmdefault(font->char_map, (msdf_glyph){0});
-    hmdefault(font->kerning_map, 0);
     return font;
 }
 
@@ -37,12 +31,9 @@ float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring_view text, f32
     return size;
 }
 
-msdf_glyph msdf_font_get_glyph(msdf_font *font, int index) { return hmget(font->char_map, index); }
+msdf_glyph msdf_font_get_glyph(msdf_font *font, int index) { return font->glyphs[index]; }
 
-int msdf_font_computer_kerning(msdf_font *font, int prev, int next) {
-    const kerning_key key = (kerning_key){.first = prev, .second = next};
-    return hmget(font->kerning_map, key);
-}
+int msdf_font_computer_kerning(msdf_font *font, int prev, int next) { return font->kernings[prev][next]; }
 
 static msdf_font system_font;
 msdf_font *msdf_font_system_font() {
@@ -51,8 +42,6 @@ msdf_font *msdf_font_system_font() {
         return &system_font;
     system_font_initialized = true;
 
-    system_font.char_map = NULL;
-    system_font.kerning_map = NULL;
     system_font.name = ustring_STR("Lato-Regular");
     system_font.line_height = 50;
     system_font.size = 42;
@@ -179,32 +168,31 @@ msdf_font *msdf_font_system_font() {
     int char_count = count_of(char_data);
     for (int i = 0; i < char_count; ++i) {
         int *g_data = char_data[i];
-        msdf_glyph g = (msdf_glyph){.id = g_data[0],
-                                    .index = g_data[1],
-                                    .xoffset = g_data[2],
-                                    .yoffset = g_data[3],
-                                    .xadvance = g_data[4],
-                                    .width = g_data[5],
-                                    .height = g_data[6],
-                                    .x = g_data[7],
-                                    .y = g_data[8]};
-        hmput(system_font.char_map, g_data[0], g);
+        msdf_glyph g = {0};
+        g.valid = true, g.id = g_data[0], g.index = g_data[1], g.xoffset = g_data[2], g.yoffset = g_data[3];
+        g.xadvance = g_data[4], g.width = g_data[5], g.height = g_data[6], g.x = g_data[7], g.y = g_data[8];
+        system_font.glyphs[g_data[0]] = g;
     }
 
     int kerning_count = count_of(kerning_data);
     for (int i = 0; i < kerning_count; ++i) {
         int *k_data = kerning_data[i];
-        kerning_key key = (kerning_key){.first = k_data[0], .second = k_data[1]};
-        hmput(system_font.kerning_map, key, k_data[2]);
+        int first = k_data[0];
+        int second = k_data[1];
+        int amount = k_data[2];
+        system_font.kernings[first][second] = amount;
     }
 
+#ifdef UI_NATIVE
     ustring image_path = os_get_bundle_path(ustring_STR("public/font/Lato-Regular.png"));
     int width, height, channel;
     u8 *data = io_load_image(image_path, &width, &height, &channel, 4);
-    
-    gpu_texture_desc desc = { .width = width, .height = height };
+
+    gpu_texture_desc desc = {.width = width, .height = height};
     desc.format = PIXELFORMAT_RGBA8;
-    desc.data = (udata){.data = (i8*)data, .length = width * height * 4};
+    desc.data = (udata){.data = (i8 *)data, .length = width * height * 4};
     system_font.texture = gpu_create_texture(&desc);
+#endif
+
     return &system_font;
 }

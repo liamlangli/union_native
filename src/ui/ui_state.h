@@ -2,6 +2,7 @@
 
 #include "ui/ui_renderer.h"
 #include "ui/ui_type.h"
+#include "ui/ui_keycode.h"
 
 typedef struct ui_state_t {
     ui_rect window_rect;
@@ -18,9 +19,9 @@ typedef struct ui_state_t {
     bool middle_mouse_press, middle_mouse_release;
     bool left_mouse_is_pressed, right_mouse_is_pressed, middle_mouse_is_pressed;
 
-    ui_key_map_t *key_press;
-    ui_key_map_t *key_release;
-    ui_key_map_t *key_pressed;
+    u8 key_press[MAX_KEY_COUNT];
+    u8 key_release[MAX_KEY_COUNT];
+    u8 key_pressed[MAX_KEY_COUNT];
     ustring_view edit_str;
 
     bool updated;

@@ -1,3 +1,4 @@
+#ifdef UI_NATIVE
 #include "ui/ui_dev_tool.h"
 #include "foundation/ustring.h"
 #include "foundation/logger.h"
@@ -173,3 +174,4 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     }
     ui_scroll_view(&console_view, scroll_view_rect, 0, clip);
 }
+#endif

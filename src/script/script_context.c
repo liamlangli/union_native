@@ -66,7 +66,9 @@ void script_context_init(os_window_t *window) {
     ui_renderer_set_size(window->width, window->height);
     ui_state_set_size(window->width, window->height);
     ui_state_init();
+#ifdef UI_NATIVE
     ui_dev_tool_init(&shared_context.dev_tool);
+#endif
 }
 
 void script_context_terminate(void) {
@@ -201,7 +203,9 @@ int script_eval_uri(ustring_view uri) {
 
 void script_context_loop_tick() {
     if (!shared_context.invalid_script) script_browser_tick();
+#ifdef UI_NATIVE
     ui_dev_tool(&shared_context.dev_tool);
+#endif
     ui_renderer_render();
     ui_state_update();
     
