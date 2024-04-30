@@ -4,6 +4,9 @@ project(un)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+# cmake options
+set(CMAKE_SUPPRESS_REGENERATION true)
+
 include(${CMAKE_SOURCE_DIR}/cmake/Platform.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Options.cmake)
 

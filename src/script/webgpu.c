@@ -136,7 +136,7 @@ static const JSCFunctionListEntry js_gpu_context_proto_funcs[] = {
     JS_CFUNC_DEF(.name="getCurrentTexture", 0, _context_get_current_texture),
 };
 
-void script_webgpu_register(void) {
+void script_webgpu_setup(void) {
     CHECK_SCOPE
 
     _webgpu_register_constants(ctx);

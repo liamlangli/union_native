@@ -1,6 +1,7 @@
 #include "script/script_context.h"
 #include "script/browser.h"
 #include "script/webgpu.h"
+#include "script/webgl.h"
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"
@@ -94,14 +95,12 @@ void script_context_destroy(void) {
 
 void script_context_cleanup(void) {
     script_browser_cleanup();
-    script_webgpu_cleanup();
     script_context_destroy();
 }
 
 void script_context_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
-    script_webgpu_register();
-    script_browser_register();
+    script_browser_setup();
 }
 
 int script_eval(ustring source, ustring_view filename) {

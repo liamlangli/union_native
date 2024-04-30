@@ -5,6 +5,13 @@
 #include "os/os.h"
 #include "gpu_const.h"
 
+typedef enum gpu_backend {
+    none,
+    webgl,
+    webgpu,
+    union_gpu,
+} gpu_backend;
+
 typedef struct gpu_texture { u32 id; } gpu_texture;
 typedef struct gpu_sampler { u32 id; } gpu_sampler;
 typedef struct gpu_buffer { u32 id; } gpu_buffer;

@@ -2,7 +2,7 @@
 
 #include "foundation/global.h"
 
-void script_browser_register(void);
+void script_browser_setup(void);
 void script_browser_cleanup(void);
 void script_browser_tick(void);
 

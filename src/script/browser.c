@@ -1,7 +1,10 @@
 #include "foundation/io.h"
 #include "foundation/logger.h"
 #include "foundation/ustring.h"
+#include "gpu/gpu.h"
 #include "script/api.h"
+#include "script/webgl.h"
+#include "script/webgpu.h"
 
 #include <assert.h>
 #include <quickjs/quickjs-libc.h>
@@ -46,6 +49,7 @@ typedef struct browser_module {
     js_listener_hm *document_event_listeners;
     js_listener_hm *canvas_event_listeners;
     js_frame_callback *frame_callbacks;
+    gpu_backend backend;
 } browser_module;
 
 static browser_module browser = {0};
@@ -198,9 +202,16 @@ JSValue js_get_context(JSContext *ctx, JSValueConst this_val, int argc, JSValueC
     const char *context_name = JS_ToCString(ctx, argv[0]);
     ustring_view name = ustring_view_str((i8*)context_name);
     if (!ustring_view_start_with_ustring(name, ustring_STR("webgpu"))) {
+        ULOG_INFO("use webgpu backend.");
+        script_webgpu_setup();
+        browser.backend = webgpu;
+    } else if (ustring_view_start_with_ustring(name, ustring_STR("webgl"))) {
+        ULOG_INFO("use webgl backend.");
+        script_webgl_setup();
+        browser.backend = webgl;
+    } else {
         ULOG_ERROR("invalid context name: {}", context_name);
-        JS_FreeCString(ctx, context_name);
-        return JS_UNDEFINED;
+        browser.backend = none;
     }
     JS_FreeCString(ctx, context_name);
     JSValue global = JS_GetGlobalObject(ctx);
@@ -756,7 +767,7 @@ void create_classes(JSRuntime *rt) {
     JS_NewClass(rt, js_weak_ref_class_id, &js_weak_ref_class);
 }
 
-void script_browser_register(void) {
+void script_browser_setup(void) {
     CHECK_SCOPE
 
     JSValue global = JS_GetGlobalObject(ctx);
@@ -841,4 +852,11 @@ void script_listeners_cleanup() {
     }
 }
 
-void script_browser_cleanup(void) { script_listeners_cleanup(); }
+void script_browser_cleanup(void) {
+    script_listeners_cleanup();
+    if (browser.backend == webgpu)
+        script_webgpu_cleanup();
+    else if (browser.backend == webgl) {
+        script_webgl_cleanup();
+    }
+}
