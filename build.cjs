@@ -12,8 +12,8 @@ const lib_path = path.join(__dirname, 'third_party/lib')
 const deps = [
     {   
         name: 'quickjs',
-        git: 'https://github.com/bellard/quickjs.git',
-        head: '3b45d155c77bbdfe9177b1e03db830d2aff0b2a8',
+        git: 'https://github.com/liamlangli/quickjs.git',
+        head: '3b45d15',
         includes: ['quickjs.h', 'quickjs-libc.h'],
         libs: ['libquickjs.a', 'libquickjs.lto.a'],
         build_cmd: 'make CONFIG_MIMALLOC=y CONFIG_VERSION="\\\"0.0.1\\\"" CONFIG_BIGNUM=y CONFIG_STR_EVAL=y CONFIG_LTO=y',
@@ -21,16 +21,16 @@ const deps = [
     },
     { 
         name: 'mimalloc',
-        git: 'https://github.com/microsoft/mimalloc.git',
-        head: '43ce4bd7fd34bcc730c1c7471c99995597415488',
+        git: 'https://github.com/liamlangli/mimalloc.git',
+        head: 'cc3c14f',
         libs: ['libmimalloc.a'],
         build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log`,
         build_toolchain: 'cmake',
     },
     {
         name: 'libuv',
-        git: 'https://github.com/libuv/libuv.git',
-        head: 'e9f29cb984231524e3931aa0ae2c5dae1a32884e',
+        git: 'https://github.com/liamlangli/libuv.git',
+        head: '520eb622',
         libs: ['libuv.a'],
         build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DBUILD_TESTING=OFF .. > ./cmake.log`,
         build_toolchain: 'cmake',
@@ -60,11 +60,11 @@ function download() {
             encoding: 'utf8'
         }).trim();
         
-        if (head === dep.head) {
+        if (head.startsWith(dep.head)) {
             console.log(`head matched. skip ${dep.name} checkout`)
         } else {
             console.log(`check out ${dep.name} to ${dep.head}`)
-            const cmd = `git checkout ${dep.head}`;
+            const cmd = `git reset ${dep.head} && git checkout .`;
             execSync(cmd, { cwd : dep_path, stdio: 'inherit' });
         }
     }
