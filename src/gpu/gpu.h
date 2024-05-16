@@ -234,7 +234,7 @@ bool gpu_request_device(os_window_t *window);
 void gpu_destroy_device(void);
 
 gpu_texture gpu_create_texture(gpu_texture_desc *desc);
-gpu_texture gpu_create_sampler(gpu_sampler_desc *desc);
+gpu_sampler gpu_create_sampler(gpu_sampler_desc *desc);
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc);
 gpu_shader gpu_create_shader(gpu_shader_desc *desc);
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc);

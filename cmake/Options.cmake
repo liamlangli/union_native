@@ -1,5 +1,5 @@
 set(ENABLE_UNITY_BUILD ON CACHE BOOL "Enable group based unity build")
-set(ENABLE_MIMALLOC ON CACHE BOOL "Enable mimalloc")
+set(ENABLE_MIMALLOC OFF CACHE BOOL "Enable mimalloc")
 
 set(SCRIPT_BACKEND "QuickJS" CACHE STRING "Script backend")
 set_property(CACHE SCRIPT_BACKEND PROPERTY STRINGS "QuickJS" "JavaScriptCore")

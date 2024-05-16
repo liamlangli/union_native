@@ -24,5 +24,5 @@ else() # LINUX
     add_definitions(-DOS_LINUX)
 endif()
 
-message(STATUS "OS: ${LINK_DIR}")
+message(STATUS "OS: ${PLATFORM}")
 link_directories(${LINK_DIR})
