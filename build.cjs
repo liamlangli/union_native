@@ -1,5 +1,4 @@
 const fs = require('node:fs')
-const os = require('node:os')
 const path = require('node:path')
 const { execSync } = require('node:child_process')
 
@@ -9,8 +8,6 @@ let debug = false
 const source_path = path.join(__dirname, 'third_party/source')
 const include_path = path.join(__dirname, 'third_party/include')
 const lib_path = path.join(__dirname, 'third_party/lib')
-const platform = os.platform();
-const is_win32 = platform == 'win32'
 
 const deps = [
     {   
