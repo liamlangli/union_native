@@ -2,6 +2,11 @@ if (ENABLE_UNITY_BUILD)
     set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD ON)
     set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD_MODE GROUP)
 endif()
+
+if(WIN32)
+    set_source_files_properties(${D3D11_SOURCES} PROPERTIES UNITY_GROUP "d3d11")
+endif()
+
 set_source_files_properties(${FOUNDATION_SOURCES} PROPERTIES UNITY_GROUP "foundation")
 set_source_files_properties(${OS_SOURCES} PROPERTIES UNITY_GROUP "os")
 set_source_files_properties(${GPU_SOURCES} PROPERTIES UNITY_GROUP "gpu")

@@ -9,6 +9,10 @@ endif()
 if (WIN32)
     # libuv deps
     target_link_libraries(${PROJECT_NAME} uv ws2_32 userenv iphlpapi dbghelp pthread)
+    
+    # graphics
+    target_link_libraries(${PROJECT_NAME} d3d11)
+
     target_link_libraries(${PROJECT_NAME} quickjs m dl)
 elseif (APPLE)
     target_link_libraries(${PROJECT_NAME} quickjs m dl uv)

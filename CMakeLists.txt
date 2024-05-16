@@ -46,7 +46,14 @@ set(APPLE_SOURCES
     src/apple/metal.m
     src/apple/metal_type.m)
 file(GLOB APPLE_HEADERS src/apple/*.h)
-if (APPLE)
+
+# win
+if (WIN32)
+    set(D3D11_SOURCES
+        src/d3d11/device.c
+    )
+    list(APPEND PROJECT_SRC ${D3D11_SOURCES})
+elseif (APPLE)
     list(APPEND APPLE_SOURCES src/apple/os.m)
     if (IOS)
         list(APPEND APPLE_SOURCES src/apple/os.ios.m)
