@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const os = require('node:os')
 const path = require('node:path')
 const { execSync } = require('node:child_process')
 
@@ -8,6 +9,8 @@ let debug = false
 const source_path = path.join(__dirname, 'third_party/source')
 const include_path = path.join(__dirname, 'third_party/include')
 const lib_path = path.join(__dirname, 'third_party/lib')
+const platform = os.platform();
+const is_win32 = platform == 'win32'
 
 const deps = [
     {   
@@ -15,15 +18,15 @@ const deps = [
         git: 'https://github.com/liamlangli/quickjs.git',
         head: '3b45d15',
         includes: ['quickjs.h', 'quickjs-libc.h'],
-        libs: ['libquickjs.a', 'libquickjs.lto.a'],
-        build_cmd: 'make CONFIG_MIMALLOC=y CONFIG_VERSION="\\\"0.0.1\\\"" CONFIG_BIGNUM=y CONFIG_STR_EVAL=y CONFIG_LTO=y',
+        libs: ['libquickjs.a'],
+        build_cmd: 'make libquickjs.a CONFIG_MIMALLOC=y CONFIG_VERSION="\\\"0.0.1\\\"" CONFIG_BIGNUM=y CONFIG_STR_EVAL=y CONFIG_LTO=y',
         build_toolchain: 'make',
     },
     { 
         name: 'mimalloc',
         git: 'https://github.com/liamlangli/mimalloc.git',
         head: 'cc3c14f',
-        libs: ['libmimalloc.a'],
+        libs: ['libmimalloc.a', 'libmimalloc-static.a'],
         build_cmd: `cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log`,
         build_toolchain: 'cmake',
     },
@@ -70,7 +73,7 @@ function download() {
     }
 }
 
-function cpFolderSync(src, dest) {
+function cp_folder_sync(src, dest) {
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true });
     }
@@ -79,7 +82,7 @@ function cpFolderSync(src, dest) {
         const src_path = path.join(src, f);
         const dest_path = path.join(dest, f);
         if (fs.lstatSync(src_path).isDirectory()) {
-            cpFolderSync(src_path, dest_path);
+            cp_folder_sync(src_path, dest_path);
         } else {
             fs.copyFileSync(src_path, dest_path);
         }
@@ -136,7 +139,7 @@ function compile() {
         if (dep.build_toolchain === 'cmake') {
             const src = path.join(dep_path, 'include');
             const dst = path.join(include_dst);
-            cpFolderSync(src, dst);
+            cp_folder_sync(src, dst);
         } else if (dep.build_toolchain === 'make') {
             for (const include of dep.includes) {
                 const src = path.join(dep_path, include);
@@ -148,7 +151,8 @@ function compile() {
         for (const lib of dep.libs) {
             const src = path.join(dep_path, dep.build_toolchain === 'cmake' ? 'build' : '', lib);
             const dst = path.join(lib_path, lib);
-            fs.copyFileSync(src, dst);
+            if (fs.existsSync(src))
+                fs.copyFileSync(src, dst);
         }
     }
 }

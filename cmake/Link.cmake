@@ -1,9 +1,15 @@
 if (ENABLE_MIMALLOC)
-    target_link_libraries(${PROJECT_NAME} mimalloc)
+    if (WIN32)
+        target_link_libraries(${PROJECT_NAME} mimalloc-static)
+    else()
+        target_link_libraries(${PROJECT_NAME} mimalloc)
+    endif()
 endif()
 
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} quickjs m dl ws2_32 uv)
+    # libuv deps
+    target_link_libraries(${PROJECT_NAME} uv ws2_32 userenv iphlpapi dbghelp pthread)
+    target_link_libraries(${PROJECT_NAME} quickjs m dl)
 elseif (APPLE)
     target_link_libraries(${PROJECT_NAME} quickjs m dl uv)
     target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
