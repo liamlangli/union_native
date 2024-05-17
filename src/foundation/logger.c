@@ -65,6 +65,7 @@ void logger_input(logger_t *logger, int type, ustring message) {
             break;
         case ULOG_ERROR:
             printf(ERROR_COLOR "[ERR]" ULOG_COLOR " %s\n", message.data);
+            exit(2);
             break;
         default:
             printf(ULOG_COLOR "[MSG]" ULOG_COLOR " %s\n", message.data);

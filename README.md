@@ -12,12 +12,12 @@
 ## Build
 ```shell
 # download dep repos
-node build.js download
+python script/dep.py download
 
 # compile deps
-node build.js compile
+python script/dep.py compile
 # or
-node build.js --debug compile
+python script/dep.py --debug compile
 
 # build with cmake
 mkdir build && cd build && cmake .. && make

@@ -4,7 +4,7 @@ if (ENABLE_UNITY_BUILD)
 endif()
 
 if(WIN32)
-    set_source_files_properties(${D3D11_SOURCES} PROPERTIES UNITY_GROUP "d3d11")
+    set_source_files_properties(${VULKAN_SOURCES} PROPERTIES UNITY_GROUP "vulkan")
 endif()
 
 set_source_files_properties(${FOUNDATION_SOURCES} PROPERTIES UNITY_GROUP "foundation")

@@ -5,9 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "type": "cppdbg",
             "request": "launch",
             "name": "lldb launch un",
+            "debugServerPath": "",
             "program": "${workspaceFolder}/build/un",
             "args": [],
             "cwd": "${workspaceFolder}/build",

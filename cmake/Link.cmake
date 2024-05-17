@@ -11,7 +11,7 @@ if (WIN32)
     target_link_libraries(${PROJECT_NAME} uv ws2_32 userenv iphlpapi dbghelp pthread)
     
     # graphics
-    target_link_libraries(${PROJECT_NAME} d3d11)
+    target_link_libraries(${PROJECT_NAME} vulkan-1)
 
     target_link_libraries(${PROJECT_NAME} quickjs m dl)
 elseif (APPLE)

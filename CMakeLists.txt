@@ -48,12 +48,7 @@ set(APPLE_SOURCES
 file(GLOB APPLE_HEADERS src/apple/*.h)
 
 # win
-if (WIN32)
-    set(D3D11_SOURCES
-        src/d3d11/device.c
-    )
-    list(APPEND PROJECT_SRC ${D3D11_SOURCES})
-elseif (APPLE)
+if (APPLE)
     list(APPEND APPLE_SOURCES src/apple/os.m)
     if (IOS)
         list(APPEND APPLE_SOURCES src/apple/os.ios.m)
@@ -61,6 +56,12 @@ elseif (APPLE)
         list(APPEND APPLE_SOURCES src/apple/os.macos.m)
     endif()
     list(APPEND PROJECT_SRC ${APPLE_SOURCES})
+    source_group(apple FILE ${APPLE_SOURCES} ${APPLE_HEADERS})
+else()
+    set(VULKAN_SOURCES
+        src/vulkan/device.c)
+    list(APPEND PROJECT_SRC ${VULKAN_SOURCES})
+    source_group(vulkan FILES ${VULKAN_SOURCES})
 endif()
 
 # include third party
@@ -71,7 +72,6 @@ source_group(foundation FILES ${FOUNDATION_SOURCES} ${FOUNDATION_HEADERS})
 source_group(os FILES ${OS_SOURCES} ${OS_HEADERS})
 source_group(ui FILES ${UI_SOURCES} ${UI_HEADERS})
 source_group(script FILES ${SCRIPT_SOURCES} ${SCRIPT_HEADERS})
-source_group(apple FILE ${APPLE_SOURCES} ${APPLE_HEADERS})
 source_group(main FILES ${MAIN_ENTRY})
 
 include(${CMAKE_SOURCE_DIR}/cmake/Include.cmake)

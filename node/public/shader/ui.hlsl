@@ -21,9 +21,9 @@ struct vertex_output {
     float4 color;
     float2 sample_point;
     float2 screen_point;
-    uint type [[flat]];
-    uint clip [[flat]];
-    float4 position [[position]];
+    nointerpolation uint type;
+    nointerpolation uint clip;
+    float4 position: SV_POSITION;
 };
 
 float4 fetch_primitive_buffer(texture2d<float, access::read> buffer, uint pixel_index) {

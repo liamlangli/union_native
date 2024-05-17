@@ -17,9 +17,9 @@ function compile() {
         const vs_cache_path = path.join(cache_path, file.replace('.hlsl', '_vs.cso'));
         const ps_cache_path = path.join(cache_path, file.replace('.hlsl', '_ps.cso'));
         if (file.endsWith('.hlsl')) {
-            const vs_cmd = `dxc /T vs_5_0 /E vertex_main /Fo ${vs_cache_path} ${file_path}`;
+            const vs_cmd = `dxc /T vs_5_0 /E vertex_main /Fo ${vs_cache_path} ${file_path} > vs.log`;
             execSync(vs_cmd);
-            const fs_cmd = `dxc /T vs_5_0 /E fragment_main /Fo ${ps_cache_path} ${file_path}`;
+            const fs_cmd = `dxc /T vs_5_0 /E fragment_main /Fo ${ps_cache_path} ${file_path} > ps.log`;
             execSync(fs_cmd);
         }
     }
