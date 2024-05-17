@@ -2,6 +2,8 @@
 #include <minwindef.h>
 #include <vulkan/vulkan_core.h>
 
+#define MAX_SWAP_VIEW_COUNT 3
+
 #if defined(OS_WINDOWS)
 
     #define VK_USE_PLATFORM_WIN32_KHR
@@ -12,14 +14,38 @@
     #include "foundation/global.h"
     #include "foundation/logger.h"
 
-    #define MAX_SWAP_VIEW_COUNT 3
 
-typedef struct gpu_device_d3d11_t {
+
+typedef struct gpu_shader_vk_t {
+    VkShaderModule module;
+} gpu_shader_vk_t;
+
+typedef struct gpu_texture_vk_t {
+    VkImage image;
+} gpu_texture_vk_t;
+
+typedef struct gpu_sampler_vk_t {
+    VkSampler sampler;
+} gpu_sampler_vk_t;
+
+typedef struct gpu_buffer_vk_t {
+    VkBuffer buffer;
+} gpu_buffer_vk_t;
+
+typedef struct gpu_pipeline_vk_t {
+    VkPipeline pipeline;
+} gpu_pipeline_vk_t;
+
+typedef struct gpu_attachments_vk_t {
+    VkRenderPass pass;
+} gpu_attachments_vk_t;
+
+typedef struct gpu_device_vk_t {
     // device region
     VkInstance instance;
     VkDebugUtilsMessengerEXT msger;
     VkSurfaceKHR surface;
-    VkPhysicalDevice physical_device;
+    VkPhysicalDevice gpu;
     VkDevice device;
     VkQueue queue_gfx;
     VkQueue queue_present;
@@ -39,9 +65,15 @@ typedef struct gpu_device_d3d11_t {
     VkCommandBuffer cmd_buffers[MAX_SWAP_VIEW_COUNT];
     VkFence wait_fences[MAX_SWAP_VIEW_COUNT];
     u32 curr_frame;
-} gpu_device_d3d11_t;
 
-static gpu_device_d3d11_t _device;
+    // resources
+    gpu_shader_vk_t shaders[GPU_SHADER_POOL_SIZE];
+    gpu_texture_vk_t textures[GPU_TEXTURE_POOL_SIZE];
+    gpu_buffer_vk_t buffers[GPU_BUFFER_POOL_SIZE];
+    gpu_pipeline_vk_t pipelines[GPU_PIPELINE_POOL_SIZE];
+} gpu_device_vk_t;
+
+static gpu_device_vk_t _device;
 
 void vk_create_instance() {
     VkApplicationInfo info = {};
@@ -50,13 +82,13 @@ void vk_create_instance() {
     info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     info.pEngineName = "No Engine";
     info.engineVersion = VK_MAKE_VERSION(1, 1, 0);
-    info.apiVersion = VK_API_VERSION_1_1;
+    info.apiVersion = VK_API_VERSION_1_0;
 
     VkInstanceCreateInfo ins_info = {};
     ins_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     ins_info.pApplicationInfo = &info;
-    const char *extensions[] = { "VK_KHR_swapchain", "VK_KHR_win32_surface" };
-    ins_info.enabledExtensionCount = 1;
+    const char *extensions[] = { "VK_KHR_win32_surface", "VK_KHR_surface" };
+    ins_info.enabledExtensionCount = 2;
     ins_info.ppEnabledExtensionNames = extensions;
 
     if (vkCreateInstance(&ins_info, NULL, &_device.instance) != VK_SUCCESS) {
@@ -68,6 +100,8 @@ void vk_create_instance() {
 void vk_create_surface(os_window_t *window) {
     VkWin32SurfaceCreateInfoKHR info = {};
     info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    info.pNext = NULL;
+    info.flags = 0;
     info.hwnd = window->native_window;
     info.hinstance = GetModuleHandle(NULL);
 
@@ -79,21 +113,19 @@ void vk_create_surface(os_window_t *window) {
 }
 
 void vk_select_physical_device() {
-    u32 device_count = 0;
-    vkEnumeratePhysicalDevices(_device.instance, &device_count, NULL);
-    if (device_count == 0) {
+    u32 gpu_count = 0;
+    vkEnumeratePhysicalDevices(_device.instance, &gpu_count, NULL);
+    if (gpu_count == 0) {
         ULOG_ERROR("failed to find GPUs with Vulkan support.");
     }
 
-    VkPhysicalDevice devices[device_count];
-    vkEnumeratePhysicalDevices(_device.instance, &device_count, devices);
+    VkPhysicalDevice devices[VK_PHYSICAL_DEVICE_TYPE_CPU + 1];
+    vkEnumeratePhysicalDevices(_device.instance, &gpu_count, devices);
 
-    u32 selected_device = 0;
-    // for (uint32_t i = 0; i < device_count; i++) {
-    // }
-    _device.physical_device = devices[selected_device];
+    u32 selected_gpu = 0;
+    _device.gpu = devices[selected_gpu];
 
-    if (_device.physical_device == VK_NULL_HANDLE) {
+    if (_device.gpu == VK_NULL_HANDLE) {
         ULOG_ERROR("failed to find a suitable GPU\n");
     }
 
@@ -108,12 +140,18 @@ void vk_create_logical_device() {
     float queue_riority = 1.0f;
     queue_info.pQueuePriorities = &queue_riority;
 
-    VkDeviceCreateInfo info = {};
+    VkDeviceCreateInfo info = { 0 };
     info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     info.queueCreateInfoCount = 1;
     info.pQueueCreateInfos = &queue_info;
+    info.ppEnabledLayerNames = NULL;
 
-    if (vkCreateDevice(_device.physical_device, &info, NULL, &_device.device) != VK_SUCCESS) {
+    const char *extensions[] = { "VK_KHR_swapchain" };
+    info.enabledExtensionCount = 1;
+    info.ppEnabledExtensionNames = extensions;
+
+    VkResult r = vkCreateDevice(_device.gpu, &info, NULL, &_device.device);
+    if (r != VK_SUCCESS) {
         ULOG_ERROR("failed to create logical device\n");
     }
 
@@ -125,7 +163,7 @@ void vk_create_logical_device() {
 
 void vk_create_swapchain() {
     VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_device.physical_device, _device.surface, &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_device.gpu, _device.surface, &capabilities);
 
     VkSwapchainCreateInfoKHR info = {};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -153,6 +191,19 @@ void vk_create_swapchain() {
 
     _device.swapchain_format = info.imageFormat;
     _device.swapchain_extent = info.imageExtent;
+
+    VkSemaphoreCreateInfo sem_info = {0};
+    sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fence_info = {0};
+    fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (u32 i = 0; i < MAX_SWAP_VIEW_COUNT; ++i) {
+        vkCreateFence(_device.device, &fence_info, NULL, &_device.wait_fences[i]);
+        vkCreateSemaphore(_device.device, &sem_info, NULL, &_device.presend_sem[i]);
+        vkCreateSemaphore(_device.device, &sem_info, NULL, &_device.render_sem[i]);
+    }
 
     ULOG_INFO("vk swapchain created.");
 }
@@ -242,7 +293,11 @@ void gpu_destroy_attachments(gpu_attachments attachments) {}
 void gpu_update_texture(gpu_texture texture, udata data) {}
 void gpu_update_buffer(gpu_buffer buffer, udata data) {}
 
-bool gpu_begin_pass(gpu_pass *pass) { return true; }
+bool gpu_begin_pass(gpu_pass *pass) {
+
+
+    return true;
+}
 void gpu_set_viewport(int x, int y, int width, int height) {}
 void gpu_set_scissor(int x, int y, int width, int height) {}
 void gpu_set_pipeline(gpu_pipeline pipeline) {}
