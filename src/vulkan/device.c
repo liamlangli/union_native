@@ -1,11 +1,14 @@
 #include "gpu/gpu.h"
-#include <minwindef.h>
+
+#if defined(OS_WINDOWS)
+    #include <minwindef.h>
+#endif
+
 #include <vulkan/vulkan_core.h>
 
 #define MAX_SWAP_VIEW_COUNT 3
 
 #if defined(OS_WINDOWS)
-
     #define VK_USE_PLATFORM_WIN32_KHR
 
     #include <vulkan/vulkan.h>

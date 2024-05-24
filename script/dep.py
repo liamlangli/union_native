@@ -54,9 +54,10 @@ def download():
         else:
             print(f"downloading {dep['name']} source")
             run_cmd(f"git clone {dep['git']} {dep_path}")
+        print(dep_path)
 
         # Check if head matched
-        head = subprocess.check_output("git rev-parse HEAD", cwd=dep_path, text=True).strip()
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dep_path, text=True).strip()
         
         if head.startswith(dep['head']):
             print(f"head matched. skip {dep['name']} checkout")
