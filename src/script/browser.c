@@ -193,54 +193,6 @@ JSValue js_canvas_remove_event_listener(JSContext *ctx, JSValueConst _, int argc
     return JS_UNDEFINED;
 }
 
-JSValue js_get_context(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    if (argc < 1)
-        return JS_UNDEFINED;
-    
-    const char *context_name = JS_ToCString(ctx, argv[0]);
-    ustring_view name = ustring_view_str((i8*)context_name);
-    if (!ustring_view_start_with_ustring(name, ustring_STR("webgpu"))) {
-        ULOG_INFO("use webgpu backend.");
-        script_webgpu_setup();
-        browser.backend = webgpu;
-    } else if (ustring_view_start_with_ustring(name, ustring_STR("webgl"))) {
-        ULOG_INFO("use webgl backend.");
-        script_webgl_setup();
-        browser.backend = webgl;
-    } else {
-        ULOG_ERROR("invalid context name: {}", context_name);
-        browser.backend = none;
-    }
-    JS_FreeCString(ctx, context_name);
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue gpu_ctx = JS_GetPropertyStr(ctx, global, "GPUContext");
-    JS_FreeValue(ctx, global);
-    return gpu_ctx;
-}
-
-JSValue js_document_create_element(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue canvas = JS_GetPropertyStr(ctx, global, "canvas");
-    JS_FreeValue(ctx, global);
-    return canvas;
-}
-
-JSValue js_get_element_by_id(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue canvas = JS_GetPropertyStr(ctx, global, "canvas");
-    JS_FreeValue(ctx, global);
-    return canvas;
-}
-
-JSValue js_get_elements_by_tag_name(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    JSValue arr = JS_NewArray(ctx);
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue canvas = JS_GetPropertyStr(ctx, global, "canvas");
-    JS_FreeValue(ctx, global);
-    JS_SetPropertyUint32(ctx, arr, 0, canvas);
-    return arr;
-}
-
 JSValue js_request_animation_frame(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     if (argc < 1)
         return JS_UNDEFINED;
@@ -510,9 +462,6 @@ static const JSCFunctionListEntry js_window_funcs[] = {
 static const JSCFunctionListEntry js_document_proto_funcs[] = {
     JS_CFUNC_DEF("addEventListener", 3, js_document_add_event_listener),
     JS_CFUNC_DEF("removeEventListener", 3, js_document_remove_event_listener),
-    JS_CFUNC_DEF("createElement", 1, js_document_create_element),
-    JS_CFUNC_DEF("getElementById", 1, js_get_element_by_id),
-    JS_CFUNC_DEF("getElementsByTagName", 1, js_get_elements_by_tag_name),
 };
 
 static const JSCFunctionListEntry js_document_funcs[] = {
@@ -542,7 +491,6 @@ static const JSCFunctionListEntry js_performance_funcs[] = {
 static const JSCFunctionListEntry js_canvas_proto_funcs[] = {
     JS_CFUNC_DEF("addEventListener", 3, js_canvas_add_event_listener),
     JS_CFUNC_DEF("removeEventListener", 2, js_canvas_remove_event_listener),
-    JS_CFUNC_DEF("getContext", 1, js_get_context),
     JS_OBJECT_DEF("style", js_style_proto_funcs, count_of(js_style_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
@@ -852,9 +800,4 @@ void script_listeners_cleanup() {
 
 void script_browser_cleanup(void) {
     script_listeners_cleanup();
-    if (browser.backend == webgpu)
-        script_webgpu_cleanup();
-    else if (browser.backend == webgl) {
-        script_webgl_cleanup();
-    }
 }
