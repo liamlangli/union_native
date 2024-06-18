@@ -22,11 +22,9 @@
         {
             "name": "Mac",
             "includePath": [
-                "/usr/local/include",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/quickjs/include",
-                "${workspaceFolder}/third_party/glfw/include",
-                "${workspaceFolder}/third_party/stb"
+                "${workspaceFolder}/third_party/stb",
+                "${workspaceFolder}/third_party/include"
             ],
             "defines": [
                 "OS_MACOS",
@@ -42,7 +40,6 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/**",
                 "${workspaceFolder}/third_party/stb",
                 "${workspaceFolder}/third_party/include"
             ],

@@ -1,7 +1,5 @@
 #include "script/script_context.h"
 #include "script/browser.h"
-#include "script/webgpu.h"
-#include "script/webgl.h"
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"

@@ -3,8 +3,6 @@
 #include "foundation/ustring.h"
 #include "gpu/gpu.h"
 #include "script/api.h"
-#include "script/webgl.h"
-#include "script/webgpu.h"
 
 #include <assert.h>
 #include <quickjs/quickjs-libc.h>
