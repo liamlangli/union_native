@@ -169,19 +169,19 @@ void ui_renderer_init() {
         .depth = { .write_enabled = false, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_NONE },
     });
 
-    _renderer.binding = (gpu_binding){
-        .vertex.textures = {
-            [0] = _renderer.primitive_data_texture,
-        },
-        .fragment.textures = {
-            [0] = ui_font_shared()->font->texture,
-            [1] = _renderer.icon_texture,
-        },
-        .buffers = {
-            [0] = _renderer.index_buffer,
-            [1] = _renderer.uniform_buffer,
-        },
-    };
+    // _renderer.binding = (gpu_binding){
+    //     .vertex.textures = {
+    //         [0] = _renderer.primitive_data_texture,
+    //     },
+    //     .fragment.textures = {
+    //         [0] = ui_font_shared()->font->texture,
+    //         [1] = _renderer.icon_texture,
+    //     },
+    //     .buffers = {
+    //         [0] = _renderer.index_buffer,
+    //         [1] = _renderer.uniform_buffer,
+    //     },
+    // };
 
     _renderer.pipeline = pipeline;
 #endif
@@ -229,7 +229,7 @@ void ui_renderer_render() {
 
     gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     gpu_set_pipeline(_renderer.pipeline);
-    gpu_set_binding(&_renderer.binding);
+    gpu_set_binding(_renderer.binding);
     gpu_draw(0, _renderer.last_index_offset, 1);
 }
 #endif

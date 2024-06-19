@@ -246,6 +246,35 @@ void gpu_update_buffer(gpu_buffer buffer, udata data) {
 #endif
 }
 
+gpu_binding gpu_create_binding(gpu_binding_desc *desc) {
+    // gpu_pipeline_mtl_t mtl_pipeline = _mtl_get_pipeline(pipeline.id);
+    // if (mtl_pipeline.instanced) {
+    //     for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; ++i) {
+    //         if (nil == _state.device.uniform_buffers[i]) {
+    //             _state.device.uniform_buffers[i] = [_state.device.device newBufferWithLength: GPU_UNIFORM_BUFFER_SIZE options: MTLResourceStorageModeManaged];
+    //         }
+    //         [binding->buffers[GPU_VERTEX_BUFFER_COUNT + i] release];
+    //         binding->buffers[GPU_VERTEX_BUFFER_COUNT + i] = _state.device.uniform_buffers[i];
+    //     }
+    // }
+    return (gpu_binding){ .id = 0};
+}
+
+gpu_mesh gpu_create_mesh(gpu_mesh_desc *desc) {
+    // gpu_buffer vertex_buffer = gpu_create_buffer(&desc->vertex_buffer);
+    // gpu_buffer index_buffer = gpu_create_buffer(&desc->index_buffer);
+    // gpu_texture textures[GPU_SHADER_TEXTURE_COUNT];
+    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+    //     if (desc->textures[i].data.length > 0) {
+    //         textures[i] = gpu_create_texture(&desc->textures[i]);
+    //     }
+    // }
+    // gpu_shader shader = gpu_create_shader(&desc->shader);
+    // gpu_pipeline pipeline = gpu_create_pipeline(&desc->pipeline);
+    // gpu_binding binding = gpu_create_binding(&desc->binding);
+    return (gpu_mesh){ .id = 0};
+}
+
 void gpu_mtl_begin_frame(MTKView *view) {
     _state.device.swapchain = (gpu_swapchain_mtl_t) {
         .width = (int) [view drawableSize].width,
@@ -259,49 +288,49 @@ void gpu_mtl_begin_frame(MTKView *view) {
     };
 }
 
-bool gpu_begin_pass(gpu_pass *pass) {
+void gpu_begin_render_pass(gpu_render_pass pass) {
     assert(_state.device.cmd_encoder == nil);
     assert(_state.device.cur_drawable == nil);
 
-    gpu_pass_action action = pass->action;
-    if (nil == _state.device.cmd_buffer) {
-        dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
-        _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
-        [_state.device.cmd_buffer enqueue];
-        [_state.device.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
-            dispatch_semaphore_signal(_state.device.semaphore);
-        }];
-    }
+    // gpu_pass_action action = pass->action;
+    // if (nil == _state.device.cmd_buffer) {
+    //     dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
+    //     _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
+    //     [_state.device.cmd_buffer enqueue];
+    //     [_state.device.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
+    //         dispatch_semaphore_signal(_state.device.semaphore);
+    //     }];
+    // }
     
-    MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
-    gpu_attachments attachments = pass->attachments;
-    if (attachments.id == _mtl_invalid_id) {
-        _state.device.cur_drawable = _state.device.swapchain.drawable;
-        pass_desc.colorAttachments[0].texture = _state.device.cur_drawable.texture;
-        pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
-        pass_desc.colorAttachments[0].loadAction = _mtl_load_action(action.color_action[0].load_action);
-        gpu_color c = action.color_action[0].clear_value;
-        pass_desc.colorAttachments[0].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
+    // MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
+    // gpu_attachments attachments = pass->attachments;
+    // if (attachments.id == _mtl_invalid_id) {
+    //     _state.device.cur_drawable = _state.device.swapchain.drawable;
+    //     pass_desc.colorAttachments[0].texture = _state.device.cur_drawable.texture;
+    //     pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    //     pass_desc.colorAttachments[0].loadAction = _mtl_load_action(action.color_action[0].load_action);
+    //     gpu_color c = action.color_action[0].clear_value;
+    //     pass_desc.colorAttachments[0].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
     
-        if (_state.device.swapchain.depth_stencil_texture) {
-            pass_desc.depthAttachment.texture = _state.device.swapchain.depth_stencil_texture;
-            pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
-            pass_desc.depthAttachment.loadAction = _mtl_load_action(action.depth_action.load_action);
-            pass_desc.depthAttachment.clearDepth = action.depth_action.clear_value;
-            if (_mtl_stencil_enabled_format(_state.device.swapchain.depth_stencil_format)) {
-                pass_desc.stencilAttachment.texture = _state.device.swapchain.depth_stencil_texture;
-                pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
-                pass_desc.stencilAttachment.loadAction = _mtl_load_action(action.stencil_action.load_action);
-                pass_desc.stencilAttachment.clearStencil = action.stencil_action.clear_value;
-            }
-        }
-    }
+    //     if (_state.device.swapchain.depth_stencil_texture) {
+    //         pass_desc.depthAttachment.texture = _state.device.swapchain.depth_stencil_texture;
+    //         pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
+    //         pass_desc.depthAttachment.loadAction = _mtl_load_action(action.depth_action.load_action);
+    //         pass_desc.depthAttachment.clearDepth = action.depth_action.clear_value;
+    //         if (_mtl_stencil_enabled_format(_state.device.swapchain.depth_stencil_format)) {
+    //             pass_desc.stencilAttachment.texture = _state.device.swapchain.depth_stencil_texture;
+    //             pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
+    //             pass_desc.stencilAttachment.loadAction = _mtl_load_action(action.stencil_action.load_action);
+    //             pass_desc.stencilAttachment.clearStencil = action.stencil_action.clear_value;
+    //         }
+    //     }
+    // }
 
-    _state.device.cmd_encoder = [_state.device.cmd_buffer renderCommandEncoderWithDescriptor: pass_desc];
-    if (nil == _state.device.cmd_encoder) {
-        return false;
-    }
-    return true;
+    // _state.device.cmd_encoder = [_state.device.cmd_buffer renderCommandEncoderWithDescriptor: pass_desc];
+    // if (nil == _state.device.cmd_encoder) {
+    //     return false;
+    // }
+    // return true;
 }
 
 void gpu_end_pass() {
@@ -546,30 +575,30 @@ void gpu_set_pipeline(gpu_pipeline pipeline) {
     }
 }
 
-void gpu_set_binding(const gpu_binding* binding) {
-    assert(binding);
-    for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
-        if (binding->buffers[i].id == _mtl_invalid_id) break;
-        gpu_buffer_mtl_t buffer = _mtl_get_buffer(binding->buffers[i].id);
-        NSUInteger offset = (NSUInteger)binding->buffer_offsets[i];
-        [_state.device.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
-    }
+void gpu_set_binding(gpu_binding binding) {
+    // assert(binding);
+    // for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
+    //     if (binding->buffers[i].id == _mtl_invalid_id) break;
+    //     gpu_buffer_mtl_t buffer = _mtl_get_buffer(binding->buffers[i].id);
+    //     NSUInteger offset = (NSUInteger)binding->buffer_offsets[i];
+    //     [_state.device.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
+    // }
 
-    if (binding->index_buffer.id != _mtl_invalid_id) {
-        _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
-    }
+    // if (binding->index_buffer.id != _mtl_invalid_id) {
+    //     _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
+    // }
 
-    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
-        if (binding->vertex.textures[i].id == _mtl_invalid_id) break;
-        gpu_texture_mtl_t texture = _mtl_get_texture(binding->vertex.textures[i].id);
-        [_state.device.cmd_encoder setVertexTexture: texture.texture atIndex: i];
-    }
+    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+    //     if (binding->vertex.textures[i].id == _mtl_invalid_id) break;
+    //     gpu_texture_mtl_t texture = _mtl_get_texture(binding->vertex.textures[i].id);
+    //     [_state.device.cmd_encoder setVertexTexture: texture.texture atIndex: i];
+    // }
 
-    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
-        if (binding->fragment.textures[i].id == _mtl_invalid_id) break;
-        gpu_texture_mtl_t texture = _mtl_get_texture(binding->fragment.textures[i].id);
-        [_state.device.cmd_encoder setFragmentTexture: texture.texture atIndex: i];
-    }
+    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+    //     if (binding->fragment.textures[i].id == _mtl_invalid_id) break;
+    //     gpu_texture_mtl_t texture = _mtl_get_texture(binding->fragment.textures[i].id);
+    //     [_state.device.cmd_encoder setFragmentTexture: texture.texture atIndex: i];
+    // }
 }
 
 void gpu_draw(int base, int count, int instance_count) {

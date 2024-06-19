@@ -10,25 +10,25 @@
 void on_launch(os_window_t* window) {
     logger_init(logger_global());
     script_context_init(window);
-    ustring_view uri = ustring_view_from_ustring(ustring_STR("public/simple.js"));
+    ustring_view uri = ustring_view_from_ustring(ustring_STR("public/main.js"));
     script_eval_uri(uri);
 }
 
-static gpu_pass pass = {
-    .action = {
-        .color_action = {
-            [0] = {
-                .clear_value = (gpu_color){.r=0.21, .g=0.212, .b=0.223, .a=1}
-            }
-        },
-        .depth_action = {
-            .store_action = STORE_ACTION_DONTCARE
-        }
-    }
-};
+// static gpu_pass pass = {
+//     .action = {
+//         .color_action = {
+//             [0] = {
+//                 .clear_value = (gpu_color){.r=0.21, .g=0.212, .b=0.223, .a=1}
+//             }
+//         },
+//         .depth_action = {
+//             .store_action = STORE_ACTION_DONTCARE
+//         }
+//     }
+// };
 
 void on_frame(os_window_t* window) {
-    gpu_begin_pass(&pass);
+    // gpu_begin_pass(&pass);
     script_context_loop_tick();
     gpu_end_pass();
     gpu_commit();

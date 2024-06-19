@@ -17,7 +17,9 @@ typedef struct gpu_sampler { u32 id; } gpu_sampler;
 typedef struct gpu_buffer { u32 id; } gpu_buffer;
 typedef struct gpu_shader { u32 id; } gpu_shader;
 typedef struct gpu_pipeline { u32 id; } gpu_pipeline;
-typedef struct gpu_attachments { u32 id; } gpu_attachments;
+typedef struct gpu_binding { u32 id; } gpu_binding;
+typedef struct gpu_render_pass { u32 id; } gpu_render_pass;
+typedef struct gpu_mesh { u32 id; } gpu_mesh;
 typedef struct gpu_color { f32 r, g, b, a; } gpu_color;
 
 typedef struct gpu_texture_desc {
@@ -179,14 +181,30 @@ typedef struct gpu_stage_binding {
     gpu_sampler samplers[GPU_SHADER_SAMPLER_COUNT];
 } gpu_stage_binding;
 
-typedef struct gpu_binding {
-    gpu_buffer buffers[GPU_ATTRIBUTE_COUNT];
-    int buffer_offsets[GPU_ATTRIBUTE_COUNT];
+typedef struct gpu_binding_texture_desc {
+    gpu_texture texture;
+    gpu_sampler sampler;
+} gpu_binding_texture_desc;
+
+typedef struct gpu_binding_desc {
+    gpu_pipeline pipeline;
+    gpu_buffer buffers[GPU_SHADER_BUFFER_COUNT];
+    u32 buffer_offsets[GPU_SHADER_BUFFER_COUNT];
+    gpu_binding_texture_desc textures[GPU_SHADER_TEXTURE_COUNT];
+    u32 group;
+    ustring label;
+} gpu_binding_desc;
+
+typedef struct gpu_mesh_desc {
+    gpu_buffer buffers[GPU_VERTEX_BUFFER_COUNT];
+    u32 buffer_offsets[GPU_VERTEX_BUFFER_COUNT];
+    ustring buffers_names[GPU_VERTEX_BUFFER_COUNT];
+    gpu_pipeline pipeline;
     gpu_buffer index_buffer;
-    int index_buffer_offset;
-    gpu_stage_binding vertex;
-    gpu_stage_binding fragment;
-} gpu_binding;
+    u32 index_buffer_offset;
+    gpu_index_type index_type;
+    ustring label;
+} gpu_mesh_desc;
 
 typedef struct gpu_color_attachment_action {
     gpu_load_action load_action;
@@ -212,23 +230,45 @@ typedef struct gpu_pass_action {
     gpu_stencil_attachment_action stencil_action;
 } gpu_pass_action;
 
-typedef struct gpu_pass {
-    gpu_pass_action action;
-    gpu_attachments attachments;
-} gpu_pass;
-
 typedef struct gpu_attachment_desc {
     gpu_texture texture;
     int mip_level;
     int slice;
 } gpu_attachment_desc;
 
-typedef struct gpu_attachments_desc {
-    gpu_attachment_desc colors[GPU_ATTACHMENT_COUNT];
-    gpu_attachment_desc depth;
-    gpu_attachment_desc stencil;
+typedef struct gpu_render_pass_color_attachment {
+    gpu_attachment_desc desc;
+    gpu_load_action load_action;
+    gpu_store_action store_action;
+    gpu_color clear_value;
+} gpu_render_pass_color_attachment;
+
+typedef struct gpu_render_pass_depth_stencil_attachment {
+    gpu_attachment_desc desc;
+    gpu_load_action load_action;
+    gpu_store_action store_action;
+    f32 clear_value;
+    bool private;
+} gpu_render_pass_depth_stencil_attachment;
+
+typedef struct gpu_render_pass_desc {
+    int width;
+    int height;
+    gpu_render_pass_color_attachment colors[GPU_ATTACHMENT_COUNT];
+    gpu_render_pass_depth_stencil_attachment depth;
+    gpu_render_pass_depth_stencil_attachment stencil;
+    bool screen;
     ustring label;
-} gpu_attachments_desc;
+    u32 id;
+} gpu_render_pass_desc;
+
+typedef struct gpu_pipeline_reflection {
+    gpu_vertex_layout_state layout;
+    gpu_uniform_desc global_uniforms[GPU_BLOCK_UNIFORM_COUNT];
+    gpu_shader_uniform_block_desc uniform_blocks[GPU_BLOCK_UNIFORM_COUNT];
+    gpu_shader_texture_desc textures[GPU_SHADER_TEXTURE_COUNT];
+    gpu_index_type index_type;
+} gpu_pipeline_reflection;
 
 bool gpu_request_device(os_window_t *window);
 void gpu_destroy_device(void);
@@ -238,23 +278,29 @@ gpu_sampler gpu_create_sampler(gpu_sampler_desc *desc);
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc);
 gpu_shader gpu_create_shader(gpu_shader_desc *desc);
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc);
-gpu_attachments gpu_create_attachments(gpu_attachments_desc *desc);
+gpu_binding gpu_create_binding(gpu_binding_desc *desc);
+gpu_mesh gpu_create_mesh(gpu_mesh_desc *desc);
+gpu_render_pass gpu_create_render_pass(gpu_render_pass_desc *desc);
 
 void gpu_destroy_texture(gpu_texture texture);
 void gpu_destroy_sampler(gpu_sampler sampler);
 void gpu_destroy_buffer(gpu_buffer buffer);
 void gpu_destroy_shader(gpu_shader shader);
 void gpu_destroy_pipeline(gpu_pipeline pipeline);
-void gpu_destroy_attachments(gpu_attachments attachments);
+void gpu_destroy_binding(gpu_binding binding);
+void gpu_destroy_mesh(gpu_mesh mesh);
+void gpu_destroy_render_pass(gpu_render_pass pass);
 
+gpu_pipeline_reflection gpu_pipeline_get_reflection(gpu_pipeline pipeline);
 void gpu_update_texture(gpu_texture texture, udata data);
 void gpu_update_buffer(gpu_buffer buffer, udata data);
 
-bool gpu_begin_pass(gpu_pass *pass);
+void gpu_begin_render_pass(gpu_render_pass pass);
 void gpu_set_viewport(int x, int y, int width, int height);
 void gpu_set_scissor(int x, int y, int width, int height);
 void gpu_set_pipeline(gpu_pipeline pipeline);
-void gpu_set_binding(const gpu_binding* binding);
+void gpu_set_binding(gpu_binding binding);
+void gpu_set_mesh(gpu_mesh mesh);
 void gpu_draw(int base, int count, int instance_count);
 void gpu_end_pass(void);
 void gpu_commit(void);

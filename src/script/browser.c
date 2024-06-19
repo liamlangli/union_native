@@ -353,7 +353,7 @@ static JSValue _image_set_src(JSContext *ctx, JSValueConst this_val, JSValueCons
         if (strncmp(path, "http", 4) == 0) {
             assert(false);
         } else {
-            image->data = io_load_image(ustring_str((i8*)path), &image->width, &image->height, &image->channel, 4);
+            image->data = io_load_image(ustring_str((i8 *)path), &image->width, &image->height, &image->channel, 4);
         }
     }
 
@@ -363,16 +363,14 @@ static JSValue _image_set_src(JSContext *ctx, JSValueConst this_val, JSValueCons
         return JS_EXCEPTION;
     }
 
-    js_scope* scope = (js_scope*)image->onload;
+    js_scope *scope = (js_scope *)image->onload;
     if (JS_IsFunction(script_context_internal(), scope->func))
         JS_Call(script_context_internal(), scope->func, this_val, 1, &this_val);
 
     return JS_UNDEFINED;
 }
 
-static JSValue _image_get_src(JSContext *ctx, JSValueConst this_val) {
-    return JS_UNDEFINED;
-}
+static JSValue _image_get_src(JSContext *ctx, JSValueConst this_val) { return JS_UNDEFINED; }
 
 static JSValue _image_magic_set_func(JSContext *ctx, JSValueConst this_val, JSValueConst val, int magic) {
     return JS_UNDEFINED;
@@ -381,12 +379,12 @@ static JSValue _image_magic_set_func(JSContext *ctx, JSValueConst this_val, JSVa
 static JSValue _image_magic_get_func(JSContext *ctx, JSValueConst this_val, int magic) {
     js_image *image = JS_GetOpaque2(ctx, this_val, js_image_class_id);
     switch (magic) {
-        case 0:
-            return JS_NewInt32(ctx, image->width);
-        case 1:
-            return JS_NewInt32(ctx, image->height);
-        default:
-            return JS_UNDEFINED;
+    case 0:
+        return JS_NewInt32(ctx, image->width);
+    case 1:
+        return JS_NewInt32(ctx, image->height);
+    default:
+        return JS_UNDEFINED;
     }
     return JS_UNDEFINED;
 }
@@ -411,7 +409,7 @@ static JSValue js_get_image_onload(JSContext *ctx, JSValueConst this_val) {
 }
 
 js_image *js_image_from_opaque(void *opaque) {
-    JSValue val = *(JSValue*)opaque;
+    JSValue val = *(JSValue *)opaque;
     return JS_GetOpaque(val, js_image_class_id);
 }
 
@@ -754,9 +752,11 @@ void script_browser_setup(void) {
     JS_SetConstructor(ctx, weak_ref_ctor, weak_ref_proto);
     JS_SetPropertyStr(ctx, global, "WeakRef", weak_ref_ctor);
 
-    JSValue navigator = JS_GetPropertyStr(ctx, global, "navigator");
+    JSValue navigator = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, navigator, "userAgent", JS_NewString(ctx, USER_AGENT));
-    JS_FreeValue(ctx, navigator);
+    JSValue native = JS_GetPropertyStr(ctx, global, "native_adapter");
+    JS_SetPropertyStr(ctx, navigator, "native_adapter", native);
+    JS_SetPropertyStr(ctx, global, "navigator", navigator);
 
     JSValue localStorage = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, localStorage, js_local_storage_proto_funcs, count_of(js_local_storage_proto_funcs));
@@ -798,6 +798,4 @@ void script_listeners_cleanup() {
     }
 }
 
-void script_browser_cleanup(void) {
-    script_listeners_cleanup();
-}
+void script_browser_cleanup(void) { script_listeners_cleanup(); }

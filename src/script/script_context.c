@@ -1,4 +1,5 @@
 #include "script/script_context.h"
+#include "script/script_gpu.h"
 #include "script/browser.h"
 #include "foundation/global.h"
 #include "foundation/ustring.h"
@@ -93,11 +94,13 @@ void script_context_destroy(void) {
 
 void script_context_cleanup(void) {
     script_browser_cleanup();
+    script_gpu_cleanup();
     script_context_destroy();
 }
 
 void script_context_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
+    script_gpu_setup();
     script_browser_setup();
 }
 
