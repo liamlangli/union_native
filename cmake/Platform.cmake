@@ -10,6 +10,7 @@ if(APPLE)
         OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    # enable_language(Swift)
     message(STATUS "CMAKE_OSX_SYSROOT: ${CMAKE_OSX_SYSROOT}")
 endif()
 

@@ -7,28 +7,30 @@
 #include <stb_ds.h>
 #include <uv.h>
 
+
+static gpu_render_pass screen_pass;
+
 void on_launch(os_window_t* window) {
     logger_init(logger_global());
     script_context_init(window);
     ustring_view uri = ustring_view_from_ustring(ustring_STR("public/main.js"));
     script_eval_uri(uri);
+    
+    gpu_render_pass_desc desc;
+    desc.width = window->width;
+    desc.height = window->height;
+    desc.colors[0].clear_value = (gpu_color){.r = 0.1, .g = 0.12, .b = 0.13, .a = 1.0 };
+    desc.colors[0].load_action = LOAD_ACTION_CLEAR;
+    desc.colors[0].store_action = STORE_ACTION_STORE;
+    desc.depth.clear_value = 1;
+    desc.depth.load_action = LOAD_ACTION_CLEAR;
+    desc.depth.store_action = STORE_ACTION_DONTCARE;
+    desc.screen = true;
+    screen_pass = gpu_create_render_pass(&desc);
 }
 
-// static gpu_pass pass = {
-//     .action = {
-//         .color_action = {
-//             [0] = {
-//                 .clear_value = (gpu_color){.r=0.21, .g=0.212, .b=0.223, .a=1}
-//             }
-//         },
-//         .depth_action = {
-//             .store_action = STORE_ACTION_DONTCARE
-//         }
-//     }
-// };
-
 void on_frame(os_window_t* window) {
-    // gpu_begin_pass(&pass);
+    gpu_begin_render_pass(screen_pass);
     script_context_loop_tick();
     gpu_end_pass();
     gpu_commit();

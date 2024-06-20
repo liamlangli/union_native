@@ -1,9 +1,9 @@
+#include "foundation/global.h"
 #include "foundation/udata.h"
 #include "gpu/gpu.h"
 #include "foundation/logger.h"
 #include "gpu/gpu_const.h"
 
-// see https://clang.llvm.org/docs/LanguageExtensions.html#automatic-reference-counting
 #include <Foundation/Foundation.h>
 #include <TargetConditionals.h>
 #include <AvailabilityMacros.h>
@@ -14,27 +14,53 @@
 #import <QuartzCore/CoreAnimation.h> // needed for CAMetalDrawable
 #import "metal.h"
 
-typedef struct gpu_shader_mtl_t {
+typedef struct gpu_shader_mtl {
     id<MTLLibrary> vertex_lib;
     id<MTLLibrary> fragment_lib;
     id<MTLFunction> vertex_func;
     id<MTLFunction> fragment_func;
-} gpu_shader_mtl_t;
+} gpu_shader_mtl;
 
-typedef struct gpu_texture_mtl_t {
+typedef struct gpu_texture_mtl {
     id<MTLTexture> texture;
     NSUInteger width, height, depth;
     gpu_pixel_format format;
     gpu_texture_type type;
-} gpu_texture_mtl_t;
+} gpu_texture_mtl;
 
-typedef struct gpu_buffer_mtl_t {
+typedef struct gpu_sampler_mtl {
+    id<MTLSamplerState> sampler;
+    gpu_filter min_filter, mag_filter, mip_filter;
+    gpu_wrap wrap_u, wrap_v, wrap_w;
+} gpu_sampler_mtl;
+
+typedef struct gpu_buffer_mtl {
     id<MTLBuffer> buffer;
-} gpu_buffer_mtl_t;
+} gpu_buffer_mtl;
 
-typedef struct gpu_pipeline_mtl_t {
+typedef struct gpu_mesh_mtl {
+    gpu_buffer buffers[GPU_SHADER_BUFFER_COUNT];
+    u32 buffer_offsets[GPU_SHADER_BUFFER_COUNT];
+    gpu_buffer index_buffer;
+    u32 index_buffer_offset;
+} gpu_mesh_mtl;
+
+typedef struct gpu_binding_mtl {
+    gpu_buffer vertex_buffers[GPU_SHADER_BUFFER_COUNT];
+    gpu_buffer fragment_buffers[GPU_SHADER_BUFFER_COUNT];
+    gpu_texture vertex_textures[GPU_SHADER_TEXTURE_COUNT];
+    gpu_texture fragment_textures[GPU_SHADER_TEXTURE_COUNT];
+} gpu_binding_mtl;
+
+typedef struct gpu_render_pass_mtl {
+    MTLRenderPassDescriptor* desc;
+    bool screen;
+} gpu_render_pass_mtl;
+
+typedef struct gpu_pipeline_mtl {
     id<MTLRenderPipelineState> pso;
     id<MTLDepthStencilState> dso;
+    MTLRenderPipelineReflection* reflection;
     bool instanced, indexed;
 
     MTLPrimitiveType primitive_type;
@@ -43,92 +69,56 @@ typedef struct gpu_pipeline_mtl_t {
     MTLWinding winding;
     MTLPixelFormat depth_stencil_format;
     u32 stencil_ref;
-} gpu_pipeline_mtl_t;
+} gpu_pipeline_mtl;
 
-typedef struct gpu_pass_mtl_t {
+typedef struct gpu_pass_mtl {
     int width, height;
-} gpu_pass_mtl_t;
+} gpu_pass_mtl;
 
-typedef struct gpu_swapchain_mtl_t {
+typedef struct gpu_swapchain_mtl {
     int width, height, sample_count;
     gpu_pixel_format color_format;
     gpu_pixel_format depth_stencil_format;
     id<CAMetalDrawable> drawable;
     id<MTLTexture> color_texture;
     id<MTLTexture> depth_stencil_texture;
-} gpu_swapchain_mtl_t;
+} gpu_swapchain_mtl;
 
-typedef struct gpu_device_mtl_t {
-    dispatch_semaphore_t semaphore;
-    int frame_index, frame_swap_count;
-    gpu_swapchain_mtl_t swapchain;
-
+typedef struct gpu_device_mtl {
     id<MTLDevice> device;
-    id<MTLHeap> heap;
+} gpu_device_mtl;
+
+typedef struct gpu_state_mtl {
+    bool valid;
+    int frame_index;
+    gpu_device_mtl device;
+    dispatch_semaphore_t semaphore;
+
+    gpu_swapchain_mtl swapchain;
+
+    gpu_pipeline_mtl cur_pipeline;
+    gpu_render_pass_mtl cur_render_pass;
+    gpu_mesh_mtl cur_mesh;
+    
     id<MTLCommandQueue> cmd_queue;
     id<MTLCommandBuffer> cmd_buffer;
     id<MTLRenderCommandEncoder> cmd_encoder;
     id<CAMetalDrawable> cur_drawable;
-    id<MTLBuffer> uniform_buffers[GPU_SWAP_BUFFER_COUNT];
+    
+    gpu_shader_mtl *shaders;
+    gpu_texture_mtl *textures;
+    gpu_sampler_mtl *samplers;
+    gpu_buffer_mtl *buffers;
+    gpu_pipeline_mtl *pipelines;
+    gpu_binding_mtl *bindings;
+    gpu_mesh_mtl *meshes;
+    gpu_render_pass_mtl *render_passes;
+} gpu_state_mtl;
 
-    gpu_shader_mtl_t shaders[GPU_SHADER_POOL_SIZE];
-    gpu_texture_mtl_t textures[GPU_TEXTURE_POOL_SIZE];
-    gpu_buffer_mtl_t buffers[GPU_BUFFER_POOL_SIZE];
-    gpu_pipeline_mtl_t pipelines[GPU_PIPELINE_POOL_SIZE];
-} gpu_device_mtl_t;
-
-typedef struct gpu_state_mtl_t {
-    bool valid;
-    int frame_index;
-    gpu_device_mtl_t device;
-
-    gpu_pipeline_mtl_t cur_pipeline;
-    gpu_pass_mtl_t cur_pass;
-    gpu_buffer_mtl_t cur_index_buffer;
-} gpu_state_mtl_t;
-
-static gpu_state_mtl_t _state;
-
-#define _mtl_invalid_id 0
-static int _mtl_shader_id = 1;
-static int _mtl_texture_id = 1;
-static int _mtl_buffer_id = 1;
-static int _mtl_pipeline_id = 1;
-
-int _mtl_add_texture(gpu_texture_mtl_t texture) {
-    int id = _mtl_texture_id++;
-    _state.device.textures[id] = texture;
-    return id;
-}
-
-gpu_texture_mtl_t _mtl_get_texture(int id) { return _state.device.textures[id]; }
-
-int _mtl_add_buffer(gpu_buffer_mtl_t buffer) {
-    int id = _mtl_buffer_id++;
-    _state.device.buffers[id] = buffer;
-    return id;
-}
-
-gpu_buffer_mtl_t _mtl_get_buffer(int id) { return _state.device.buffers[id]; }
-
-int _mtl_add_shader(gpu_shader_mtl_t shader) {
-    int id = _mtl_shader_id++;
-    _state.device.shaders[id] = shader;
-    return id;
-}
-
-gpu_shader_mtl_t _mtl_get_shader(int id) { return _state.device.shaders[id]; }
-
-int _mtl_add_pipeline(gpu_pipeline_mtl_t pipeline) {
-    int id = _mtl_pipeline_id++;
-    _state.device.pipelines[id] = pipeline;
-    return id;
-}
-
-gpu_pipeline_mtl_t _mtl_get_pipeline(int id) { return _state.device.pipelines[id]; }
+static gpu_state_mtl _state;
 
 bool gpu_request_device(os_window_t *window) {
-    _state.device.semaphore = dispatch_semaphore_create(GPU_SWAP_BUFFER_COUNT);
+    _state.semaphore = dispatch_semaphore_create(GPU_SWAP_BUFFER_COUNT);
     _state.device.device = MTLCreateSystemDefaultDevice();
 
     if (nil == _state.device.device) {
@@ -136,38 +126,30 @@ bool gpu_request_device(os_window_t *window) {
         return false;
     }
 
-    uint slot_count = GPU_SWAP_BUFFER_COUNT * (
-        GPU_BUFFER_POOL_SIZE + 
-        GPU_TEXTURE_POOL_SIZE + 
-        GPU_PIPELINE_POOL_SIZE +
-        GPU_SHADER_POOL_SIZE + 
-        GPU_ATTACHMENTS_POOL_SIZE
-    );
+    _state.cmd_queue = [_state.device.device newCommandQueue];
+    _state.cmd_buffer = nil;
+    _state.cmd_encoder = nil;
+    _state.cur_drawable = nil;
+    _state.frame_index = 0;
+        
+    arrpush(_state.buffers, (gpu_buffer_mtl){});
+    arrpush(_state.textures, (gpu_texture_mtl){});
+    arrpush(_state.samplers, (gpu_sampler_mtl){});
+    arrpush(_state.shaders, (gpu_shader_mtl){});
+    arrpush(_state.pipelines, (gpu_pipeline_mtl){});
+    arrpush(_state.render_passes, (gpu_render_pass_mtl){});
+    arrpush(_state.meshes, (gpu_mesh_mtl){});
+    arrpush(_state.bindings, (gpu_binding_mtl){});
 
-    _state.device.heap = nil;
-    _state.device.cmd_queue = [_state.device.device newCommandQueue];
-    _state.device.cmd_buffer = nil;
-    _state.device.cmd_encoder = nil;
-    _state.device.cur_drawable = nil;
-    _state.device.frame_index = 0;
-    _state.device.frame_swap_count = GPU_SWAP_BUFFER_COUNT;
-    for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; i++) {
-        _state.device.uniform_buffers[i] = nil;
-    }
     return true;
 }
 
 void gpu_destroy_device() {
-    for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; i++) {
-        if (_state.device.uniform_buffers[i]) {
-            [_state.device.uniform_buffers[i] release];
-        }
-    }
-    [_state.device.cmd_encoder release];
-    [_state.device.cmd_buffer release];
-    [_state.device.cmd_queue release];
+    [_state.cmd_encoder release];
+    [_state.cmd_buffer release];
+    [_state.cmd_queue release];
     [_state.device.device release];
-    dispatch_release(_state.device.semaphore);
+    dispatch_release(_state.semaphore);
 }
 
 gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
@@ -185,7 +167,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     mtl_desc.usage = MTLTextureUsageShaderRead;
 
     id<MTLTexture> texture = [_state.device.device newTextureWithDescriptor: mtl_desc];
-    gpu_texture_mtl_t mtl_texture = (gpu_texture_mtl_t){
+    gpu_texture_mtl mtl_texture = (gpu_texture_mtl){
         .texture = texture,
         .width = mtl_desc.width,
         .height = mtl_desc.height,
@@ -193,7 +175,10 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
         .format = desc->format,
         .type = desc->type
     };
-    gpu_texture result = { .id = _mtl_add_texture(mtl_texture) };
+    
+    u32 _id = (u32)arrlen(_state.textures);
+    arrpush(_state.textures, mtl_texture);
+    gpu_texture result = { .id = _id };
     
     if (desc->data.length > 0) {
         gpu_update_texture(result, desc->data);
@@ -203,7 +188,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
 }
 
 void gpu_update_texture(gpu_texture texture, udata data) {
-    gpu_texture_mtl_t mtl_texture = _mtl_get_texture(texture.id);
+    gpu_texture_mtl mtl_texture = _state.textures[texture.id];
     int width = (int)mtl_texture.width;
     int height = (int)mtl_texture.height;
     gpu_pixel_format format = mtl_texture.format;
@@ -234,49 +219,154 @@ void gpu_update_texture(gpu_texture texture, udata data) {
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
     assert(desc->size > 0);
     id<MTLBuffer> buffer = [_state.device.device newBufferWithLength: desc->size options: MTLResourceStorageModeManaged];
-    gpu_buffer_mtl_t mtl_buffer = (gpu_buffer_mtl_t){ .buffer = buffer };
-    return (gpu_buffer){ .id = _mtl_add_buffer(mtl_buffer) };
+    gpu_buffer_mtl mtl_buffer = (gpu_buffer_mtl){ .buffer = buffer };
+    u32 _id = (u32)arrlen(_state.buffers);
+    arrput(_state.buffers, mtl_buffer);
+    return (gpu_buffer){ .id = _id };
 }
 
 void gpu_update_buffer(gpu_buffer buffer, udata data) {
-    gpu_buffer_mtl_t mtl_buffer = _mtl_get_buffer(buffer.id);
+    gpu_buffer_mtl mtl_buffer = _state.buffers[buffer.id];
     memcpy([mtl_buffer.buffer contents], data.data, data.length);
 #if defined(OS_MACOS)
     [mtl_buffer.buffer didModifyRange: NSMakeRange(0, data.length)];
 #endif
 }
 
+bool ustring_match(ustring a, NSString *b) {
+    if (a.length != b.length) return false;
+    return strncmp(a.data, [b UTF8String], a.length) == 0;
+}
+
+i32 get_parameter_index(ustring a, MTLRenderPipelineReflection *reflection) {
+    for (u32 i = 0; i < reflection.vertexBindings.count; ++i) {
+        MTLBinding *binding = reflection.vertexBindings[i];
+        if (ustring_match(a, binding.name)) {
+            return i + 1;
+        }
+    }
+    for (u32 i = 0; i < reflection.vertexBindings.count; ++i) {
+        MTLBinding *binding = reflection.vertexBindings[i];
+        if (ustring_match(a, binding.name)) {
+            return - (i + 1);
+        }
+    }
+    return 0;
+}
+
 gpu_binding gpu_create_binding(gpu_binding_desc *desc) {
-    // gpu_pipeline_mtl_t mtl_pipeline = _mtl_get_pipeline(pipeline.id);
-    // if (mtl_pipeline.instanced) {
-    //     for (int i = 0; i < GPU_SWAP_BUFFER_COUNT; ++i) {
-    //         if (nil == _state.device.uniform_buffers[i]) {
-    //             _state.device.uniform_buffers[i] = [_state.device.device newBufferWithLength: GPU_UNIFORM_BUFFER_SIZE options: MTLResourceStorageModeManaged];
-    //         }
-    //         [binding->buffers[GPU_VERTEX_BUFFER_COUNT + i] release];
-    //         binding->buffers[GPU_VERTEX_BUFFER_COUNT + i] = _state.device.uniform_buffers[i];
-    //     }
-    // }
-    return (gpu_binding){ .id = 0};
+    gpu_binding_mtl _binding = {0};
+    gpu_pipeline_mtl pipeline = _state.pipelines[desc->pipeline.id];
+
+    MTLRenderPipelineReflection *reflection = pipeline.reflection;
+
+    for (i32 i = 0; GPU_SHADER_BUFFER_COUNT; ++i) {
+        if (desc->buffers[i].id == 0) break;
+        const gpu_buffer_state *buffer_state = &desc->buffers[i];
+        i32 index = get_parameter_index(buffer_state->name, reflection);
+        if (index == 0) continue;
+        if (index > 0) {
+            _binding.vertex_buffers[index - 1] = buffer_state->buffer;
+        } else {
+            _binding.fragment_buffers[-index - 1] = buffer_state->buffer;
+        }
+    }
+
+    for (i32 i = 0; GPU_SHADER_TEXTURE_COUNT; ++i) {
+        if (desc->textures[i].id == 0) break;
+        const gpu_texture_state *texture_state = &desc->textures[i];
+        i32 index = get_parameter_index(texture_state->name, reflection);
+        if (index == 0) continue;
+        if (index > 0) {
+            _binding.vertex_textures[index - 1] = texture_state->texture;
+        } else {
+            _binding.fragment_textures[-index - 1] = texture_state->texture;
+        }
+    }
+
+    u32 _id = (u32)arrlen(_state.bindings);
+    arrput(_state.bindings, _binding);
+    return (gpu_binding){ .id = _id };
 }
 
 gpu_mesh gpu_create_mesh(gpu_mesh_desc *desc) {
-    // gpu_buffer vertex_buffer = gpu_create_buffer(&desc->vertex_buffer);
-    // gpu_buffer index_buffer = gpu_create_buffer(&desc->index_buffer);
-    // gpu_texture textures[GPU_SHADER_TEXTURE_COUNT];
-    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
-    //     if (desc->textures[i].data.length > 0) {
-    //         textures[i] = gpu_create_texture(&desc->textures[i]);
-    //     }
-    // }
-    // gpu_shader shader = gpu_create_shader(&desc->shader);
-    // gpu_pipeline pipeline = gpu_create_pipeline(&desc->pipeline);
-    // gpu_binding binding = gpu_create_binding(&desc->binding);
-    return (gpu_mesh){ .id = 0};
+    gpu_mesh_mtl _mesh = {0};
+    
+    for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
+        gpu_buffer buffer = desc->buffers[i];
+        if (buffer.id == 0) break;
+        _mesh.buffers[i] = buffer;
+        _mesh.buffer_offsets[i] = desc->buffer_offsets[i];
+    }
+
+    if (desc->index_buffer.id != 0) {
+        _mesh.index_buffer = desc->index_buffer;
+        _mesh.index_buffer_offset = desc->index_buffer_offset;
+    }
+    
+    u32 _id = (u32)arrlen(_state.meshes);
+    arrput(_state.meshes, _mesh);
+    return (gpu_mesh){ .id = _id };
+}
+
+gpu_render_pass gpu_create_render_pass(gpu_render_pass_desc *desc) {
+    gpu_render_pass_mtl _pass;
+    if (desc->screen) {
+        MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor new];
+        _state.cur_drawable = _state.swapchain.drawable;
+        pass_desc.colorAttachments[0].texture = _state.cur_drawable.texture;
+        pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+        pass_desc.colorAttachments[0].loadAction = _mtl_load_action(desc->colors[0].load_action);
+        gpu_color c = desc->colors[0].clear_value;
+        pass_desc.colorAttachments[0].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
+    
+        if (_state.swapchain.depth_stencil_texture) {
+            pass_desc.depthAttachment.texture = _state.swapchain.depth_stencil_texture;
+            pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
+            pass_desc.depthAttachment.loadAction = _mtl_load_action(desc->depth.load_action);
+            pass_desc.depthAttachment.clearDepth = desc->depth.clear_value;
+            if (_mtl_stencil_enabled_format(_state.swapchain.depth_stencil_format)) {
+                pass_desc.stencilAttachment.texture = _state.swapchain.depth_stencil_texture;
+                pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
+                pass_desc.stencilAttachment.loadAction = _mtl_load_action(desc->stencil.load_action);
+                pass_desc.stencilAttachment.clearStencil = desc->stencil.clear_value;
+            }
+        }
+        _pass.screen = true;
+        _pass.desc = pass_desc;
+    } else {
+        MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor new];
+        for (int i = 0; i < desc->color_count; ++i) {
+            gpu_color_target_state *color = &desc->colors[i];
+            pass_desc.colorAttachments[i].texture = _state.textures[color->texture.id].texture;
+            pass_desc.colorAttachments[i].storeAction = MTLStoreActionStore;
+            pass_desc.colorAttachments[i].loadAction = _mtl_load_action(color->load_action);
+            gpu_color c = color->clear_value;
+            pass_desc.colorAttachments[i].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
+        }
+        if (desc->depth.format != PIXELFORMAT_NONE) {
+            pass_desc.depthAttachment.texture = _state.textures[desc->depth.texture.id].texture;
+            pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
+            pass_desc.depthAttachment.loadAction = _mtl_load_action(desc->depth.load_action);
+            pass_desc.depthAttachment.clearDepth = desc->depth.clear_value;
+            if (_mtl_stencil_enabled_format(desc->depth.format)) {
+                pass_desc.stencilAttachment.texture = _state.textures[desc->stencil.texture.id].texture;
+                pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
+                pass_desc.stencilAttachment.loadAction = _mtl_load_action(desc->stencil.load_action);
+                pass_desc.stencilAttachment.clearStencil = desc->stencil.clear_value;
+            }
+        }
+        _pass.screen = false;
+        _pass.desc = pass_desc;
+    }
+
+    u32 _id = (u32)arrlen(_state.render_passes);
+    arrput(_state.render_passes, _pass);
+    return (gpu_render_pass){ .id = _id };
 }
 
 void gpu_mtl_begin_frame(MTKView *view) {
-    _state.device.swapchain = (gpu_swapchain_mtl_t) {
+    _state.swapchain = (gpu_swapchain_mtl) {
         .width = (int) [view drawableSize].width,
         .height = (int) [view drawableSize].height,
         .sample_count = (int) [view sampleCount],
@@ -286,72 +376,48 @@ void gpu_mtl_begin_frame(MTKView *view) {
         .color_texture = [view multisampleColorTexture],
         .depth_stencil_texture = [view depthStencilTexture],
     };
+
+    if (nil == _state.cmd_buffer) {
+        dispatch_semaphore_wait(_state.semaphore, DISPATCH_TIME_FOREVER);
+        _state.cmd_buffer = [_state.cmd_queue commandBuffer];
+        [_state.cmd_buffer enqueue];
+        [_state.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
+            dispatch_semaphore_signal(_state.semaphore);
+        }];
+    }
 }
 
 void gpu_begin_render_pass(gpu_render_pass pass) {
-    assert(_state.device.cmd_encoder == nil);
-    assert(_state.device.cur_drawable == nil);
+    assert(_state.cmd_encoder == nil);
+    assert(_state.cur_drawable == nil);
 
-    // gpu_pass_action action = pass->action;
-    // if (nil == _state.device.cmd_buffer) {
-    //     dispatch_semaphore_wait(_state.device.semaphore, DISPATCH_TIME_FOREVER);
-    //     _state.device.cmd_buffer = [_state.device.cmd_queue commandBuffer];
-    //     [_state.device.cmd_buffer enqueue];
-    //     [_state.device.cmd_buffer addCompletedHandler:^(id<MTLCommandBuffer> cmd_buf) {
-    //         dispatch_semaphore_signal(_state.device.semaphore);
-    //     }];
-    // }
-    
-    // MTLRenderPassDescriptor *pass_desc = [MTLRenderPassDescriptor renderPassDescriptor];
-    // gpu_attachments attachments = pass->attachments;
-    // if (attachments.id == _mtl_invalid_id) {
-    //     _state.device.cur_drawable = _state.device.swapchain.drawable;
-    //     pass_desc.colorAttachments[0].texture = _state.device.cur_drawable.texture;
-    //     pass_desc.colorAttachments[0].storeAction = MTLStoreActionStore;
-    //     pass_desc.colorAttachments[0].loadAction = _mtl_load_action(action.color_action[0].load_action);
-    //     gpu_color c = action.color_action[0].clear_value;
-    //     pass_desc.colorAttachments[0].clearColor = MTLClearColorMake(c.r, c.g, c.b, c.a);
-    
-    //     if (_state.device.swapchain.depth_stencil_texture) {
-    //         pass_desc.depthAttachment.texture = _state.device.swapchain.depth_stencil_texture;
-    //         pass_desc.depthAttachment.storeAction = MTLStoreActionStore;
-    //         pass_desc.depthAttachment.loadAction = _mtl_load_action(action.depth_action.load_action);
-    //         pass_desc.depthAttachment.clearDepth = action.depth_action.clear_value;
-    //         if (_mtl_stencil_enabled_format(_state.device.swapchain.depth_stencil_format)) {
-    //             pass_desc.stencilAttachment.texture = _state.device.swapchain.depth_stencil_texture;
-    //             pass_desc.stencilAttachment.storeAction = MTLStoreActionStore;
-    //             pass_desc.stencilAttachment.loadAction = _mtl_load_action(action.stencil_action.load_action);
-    //             pass_desc.stencilAttachment.clearStencil = action.stencil_action.clear_value;
-    //         }
-    //     }
-    // }
-
-    // _state.device.cmd_encoder = [_state.device.cmd_buffer renderCommandEncoderWithDescriptor: pass_desc];
-    // if (nil == _state.device.cmd_encoder) {
-    //     return false;
-    // }
-    // return true;
+    gpu_render_pass_mtl _pass = _state.render_passes[pass.id];
+    if (_pass.screen) {
+        _pass.desc.colorAttachments[0].texture = _state.swapchain.drawable.texture;
+        _pass.desc.depthAttachment.texture = _state.swapchain.depth_stencil_texture;
+        _pass.desc.depthAttachment.storeAction = MTLStoreActionDontCare;
+    }
+    _state.cmd_encoder = [_state.cmd_buffer renderCommandEncoderWithDescriptor: _pass.desc];
 }
 
 void gpu_end_pass() {
-    if (nil != _state.device.cmd_encoder) {
-        [_state.device.cmd_encoder endEncoding];
-        _state.device.cmd_encoder = nil;
-    }
-
-    if (nil != _state.device.cur_drawable) {
-        [_state.device.cmd_buffer presentDrawable: _state.device.cur_drawable];
-        _state.device.cur_drawable = nil;
+    if (nil != _state.cmd_encoder) {
+        [_state.cmd_encoder endEncoding];
+        _state.cmd_encoder = nil;
     }
 }
 
 void gpu_commit() {
-    assert(nil != _state.device.cmd_buffer);
-    assert(nil == _state.device.cmd_encoder);
+    assert(nil != _state.cmd_buffer);
+    assert(nil == _state.cmd_encoder);
 
-    [_state.device.cmd_buffer commit];
-    _state.device.frame_index = (_state.device.frame_index + 1) % _state.device.frame_swap_count;
-    _state.device.cmd_buffer = nil;
+    if (nil != _state.cur_drawable) {
+        [_state.cmd_buffer presentDrawable: _state.cur_drawable];
+        _state.cur_drawable = nil;
+    }
+
+    [_state.cmd_buffer commit];
+    _state.cmd_buffer = nil;
 }
 
 id<MTLLibrary> _mtl_library_from_bytecode(udata src) {
@@ -415,25 +481,28 @@ gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
         goto failed;
     }
 
-    gpu_shader_mtl_t mtl_shader = (gpu_shader_mtl_t){
+    gpu_shader_mtl mtl_shader = (gpu_shader_mtl){
         .vertex_lib = vertex_lib,
         .fragment_lib = fragment_lib,
         .vertex_func = vertex_func,
         .fragment_func = fragment_func,
     };
-    return (gpu_shader){.id = _mtl_add_shader(mtl_shader)};
+    
+    u32 _id = (u32)arrlen(_state.shaders);
+    arrput(_state.shaders, mtl_shader);
+    return (gpu_shader){.id = _id};
 
 failed:
     if (vertex_lib) [vertex_lib release];
     if (fragment_lib) [fragment_lib release];
     if (vertex_func) [vertex_func release];
     if (fragment_func) [fragment_func release];
-    return (gpu_shader){ .id = _mtl_invalid_id };
+    return (gpu_shader){ .id = 0 };
 }
 
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     MTLVertexDescriptor *vertex_desc = [MTLVertexDescriptor vertexDescriptor];
-    gpu_pipeline_mtl_t mtl_pipeline;
+    gpu_pipeline_mtl mtl_pipeline;
     bool vertex_buffer_enabled[GPU_VERTEX_BUFFER_COUNT];
     memset(vertex_buffer_enabled, 0, sizeof(vertex_buffer_enabled));
     for (NSUInteger attr_index = 0; attr_index < GPU_ATTRIBUTE_COUNT; ++attr_index) {
@@ -460,7 +529,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         }
     }
 
-    gpu_shader_mtl_t shader = _mtl_get_shader(desc->shader.id);
+    gpu_shader_mtl shader = _state.shaders[desc->shader.id];
     MTLRenderPipelineDescriptor *pip_desc = [MTLRenderPipelineDescriptor new];
     pip_desc.vertexDescriptor = vertex_desc;
     pip_desc.vertexFunction = shader.vertex_func;
@@ -487,13 +556,15 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     }
 
     NSError *err = nil;
-    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc error: &err];
+    MTLRenderPipelineReflection *reflection = nil;
+    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionBindingInfo reflection: &reflection error: &err];
     [pip_desc release];
+    mtl_pipeline.reflection = reflection;
 
     if (nil == pso) {
         NSLog(@"Error: %@", err);
         NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
-        return (gpu_pipeline){ .id = _mtl_invalid_id };
+        return (gpu_pipeline){ .id = 0 };
     }
     mtl_pipeline.pso = pso;
     
@@ -522,7 +593,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         id<MTLDepthStencilState> dso = [_state.device.device newDepthStencilStateWithDescriptor: ds_desc];
         [ds_desc release];
         if (nil == dso) {
-            return (gpu_pipeline){ .id = _mtl_invalid_id };
+            return (gpu_pipeline){ .id = 0 };
         }
         mtl_pipeline.dso = dso;
     }
@@ -534,11 +605,13 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     mtl_pipeline.index_type = _mtl_index_type(desc->index_type);
     mtl_pipeline.indexed = desc->index_type != INDEX_NONE;
     mtl_pipeline.stencil_ref = desc->stencil.ref;
-    return (gpu_pipeline){ .id = _mtl_add_pipeline(mtl_pipeline) };
+    u32 _id = (u32)arrlen(_state.pipelines);
+    arrput(_state.pipelines, mtl_pipeline);
+    return (gpu_pipeline){ .id = _id };
 }
 
 void gpu_set_viewport(int x, int y, int width, int height) {
-    assert(nil != _state.device.cmd_encoder);
+    assert(nil != _state.cmd_encoder);
     MTLViewport viewport = {
         .originX = (double)x,
         .originY = (double)y,
@@ -547,71 +620,91 @@ void gpu_set_viewport(int x, int y, int width, int height) {
         .znear = 0.0,
         .zfar = 1.0,
     };
-    [_state.device.cmd_encoder setViewport: viewport];
+    [_state.cmd_encoder setViewport: viewport];
 }
 
 void gpu_set_scissor(int x, int y, int width, int height) {
-    assert(nil != _state.device.cmd_encoder);
+    assert(nil != _state.cmd_encoder);
     MTLScissorRect scissor = {
         .x = x,
         .y = y,
         .width = width,
         .height = height,
     };
-    [_state.device.cmd_encoder setScissorRect: scissor];
+    [_state.cmd_encoder setScissorRect: scissor];
 }
 
 void gpu_set_pipeline(gpu_pipeline pipeline) {
-    assert(nil != _state.device.cmd_encoder);
+    assert(nil != _state.cmd_encoder);
 
-    gpu_pipeline_mtl_t mtl_pipeline = _mtl_get_pipeline(pipeline.id);
+    gpu_pipeline_mtl mtl_pipeline = _state.pipelines[pipeline.id];
     _state.cur_pipeline = mtl_pipeline;
 
-    [_state.device.cmd_encoder setCullMode: mtl_pipeline.cull_mode];
-    [_state.device.cmd_encoder setFrontFacingWinding: mtl_pipeline.winding];
-    [_state.device.cmd_encoder setRenderPipelineState: mtl_pipeline.pso];
+    [_state.cmd_encoder setCullMode: mtl_pipeline.cull_mode];
+    [_state.cmd_encoder setFrontFacingWinding: mtl_pipeline.winding];
+    [_state.cmd_encoder setRenderPipelineState: mtl_pipeline.pso];
     if (mtl_pipeline.depth_stencil_format != MTLPixelFormatInvalid) {
-        [_state.device.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
+        [_state.cmd_encoder setDepthStencilState: mtl_pipeline.dso];
     }
 }
 
 void gpu_set_binding(gpu_binding binding) {
     // assert(binding);
-    // for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
-    //     if (binding->buffers[i].id == _mtl_invalid_id) break;
-    //     gpu_buffer_mtl_t buffer = _mtl_get_buffer(binding->buffers[i].id);
-    //     NSUInteger offset = (NSUInteger)binding->buffer_offsets[i];
-    //     [_state.device.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
-    // }
+    assert(nil != _state.cmd_encoder);
+    gpu_binding_mtl _binding = _state.bindings[binding.id];
 
-    // if (binding->index_buffer.id != _mtl_invalid_id) {
-    //     _state.cur_index_buffer = _mtl_get_buffer(binding->index_buffer.id);
-    // }
+    for (int i = 0; i < GPU_SHADER_BUFFER_COUNT; ++i) {
+        if (_binding.vertex_buffers[i].id == 0) break;
+        gpu_buffer_mtl buffer = _state.buffers[_binding.vertex_buffers[i].id];
+        NSUInteger offset = 0;
+        [_state.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
+    }
 
-    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
-    //     if (binding->vertex.textures[i].id == _mtl_invalid_id) break;
-    //     gpu_texture_mtl_t texture = _mtl_get_texture(binding->vertex.textures[i].id);
-    //     [_state.device.cmd_encoder setVertexTexture: texture.texture atIndex: i];
-    // }
+    for (int i = 0; i < GPU_SHADER_BUFFER_COUNT; ++i) {
+        if (_binding.fragment_buffers[i].id == 0) break;
+        gpu_buffer_mtl buffer = _state.buffers[_binding.fragment_buffers[i].id];
+        NSUInteger offset = 0;
+        [_state.cmd_encoder setFragmentBuffer: buffer.buffer offset: offset atIndex: i];
+    }
 
-    // for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
-    //     if (binding->fragment.textures[i].id == _mtl_invalid_id) break;
-    //     gpu_texture_mtl_t texture = _mtl_get_texture(binding->fragment.textures[i].id);
-    //     [_state.device.cmd_encoder setFragmentTexture: texture.texture atIndex: i];
-    // }
+    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+        if (_binding.vertex_textures[i].id == 0) break;
+        gpu_texture_mtl texture = _state.textures[_binding.vertex_textures[i].id];
+        [_state.cmd_encoder setVertexTexture: texture.texture atIndex: i];
+    }
+
+    for (int i = 0; i < GPU_SHADER_TEXTURE_COUNT; ++i) {
+        if (_binding.fragment_textures[i].id == 0) break;
+        gpu_texture_mtl texture = _state.textures[_binding.fragment_textures[i].id];
+        [_state.cmd_encoder setFragmentTexture: texture.texture atIndex: i];
+    }
+}
+
+void gpu_set_mesh(gpu_mesh mesh) {
+    assert(nil != _state.cmd_encoder);
+
+    gpu_mesh_mtl _mesh = _state.meshes[mesh.id];
+    for (int i = 0; i < GPU_VERTEX_BUFFER_COUNT; ++i) {
+        if (_mesh.buffers[i].id == 0) break;
+        gpu_buffer_mtl buffer = _state.buffers[_mesh.buffers[i].id];
+        NSUInteger offset = _mesh.buffer_offsets[i];
+        [_state.cmd_encoder setVertexBuffer: buffer.buffer offset: offset atIndex: i];
+    }
+    
+    _state.cur_mesh = _mesh;
 }
 
 void gpu_draw(int base, int count, int instance_count) {
     if (_state.cur_pipeline.indexed) {
-        [_state.device.cmd_encoder
+        [_state.cmd_encoder
             drawIndexedPrimitives: _state.cur_pipeline.primitive_type
             indexCount: count
             indexType: _state.cur_pipeline.index_type
-            indexBuffer: _state.cur_index_buffer.buffer
+            indexBuffer: _state.buffers[_state.cur_mesh.index_buffer.id].buffer
             indexBufferOffset: 0
             instanceCount: instance_count];
     } else {
-        [_state.device.cmd_encoder
+        [_state.cmd_encoder
             drawPrimitives: _state.cur_pipeline.primitive_type
             vertexStart: base
             vertexCount: count

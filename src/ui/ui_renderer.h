@@ -34,6 +34,7 @@ typedef struct ui_renderer_t {
     gpu_buffer uniform_buffer;
     gpu_texture icon_texture;
     gpu_binding binding;
+    gpu_mesh mesh;
     gpu_pipeline pipeline;
 #endif
 } ui_renderer_t;

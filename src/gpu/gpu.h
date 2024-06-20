@@ -2,8 +2,8 @@
 
 #include "foundation/udata.h"
 #include "foundation/ustring.h"
-#include "os/os.h"
 #include "gpu_const.h"
+#include "os/os.h"
 
 typedef enum gpu_backend {
     none,
@@ -12,15 +12,33 @@ typedef enum gpu_backend {
     union_gpu,
 } gpu_backend;
 
-typedef struct gpu_texture { u32 id; } gpu_texture;
-typedef struct gpu_sampler { u32 id; } gpu_sampler;
-typedef struct gpu_buffer { u32 id; } gpu_buffer;
-typedef struct gpu_shader { u32 id; } gpu_shader;
-typedef struct gpu_pipeline { u32 id; } gpu_pipeline;
-typedef struct gpu_binding { u32 id; } gpu_binding;
-typedef struct gpu_render_pass { u32 id; } gpu_render_pass;
-typedef struct gpu_mesh { u32 id; } gpu_mesh;
-typedef struct gpu_color { f32 r, g, b, a; } gpu_color;
+typedef struct gpu_texture {
+    u32 id;
+} gpu_texture;
+typedef struct gpu_sampler {
+    u32 id;
+} gpu_sampler;
+typedef struct gpu_buffer {
+    u32 id;
+} gpu_buffer;
+typedef struct gpu_shader {
+    u32 id;
+} gpu_shader;
+typedef struct gpu_pipeline {
+    u32 id;
+} gpu_pipeline;
+typedef struct gpu_binding {
+    u32 id;
+} gpu_binding;
+typedef struct gpu_render_pass {
+    u32 id;
+} gpu_render_pass;
+typedef struct gpu_mesh {
+    u32 id;
+} gpu_mesh;
+typedef struct gpu_color {
+    f32 r, g, b, a;
+} gpu_color;
 
 typedef struct gpu_texture_desc {
     int width, height, depth;
@@ -184,12 +202,18 @@ typedef struct gpu_stage_binding {
 typedef struct gpu_binding_texture_desc {
     gpu_texture texture;
     gpu_sampler sampler;
+    ustring name;
 } gpu_binding_texture_desc;
+
+typedef struct gpu_binding_buffer_desc {
+    gpu_buffer buffer;
+    u32 offset;
+    ustring name;
+} gpu_binding_buffer_desc;
 
 typedef struct gpu_binding_desc {
     gpu_pipeline pipeline;
-    gpu_buffer buffers[GPU_SHADER_BUFFER_COUNT];
-    u32 buffer_offsets[GPU_SHADER_BUFFER_COUNT];
+    gpu_binding_buffer_desc buffers[GPU_SHADER_BUFFER_COUNT];
     gpu_binding_texture_desc textures[GPU_SHADER_TEXTURE_COUNT];
     u32 group;
     ustring label;

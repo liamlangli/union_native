@@ -29,7 +29,8 @@
             "defines": [
                 "OS_MACOS",
                 "USER_AGENT",
-                "ENABLE_MIMALLOC"
+                "ENABLE_MIMALLOC",
+                "UI_NATIVE"
             ],
             "compilerPath": "/usr/bin/clang",
             "intelliSenseMode": "macos-clang-x64",

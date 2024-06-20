@@ -284,7 +284,7 @@ gpu_sampler gpu_create_sampler(gpu_sampler_desc *desc) { return (gpu_sampler){0}
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) { return (gpu_buffer){0}; }
 gpu_shader gpu_create_shader(gpu_shader_desc *desc) { return (gpu_shader){0}; }
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) { return (gpu_pipeline){0}; }
-gpu_attachments gpu_create_attachments(gpu_attachments_desc *desc) { return (gpu_attachments){0}; }
+gpu_render_pass gpu_create_render_pass(gpu_render_pass_desc *desc) { return (gpu_render_pass){0}; }
 
 void gpu_destroy_texture(gpu_texture texture) {}
 void gpu_destroy_sampler(gpu_sampler sampler) {}

@@ -169,19 +169,19 @@ void ui_renderer_init() {
         .depth = { .write_enabled = false, .compare_func = COMPARE_LESS_EQUAL, .format = PIXELFORMAT_NONE },
     });
 
-    // _renderer.binding = (gpu_binding){
-    //     .vertex.textures = {
-    //         [0] = _renderer.primitive_data_texture,
-    //     },
-    //     .fragment.textures = {
-    //         [0] = ui_font_shared()->font->texture,
-    //         [1] = _renderer.icon_texture,
-    //     },
-    //     .buffers = {
-    //         [0] = _renderer.index_buffer,
-    //         [1] = _renderer.uniform_buffer,
-    //     },
-    // };
+    gpu_binding_desc _binding_desc = {0};
+    _binding_desc.buffers[0] = (gpu_binding_buffer_desc){ .buffer = _renderer.uniform_buffer, .offset = 0, .name = ustring_STR("material_block") };
+    _binding_desc.textures[0] = (gpu_binding_texture_desc){ .texture = _renderer.primitive_data_texture, .name = "primitive_buffer" };
+    _binding_desc.textures[1] = (gpu_binding_texture_desc){ .texture = ui_font_shared()->font->texture, .name = "font_texture" };
+    _binding_desc.textures[2] = (gpu_binding_texture_desc){ .texture = _renderer.icon_texture, .name = "icon_texture" };
+    _binding_desc.pipeline = pipeline;
+    _renderer.binding = gpu_create_binding(&_binding_desc);
+
+    gpu_mesh_desc _mesh_desc = {0};
+    _mesh_desc.buffers[0] = _renderer.index_buffer;
+    _mesh_desc.index_type = INDEX_NONE;
+    _mesh_desc.pipeline = pipeline;
+    _renderer.mesh = gpu_create_mesh(&_mesh_desc);
 
     _renderer.pipeline = pipeline;
 #endif
@@ -230,6 +230,7 @@ void ui_renderer_render() {
     gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     gpu_set_pipeline(_renderer.pipeline);
     gpu_set_binding(_renderer.binding);
+    gpu_set_mesh(_renderer.mesh);
     gpu_draw(0, _renderer.last_index_offset, 1);
 }
 #endif
