@@ -47,7 +47,10 @@
         "locale": "c",
         "version": "c",
         "*.mm": "objective-c",
-        "deque": "c"
+        "deque": "c",
+        "bitset": "c",
+        "forward_list": "c",
+        "future": "c"
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",

@@ -45,6 +45,7 @@ typedef struct gpu_texture_desc {
     udata data;
     gpu_pixel_format format;
     gpu_texture_type type;
+    gpu_usage usage;
 } gpu_texture_desc;
 
 typedef struct gpu_sampler_desc {
@@ -61,6 +62,7 @@ typedef struct gpu_buffer_desc {
     int size;
     udata data;
     gpu_buffer_type type;
+    gpu_usage usage;
 } gpu_buffer_desc;
 
 typedef struct gpu_attribute_desc {

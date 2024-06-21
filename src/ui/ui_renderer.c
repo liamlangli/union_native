@@ -94,13 +94,14 @@ void ui_renderer_init() {
     int texture_width = max_texture_size;
     int texture_height = PRIMITIVE_DATA_INIT_COUNT / 4 / texture_width;
 
-    gpu_texture_desc primitive_data_desc = {0};
-    primitive_data_desc.width = texture_width;
-    primitive_data_desc.height = texture_height;
-    primitive_data_desc.format = PIXELFORMAT_RGBA32F;
-    primitive_data_desc.data = (udata){.data = (i8*)_renderer.primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
+    gpu_texture_desc primitive_buffer_desc = {0};
+    primitive_buffer_desc.width = texture_width;
+    primitive_buffer_desc.height = texture_height;
+    primitive_buffer_desc.format = PIXELFORMAT_RGBA32F;
+    primitive_buffer_desc.data = (udata){.data = (i8*)_renderer.primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
+    primitive_buffer_desc.usage = USAGE_SHARED;
     
-    _renderer.primitive_data_texture = gpu_create_texture(&primitive_data_desc);
+    _renderer.primitive_data_texture = gpu_create_texture(&primitive_buffer_desc);
     _renderer.primitive_data_texture_width = texture_width;
 
     gpu_texture_desc icon_texture_desc = {0};
@@ -111,7 +112,8 @@ void ui_renderer_init() {
 
     _renderer.index_buffer = gpu_create_buffer(&(gpu_buffer_desc){
         .size = PRIMITIVE_DATA_INIT_COUNT * 4,
-        .type = BUFFER_VERTEX,
+        .type = BUFFER_INDEX,
+        .usage = USAGE_SHARED,
         .data = (udata){.data = (i8*)_renderer.index_data, PRIMITIVE_DATA_INIT_COUNT * 4},
     });
 
@@ -171,9 +173,9 @@ void ui_renderer_init() {
 
     gpu_binding_desc _binding_desc = {0};
     _binding_desc.buffers[0] = (gpu_binding_buffer_desc){ .buffer = _renderer.uniform_buffer, .offset = 0, .name = ustring_STR("material_block") };
-    _binding_desc.textures[0] = (gpu_binding_texture_desc){ .texture = _renderer.primitive_data_texture, .name = "primitive_buffer" };
-    _binding_desc.textures[1] = (gpu_binding_texture_desc){ .texture = ui_font_shared()->font->texture, .name = "font_texture" };
-    _binding_desc.textures[2] = (gpu_binding_texture_desc){ .texture = _renderer.icon_texture, .name = "icon_texture" };
+    _binding_desc.textures[0] = (gpu_binding_texture_desc){ .texture = _renderer.primitive_data_texture, .name = ustring_STR("primitive_buffer") };
+    _binding_desc.textures[1] = (gpu_binding_texture_desc){ .texture = ui_font_shared()->font->texture, .name = ustring_STR("font_texture") };
+    _binding_desc.textures[2] = (gpu_binding_texture_desc){ .texture = _renderer.icon_texture, .name = ustring_STR("icon_texture") };
     _binding_desc.pipeline = pipeline;
     _renderer.binding = gpu_create_binding(&_binding_desc);
 
@@ -229,8 +231,8 @@ void ui_renderer_render() {
 
     gpu_set_viewport(0, 0, ctx->window->framebuffer_width, ctx->window->framebuffer_height);
     gpu_set_pipeline(_renderer.pipeline);
-    gpu_set_binding(_renderer.binding);
     gpu_set_mesh(_renderer.mesh);
+    gpu_set_binding(_renderer.binding);
     gpu_draw(0, _renderer.last_index_offset, 1);
 }
 #endif

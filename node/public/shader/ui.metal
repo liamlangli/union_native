@@ -15,10 +15,6 @@ struct ui_uniform {
 
 #define UI_PRIM_TRIANGLE_ADVANCED_ICON 4u
 
-struct vertex_data {
-    uint vertex_id [[attribute(0)]];
-};
-
 struct vertex_output {
     float4 clip_rect;
     float4 color;
@@ -62,20 +58,21 @@ float4 rect_vertex(float4 r, uint corner_id) {
 }
 
 vertex vertex_output vertex_main(
-    vertex_data in [[stage_in]],
+    device const uint* ui_vertex_ids [[buffer(0)]],
     texture2d<float, access::read> primitive_buffer [[texture(0)]],
-    constant ui_uniform &uniforms [[buffer(1)]]
+    constant ui_uniform &material_block [[buffer(1)]],
+    uint vertexID [[vertex_id]]
 ) {
     vertex_output out;
 
-    uint vertex_id = in.vertex_id;
-    uint ptr = decode_primitive_buffer_offset(vertex_id);
+    uint ui_vertex_id = ui_vertex_ids[vertexID];
+    uint ptr = decode_primitive_buffer_offset(ui_vertex_id);
     float4 v = float4(0., 0., 0., 1.0);
 
-    if ((vertex_id & GLYPH_MASK) != 0u) {
+    if ((ui_vertex_id & GLYPH_MASK) != 0u) {
         // draw glyph
-        uint corner_id = decode_corner_id(vertex_id);
-        uint header_offset = decode_header_offset(vertex_id);
+        uint corner_id = decode_corner_id(ui_vertex_id);
+        uint header_offset = decode_header_offset(ui_vertex_id);
         uint header_ptr = ptr - header_offset - 1u;
 
         float4 glyph_data = fetch_primitive_buffer(primitive_buffer, ptr);
@@ -103,10 +100,10 @@ vertex vertex_output vertex_main(
 
     } else {
 
-        out.type = decode_primitive_type(vertex_id);
+        out.type = decode_primitive_type(ui_vertex_id);
         if (out.type == UI_PRIM_RECTANGLE) {
 
-            uint corner_id = decode_corner_id(vertex_id);
+            uint corner_id = decode_corner_id(ui_vertex_id);
             float4 primitive_data = fetch_primitive_buffer(primitive_buffer, ptr);
             float4 rect_data = fetch_primitive_buffer(primitive_buffer, ptr + 1u);
 
@@ -144,7 +141,7 @@ vertex vertex_output vertex_main(
 
     out.screen_point = v.xy;
 
-    float2 window_size = uniforms.window_size.xy;
+    float2 window_size = material_block.window_size.xy;
     out.position = float4(v.x * 2.0 - window_size.x, window_size.y - v.y * 2.0, 0.0, 1.0);
     out.position.xy /= window_size.xy;
     return out;

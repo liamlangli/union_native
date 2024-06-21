@@ -293,3 +293,21 @@ MTLStencilOperation _mtl_stencil_operation(gpu_stencil_op op) {
         default: return MTLStencilOperationKeep;
     }
 }
+
+MTLResourceOptions _mtl_resource_options(gpu_usage usage) {
+    MTLResourceOptions options = MTLResourceStorageModeShared;
+    if (usage & USAGE_MANAGED) {
+        options = MTLResourceStorageModeManaged;
+    }
+    if (usage & USAGE_PRIVATE) {
+        options |= MTLResourceStorageModePrivate;
+    }
+    if (usage & USAGE_SHARED) {
+        options |= MTLResourceStorageModeShared;
+        options |= MTLResourceCPUCacheModeWriteCombined;
+    }
+    if (usage & USAGE_MEMORYLESS) {
+        options |= MTLResourceStorageModeMemoryless;
+    }
+    return options;
+}

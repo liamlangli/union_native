@@ -11,11 +11,7 @@ enum {
     GPU_SHADER_SAMPLER_COUNT = 8,
     GPU_SHADER_BUFFER_COUNT = 4,
 
-    GPU_BUFFER_POOL_SIZE = 128,
-    GPU_TEXTURE_POOL_SIZE = 128,
-    GPU_SHADER_POOL_SIZE = 64,
-    GPU_SAMPLER_POOL_SIZE = 64,
-    GPU_PIPELINE_POOL_SIZE = 64,
+    GPU_RESOURCE_POOL_SIZE = 256,
     GPU_ATTACHMENTS_POOL_SIZE = 16,
     GPU_UB_SIZE = 4 * 1024 * 1024,
 };
@@ -273,3 +269,10 @@ typedef enum gpu_store_action {
     STORE_ACTION_STORE,
     STORE_ACTION_DONTCARE,
 } gpu_store_action;
+
+typedef enum gpu_usage {
+    USAGE_MANAGED = 0,
+    USAGE_PRIVATE = 1,
+    USAGE_SHARED = 2,
+    USAGE_MEMORYLESS = 4
+} gpu_usage;
