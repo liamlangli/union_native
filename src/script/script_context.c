@@ -64,8 +64,8 @@ void script_context_init(os_window_t *window) {
     shared_context.invalid_script = true;
     ui_renderer_init();
     ui_renderer_set_size(window->width, window->height);
-    ui_state_set_size(window->width, window->height);
     ui_state_init();
+    ui_state_set_size(window->width, window->height);
 #ifdef UI_NATIVE
     ui_dev_tool_init(&shared_context.dev_tool);
 #endif

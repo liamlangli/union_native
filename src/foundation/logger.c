@@ -91,12 +91,7 @@ void logger_input(logger_t *logger, int type, ustring message) {
         logger->last_dump = logger->last_dump + ULOG_DUMP_STRIDE;
         logger->new_line_count = 0;
     }
-    f64 time = 0;
-    script_context_t *ctx = script_context_shared();
-    if (ctx != NULL) {
-        time = ctx->state.time;
-    }
-    ULOG_line_t line = { .line = message, .type = type, .time = time };
+    ULOG_line_t line = { .line = message, .type = type };
     arrpush(logger->lines, line);
     logger->new_line_count++;
 }

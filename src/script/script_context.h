@@ -13,7 +13,6 @@ typedef struct script_context_t {
     void *module;
 
     db_t db;
-    ui_state_t state;
 #ifdef UI_NATIVE
     ui_dev_tool_t dev_tool;
 #endif

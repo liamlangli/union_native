@@ -191,7 +191,7 @@ msdf_font *msdf_font_system_font() {
     gpu_texture_desc desc = {.width = width, .height = height};
     desc.format = PIXELFORMAT_RGBA8;
     desc.data = (udata){.data = (i8 *)data, .length = width * height * 4};
-    desc.usage = USAGE_PRIVATE;
+    desc.resource_usage = USAGE_PRIVATE;
     system_font.texture = gpu_create_texture(&desc);
 #endif
 

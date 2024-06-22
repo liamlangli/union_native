@@ -191,7 +191,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     else
         _desc.arrayLength = 1;
     
-    _desc.resourceOptions = _mtl_resource_options(desc->usage);
+    _desc.resourceOptions = _mtl_resource_options(desc->resource_usage);
     _desc.usage = MTLTextureUsageShaderRead;
 
     id<MTLTexture> texture = [_state.device.device newTextureWithDescriptor: _desc];
@@ -607,7 +607,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
 
     NSError *err = nil;
     MTLRenderPipelineReflection *reflection = nil;
-    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionArgumentInfo reflection: &reflection error: &err];
+    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionBindingInfo reflection: &reflection error: &err];
     [pip_desc release];
     _pipeline.reflection = reflection;
 

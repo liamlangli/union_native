@@ -99,7 +99,7 @@ void ui_renderer_init() {
     primitive_buffer_desc.height = texture_height;
     primitive_buffer_desc.format = PIXELFORMAT_RGBA32F;
     primitive_buffer_desc.data = (udata){.data = (i8*)_renderer.primitive_data, .length = PRIMITIVE_DATA_INIT_COUNT * 4 * sizeof(f32)};
-    primitive_buffer_desc.usage = USAGE_SHARED;
+    primitive_buffer_desc.resource_usage = USAGE_SHARED;
     
     _renderer.primitive_data_texture = gpu_create_texture(&primitive_buffer_desc);
     _renderer.primitive_data_texture_width = texture_width;
@@ -108,6 +108,7 @@ void ui_renderer_init() {
     icon_texture_desc.width = 1024;
     icon_texture_desc.height = 1024;
     icon_texture_desc.format = PIXELFORMAT_RGBA8;
+    icon_texture_desc.resource_usage = USAGE_PRIVATE;
     _renderer.icon_texture = gpu_create_texture(&icon_texture_desc);
 
     _renderer.index_buffer = gpu_create_buffer(&(gpu_buffer_desc){

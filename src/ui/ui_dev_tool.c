@@ -45,7 +45,7 @@ void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
     f64 width = dev_tool->width;
     f64 height = dev_tool->height;
 
-ui_rect rect = context->state.window_rect;
+    ui_rect rect = ui_state_get()->window_rect;
     if (align & LEFT) {
         rect = (ui_rect){ 0, 0, width, rect.h};
     } else if (align & RIGHT) {

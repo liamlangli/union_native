@@ -45,7 +45,8 @@ typedef struct gpu_texture_desc {
     udata data;
     gpu_pixel_format format;
     gpu_texture_type type;
-    gpu_usage usage;
+    gpu_texture_usage usage;
+    gpu_usage resource_usage;
 } gpu_texture_desc;
 
 typedef struct gpu_sampler_desc {

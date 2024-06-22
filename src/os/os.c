@@ -18,7 +18,7 @@ ustring os_cwd() {
 
 void os_window_on_scroll(os_window_t* window, double x, double y) {
     script_context_t *ctx = script_context_shared();
-    ui_state_t *state = &ctx->state;
+    ui_state_t *state = ui_state_get();
     if (state->active == -1 && state->hover == -1) script_browser_window_mouse_scroll(x, y);
     const bool shift = ui_state_is_key_pressed(KEY_LEFT_SHIFT) || ui_state_is_key_pressed(KEY_RIGHT_SHIFT);
     state->pointer_scroll.x = (f32)(x * (shift ? state->smooth_factor : 1.f));
@@ -80,7 +80,8 @@ void os_window_on_resize(os_window_t *window, int width, int height) {
     window->width = width;
     window->height = height;
     ui_renderer_set_size(width, height);
-    ctx->state.window_rect = (ui_rect){
+    ui_state_t* state = ui_state_get();
+    state->window_rect = (ui_rect){
         .x = 0.f,
         .y = 0.f,
         .w = width,

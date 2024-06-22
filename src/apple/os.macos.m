@@ -235,9 +235,7 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
+    ui_state_t *state = ui_state_get();
     const NSRect rect = [mtk_view frame];
     const NSPoint point = [event locationInWindow];
     float x = (float)point.x;
@@ -261,9 +259,7 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)keyDown:(NSEvent*)event {
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
+    ui_state_t *state = ui_state_get();
     const NSString* characters = [event characters];
     const NSUInteger length = [characters length];
     for (NSUInteger i = 0; i < length; i++) {
@@ -320,9 +316,7 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)keyUp:(NSEvent*)event {
-    script_context_t *ctx = script_context_shared();
-    if (ctx == NULL) return;
-    ui_state_t *state = &ctx->state;
+    ui_state_t *state = ui_state_get();
     const NSString* characters = [event characters];
     const NSUInteger length = [characters length];
     for (NSUInteger i = 0; i < length; i++) {

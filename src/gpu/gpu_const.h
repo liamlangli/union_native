@@ -277,3 +277,10 @@ typedef enum gpu_usage {
     USAGE_SHARED = 1 << 2,
     USAGE_MEMORYLESS = 1 << 3
 } gpu_usage;
+
+typedef enum gpu_texture_usage {
+    TEXTURE_USAGE_DEFAULT = 0,
+    TEXTURE_USAGE_READ = 1,
+    TEXTURE_USAGE_WRITE = 1 << 1,
+    TEXTURE_USAGE_RENDER_TARGET = 1 << 2
+} gpu_texture_usage;
