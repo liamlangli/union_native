@@ -271,8 +271,9 @@ typedef enum gpu_store_action {
 } gpu_store_action;
 
 typedef enum gpu_usage {
-    USAGE_MANAGED = 0,
-    USAGE_PRIVATE = 1,
-    USAGE_SHARED = 2,
-    USAGE_MEMORYLESS = 4
+    USAGE_DEFAULT = 0,
+    USAGE_MANAGED = 1,
+    USAGE_PRIVATE = 1 << 1,
+    USAGE_SHARED = 1 << 2,
+    USAGE_MEMORYLESS = 1 << 3
 } gpu_usage;

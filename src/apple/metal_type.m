@@ -295,19 +295,28 @@ MTLStencilOperation _mtl_stencil_operation(gpu_stencil_op op) {
 }
 
 MTLResourceOptions _mtl_resource_options(gpu_usage usage) {
-    MTLResourceOptions options = MTLResourceStorageModeShared;
-    if (usage & USAGE_MANAGED) {
-        options = MTLResourceStorageModeManaged;
+    switch (usage) {
+        case USAGE_MANAGED:
+#if defined(OS_MACOS)
+            return MTLResourceStorageModeManaged;
+#else
+            return MTLResourceStorageModePrivate;
+#endif
+        case USAGE_PRIVATE:
+            return MTLResourceStorageModePrivate;
+        case USAGE_MEMORYLESS:
+            return MTLResourceStorageModeMemoryless;
+        default:
+#if defined(OS_MACOS)
+    #if defined(ARM64)
+            return MTLResourceStorageModeShared;
+    #else
+            return MTLResourceStorageModeManaged;
+    #endif
+#elif defined(OS_IOS)
+            return MTLResourceStorageModePrivate;
+#endif
     }
-    if (usage & USAGE_PRIVATE) {
-        options |= MTLResourceStorageModePrivate;
-    }
-    if (usage & USAGE_SHARED) {
-        options |= MTLResourceStorageModeShared;
-        options |= MTLResourceCPUCacheModeWriteCombined;
-    }
-    if (usage & USAGE_MEMORYLESS) {
-        options |= MTLResourceStorageModeMemoryless;
-    }
-    return options;
 }
+
+

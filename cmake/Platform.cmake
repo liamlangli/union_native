@@ -17,6 +17,7 @@ endif()
 set(PROC_ARCH x86_64)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
     set(PROC_ARCH arm64)
+    add_definitions(-DARM64)
 endif()
 
 message(STATUS "PROC_ARCH: ${PROC_ARCH}")

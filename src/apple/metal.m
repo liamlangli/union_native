@@ -607,7 +607,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
 
     NSError *err = nil;
     MTLRenderPipelineReflection *reflection = nil;
-    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionBindingInfo reflection: &reflection error: &err];
+    id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionArgumentInfo reflection: &reflection error: &err];
     [pip_desc release];
     _pipeline.reflection = reflection;
 
