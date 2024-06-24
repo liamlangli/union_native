@@ -26,7 +26,7 @@ deps = [
         'name': 'mimalloc',
         'git': 'https://github.com/liamlangli/mimalloc.git',
         'head': 'cc3c14f',
-        'libs': ['libmimalloc.a', 'libmimalloc-static.a'],
+        'libs': ['build/libmimalloc.a', 'build/libmimalloc-static.a'],
         'build_cmd': f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={"Debug" if debug else "Release"} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log',
         'build_toolchain': 'cmake',
     },
@@ -34,9 +34,19 @@ deps = [
         'name': 'libuv',
         'git': 'https://github.com/liamlangli/libuv.git',
         'head': '520eb622',
-        'libs': ['libuv.a'],
+        'includes': ['include'],
+        'libs': ['build/libuv.a'],
         'build_cmd': f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={"Debug" if debug else "Release"} -DBUILD_TESTING=OFF .. > ./cmake.log',
         'build_toolchain': 'cmake',
+    },
+    {
+        'name': 'llhttp',
+        'git': 'https://github.com/liamlangli/llhttp.git',
+        'head': '6055e85',
+        'includes': ['build/llhttp.h'],
+        'libs': ['build/libllhttp.a'],
+        'build_cmd': f'npm ci && make build/libllhttp.a && make build/llhttp.h',
+        'build_toolchain': 'script',
     }
 ]
 
@@ -103,21 +113,21 @@ def compile():
         if os.path.exists(include_dst):
             shutil.rmtree(include_dst)
         os.makedirs(include_dst, exist_ok=True)
-        if dep['build_toolchain'] == 'cmake':
-            src = os.path.join(dep_path, 'include')
-            dst = include_dst
-            cp_folder_sync(src, dst)
-        elif dep['build_toolchain'] == 'make':
+        # Copy include files
+        if 'includes' in dep:
             for include in dep['includes']:
-                src = os.path.join(dep_path, include)
-                dst = os.path.join(include_dst, include)
-                shutil.copy2(src, dst)
+                include_src = os.path.join(dep_path, include)
+                if os.path.isdir(include_src):
+                    shutil.copytree(include_src, include_dst)
+                elif os.path.exists(include_src):
+                    shutil.copy(include_src, include_dst)
 
-        for lib in dep['libs']:
-            src = os.path.join(dep_path, 'build' if dep['build_toolchain'] == 'cmake' else '', lib)
-            dst = os.path.join(lib_path, lib)
-            if os.path.exists(src):
-                shutil.copy2(src, dst)
+        # Copy lib files
+        if 'libs' in dep:
+            for lib in dep['libs']:
+                lib_src = os.path.join(dep_path, lib)
+                if os.path.exists(lib_src):
+                    shutil.copy(lib_src, lib_path)
 
 # Parse arguments
 args = sys.argv[1:]

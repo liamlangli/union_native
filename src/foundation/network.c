@@ -119,13 +119,13 @@ static ustring_view net_url_to_req_body(url_t url) {
         ustring_view_append_ustring_view(&body, &url.query);
     }
     ustring_view_append_STR(&body, " HTTP/1.1\r\n");
-    ustring_view_append_STR(&body, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"
+    ustring_view_append_STR(&body, "Accept: text/javascript,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"
                                    "webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n");
     ustring_view_append_STR(&body, "Accept-Encoding: gzip, deflate, br, zstd\r\n");
     ustring_view_append_STR(&body, "Accept-Language: en,zh-CN;q=0.9,zh;q=0.8\r\n");
     ustring_view_append_STR(&body, "Host: ");
     ustring_view_append_ustring_view(&body, &url.host);
-    if (url.port == 80 || url.port == 443) {
+    if (url.port != 80 && url.port != 443) {
         ustring_view_append_STR(&body, ":");
         char port_str[6];
         itoa(url.port, port_str, 10);
