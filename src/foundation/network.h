@@ -25,7 +25,7 @@ typedef struct net_response_t {
     udata data;
     u32 status;
     u32 content_length, header_length;
-    bool headr_parsed;
+    bool header_parsed;
     ustring_view body, header;
     ustring_view error;
 } net_response_t;

@@ -26,6 +26,7 @@ deps = [
         'name': 'mimalloc',
         'git': 'https://github.com/liamlangli/mimalloc.git',
         'head': 'cc3c14f',
+        'includes': ['include'],
         'libs': ['build/libmimalloc.a', 'build/libmimalloc-static.a'],
         'build_cmd': f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={"Debug" if debug else "Release"} -DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_TESTS=OFF -DMI_BUILD_SHARED=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_TLS=OFF -DMI_BUILD_OVERRIDE=ON -DMI_BUILD_OVERRIDE=ON .. > ./cmake.log',
         'build_toolchain': 'cmake',
@@ -38,15 +39,6 @@ deps = [
         'libs': ['build/libuv.a'],
         'build_cmd': f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={"Debug" if debug else "Release"} -DBUILD_TESTING=OFF .. > ./cmake.log',
         'build_toolchain': 'cmake',
-    },
-    {
-        'name': 'llhttp',
-        'git': 'https://github.com/liamlangli/llhttp.git',
-        'head': '6055e85',
-        'includes': ['build/llhttp.h'],
-        'libs': ['build/libllhttp.a'],
-        'build_cmd': f'npm ci && make build/libllhttp.a && make build/llhttp.h',
-        'build_toolchain': 'script',
     }
 ]
 
@@ -107,6 +99,8 @@ def compile():
             os.makedirs(build_dir, exist_ok=True)
             run_cmd(dep['build_cmd'], cwd=build_dir)
             run_cmd('make', cwd=build_dir)
+        else:
+            run_cmd(dep['build_cmd'], cwd=dep_path)
 
         # Copy include folder to include_path
         include_dst = os.path.join(include_path, dep['name'])
@@ -118,7 +112,7 @@ def compile():
             for include in dep['includes']:
                 include_src = os.path.join(dep_path, include)
                 if os.path.isdir(include_src):
-                    shutil.copytree(include_src, include_dst)
+                    shutil.copytree(include_src, include_dst, dirs_exist_ok=True)
                 elif os.path.exists(include_src):
                     shutil.copy(include_src, include_dst)
 

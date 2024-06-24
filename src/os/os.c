@@ -1,5 +1,6 @@
 #include "os/os.h"
 #include "foundation/global.h"
+#include "foundation/network.h"
 #include "os.h"
 #include "script/script.h"
 #include "ui/ui_keycode.h"

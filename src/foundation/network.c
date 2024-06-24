@@ -132,7 +132,7 @@ static ustring_view net_url_to_req_body(url_t url) {
         ustring_view_append_STR(&body, port_str);
     }
     ustring_view_append_STR(&body, "\r\n");
-    ustring_view_append_STR(&body, "Connection: keep-alive\r\n");
+    ustring_view_append_STR(&body, "Connection: close\r\n");
     ustring_view_append_STR(&body, "Upgrade-Insecure-Requests: 1\r\n");
     ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
@@ -160,7 +160,7 @@ static void on_close(uv_handle_t *handle) {
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
-    printf("%s\n", header.data);
+    printf("%s", response->body.base.data);
     if (header.length < 12)
         return false;
     if (strncmp(header.data, "HTTP/1.1 ", 9) != 0)
@@ -191,7 +191,7 @@ static bool try_parse_response_header(net_response_t *response, ustring header) 
     // parse content length
     ustring content_length = ustring_range((i8 *)header.data + (length - header.data), end - length);
     response->content_length = atoi(content_length.data);
-    response->headr_parsed = true;
+    response->header_parsed = true;
     return true;
 }
 
@@ -217,7 +217,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         session->cb(session->request, session->response);
         uv_close((uv_handle_t *)stream, on_close);
     } else if (nread > 0) {
-        if (!session->response.headr_parsed) {
+        if (!session->response.header_parsed) {
             ustring header = ustring_range(buf->base, nread);
             try_parse_response_header(&session->response, header);
         }
@@ -265,7 +265,7 @@ int net_download_async(url_t url, url_session_cb cb) {
     net_session_t *session = malloc(sizeof(net_session_t));
     session->response.data = (udata){.data = NULL, .length = 0};
     session->response.error = ustring_view_STR("");
-    session->response.headr_parsed = false;
+    session->response.header_parsed = false;
     session->cb = cb;
 
     uv_tcp_init(uv_default_loop(), &session->request.socket);
