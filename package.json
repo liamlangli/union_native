@@ -1,7 +1,7 @@
 {
-  "name": "@union_native/un",
+  "name": "@unionengine/native",
   "version": "0.0.1",
-  "description": "@unionengine/native",
+  "description": "union engine native api",
   "main": "index.js",
   "directories": {
     "example": "example"
@@ -20,10 +20,8 @@
   "license": "MIT",
   "homepage": "https://github.com/liamlangli/union_native#readme",
   "devDependencies": {
+    "@unionengine/core": "^0.1.1",
     "esbuild": "^0.20.2",
     "typescript": "^5.4.4"
-  },
-  "dependencies": {
-    "@unionengine/core": "^0.1.0"
   }
 }

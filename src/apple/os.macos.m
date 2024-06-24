@@ -12,8 +12,7 @@
 #include "foundation/logger.h"
 #include "gpu/gpu.h"
 #include "apple/metal.h"
-#include "script/script_context.h"
-#include "script/browser.h"
+#include "script/script.h"
 #include "ui/ui_keycode.h"
 
 @interface UNApp : NSApplication
@@ -241,7 +240,7 @@ static os_on_terminate terminate_func = NULL;
     float x = (float)point.x;
     float y = (float)(rect.size.height - point.y);
     state->pointer_location = (float2){.x = x, .y = y};
-    script_browser_window_mouse_move(x, y);
+    script_mouse_move(x, y);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

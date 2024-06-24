@@ -4,8 +4,6 @@
 #include "foundation/ustring.h"
 #include "foundation/format.h"
 
-#include <stb_ds.h>
-
 enum ULOG_TYPE {
     ULOG_INFO,
     ULOG_WARN,

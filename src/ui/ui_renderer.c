@@ -6,7 +6,7 @@
 #include "foundation/io.h"
 #include "foundation/logger.h"
 #include "gpu/gpu.h"
-#include "script/script_context.h"
+#include "script/script.h"
 
 #if OS_MACOS
 #include <unistd.h>
@@ -224,7 +224,7 @@ void ui_renderer_render() {
     if (_renderer.last_index_offset <= 0)
         return;
 
-    script_context_t *ctx = script_context_shared();
+    script_t *ctx = script_shared();
 
     gpu_update_buffer(_renderer.uniform_buffer, (udata){.data = (i8 *)&_renderer.window_size, sizeof(float) * 4});
     gpu_update_buffer(_renderer.index_buffer, (udata){.data = (i8 *)_renderer.index_data, _renderer.last_index_offset * 4});

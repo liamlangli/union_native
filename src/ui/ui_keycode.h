@@ -7,7 +7,7 @@
 #include "foundation/ustring.h"
 #include "ui/ui_type.h"
 
-enum KEYCODE {
+typedef enum {
     KEY_SPACE = 32,
     KEY_APOSTROPHE = 39 /* ' */,
     KEY_LEFT_PARENTHESIS = 40 /* ( */,
@@ -130,6 +130,6 @@ enum KEYCODE {
     KEY_RIGHT_ALT = 346,
     KEY_RIGHT_SUPER = 347,
     KEY_MENU = 348,
-};
+} KEYCODE;
 
 UN_EXPORT u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift);

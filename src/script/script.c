@@ -1,6 +1,5 @@
-#include "script/script_context.h"
+#include "script/script.h"
 #include "script/script_gpu.h"
-#include "script/browser.h"
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"
@@ -11,7 +10,7 @@
 #include "ui/ui_state.h"
 
 #include <quickjs/quickjs.h>
-#include <stb_ds.h>
+#include <stb/stb_ds.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <uv.h>
@@ -23,7 +22,7 @@ typedef struct qjs_module {
     JSContext *context;
 } qjs_module;
 
-static script_context_t shared_context = {0};
+static script_t shared_context = {0};
 static qjs_module shared_module = {0};
 
 static void script_dump_obj(JSContext *ctx, JSValueConst val) {
@@ -53,7 +52,7 @@ void script_dump_error(JSContext *ctx) {
     JS_FreeValue(ctx, exception);
 } 
 
-void script_context_init(os_window_t *window) {
+void script_init(os_window_t *window) {
     shared_module.runtime = JS_NewRuntime();
     shared_context.module = (void *)&shared_module;
     shared_context.window = window;
@@ -71,7 +70,7 @@ void script_context_init(os_window_t *window) {
 #endif
 }
 
-void script_context_terminate(void) {
+void script_terminate(void) {
     if (shared_module.runtime == NULL)
         return;
     JS_FreeRuntime(shared_module.runtime);
@@ -81,27 +80,25 @@ void script_context_terminate(void) {
     db_close(shared_context.db);
 }
 
-script_context_t *script_context_shared(void) { return &shared_context; }
-void *script_context_internal(void) { return shared_module.context; }
+script_t *script_shared(void) { return &shared_context; }
+void *script_internal(void) { return shared_module.context; }
 void *script_runtime_internal(void) { return shared_module.runtime; }
 
-void script_context_destroy(void) {
+void script_destroy(void) {
     if (shared_module.context == NULL)
         return;
     JS_FreeContext(shared_module.context);
     shared_module.context = NULL;
 }
 
-void script_context_cleanup(void) {
-    script_browser_cleanup();
+void script_cleanup(void) {
     script_gpu_cleanup();
-    script_context_destroy();
+    script_destroy();
 }
 
-void script_context_setup(void) {
+void script_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
     script_gpu_setup();
-    script_browser_setup();
 }
 
 int script_eval(ustring source, ustring_view filename) {
@@ -113,9 +110,9 @@ int script_eval(ustring source, ustring_view filename) {
         return -1;
     }
 
-    script_context_cleanup();
-    script_context_setup();
-    JSContext *ctx = script_context_internal();
+    script_cleanup();
+    script_setup();
+    JSContext *ctx = script_internal();
     JSValue val = JS_Eval(ctx, source.data, source.length, filename.base.data, 0);
 
     if (JS_IsException(val)) {
@@ -137,10 +134,10 @@ int script_eval_direct(ustring source, ustring *result) {
         return -1;
     }
 
-    JSContext *ctx = script_context_internal();
+    JSContext *ctx = script_internal();
     if (ctx == NULL) {
-        script_context_setup();
-        ctx = script_context_internal();
+        script_setup();
+        ctx = script_internal();
     }
     JSValue val = JS_Eval(ctx, source.data, source.length, "<eval>", 0);
     if (JS_IsException(val)) {
@@ -170,7 +167,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     ULOG_INFO_FMT("status: {d}", response.status);
     ULOG_INFO_FMT("content_length: {d}", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
-    script_context_t *ctx = script_context_shared();
+    script_t *ctx = script_shared();
 
     os_window_t *window = shared_context.window;
     os_window_on_resize(window, window->width, window->height);
@@ -201,8 +198,8 @@ int script_eval_uri(ustring_view uri) {
     return 0;
 }
 
-void script_context_loop_tick() {
-    if (!shared_context.invalid_script) script_browser_tick();
+void script_loop_tick() {
+    if (!shared_context.invalid_script) script_gpu_tick();
 #ifdef UI_NATIVE
     ui_dev_tool(&shared_context.dev_tool);
 #endif
@@ -213,10 +210,26 @@ void script_context_loop_tick() {
     JSContext *ctx;
     while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {
         if (finished < 0) {
-            script_dump_error(script_context_internal());
+            script_dump_error(script_internal());
             break;
         }
     }
 
     uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+}
+
+void script_key_action(KEYCODE key, BUTTON_ACTION action) {
+    
+}
+
+void script_mouse_move(f32 x, f32 y) {
+
+}
+
+void script_resize(i32 width, i32 height) {
+
+}
+
+void script_mouse_button(MOUSE_BUTTON button, BUTTON_ACTION action) {
+
 }

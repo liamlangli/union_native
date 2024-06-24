@@ -6,7 +6,6 @@
                 "/usr/include",
                 "/usr/local/include",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/stb",
                 "${workspaceFolder}/third_party/include"
             ],
             "defines": [
@@ -23,7 +22,6 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/stb",
                 "${workspaceFolder}/third_party/include"
             ],
             "defines": [

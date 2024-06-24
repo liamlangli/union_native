@@ -1,10 +1,12 @@
 #include "foundation/logger.h"
 #include "foundation/format.h"
-#include "script/script_context.h"
+#include "script/script.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <stb/stb_ds.h>
 
 #define ULOG_COLOR "\033[0;37m"
 #define INFO_COLOR "\033[0;32m"

@@ -2,7 +2,7 @@
 #include "ui/ui_dev_tool.h"
 #include "foundation/ustring.h"
 #include "foundation/logger.h"
-#include "script/script_context.h"
+#include "script/script.h"
 
 #include "ui/ui_draw.h"
 #include "ui/ui_label.h"
@@ -11,6 +11,8 @@
 #include "ui/ui_input.h"
 #include "ui/ui_button.h"
 #include "ui/ui_scroll_view.h"
+
+#include <stb/stb_ds.h>
 
 // tab ui
 static ui_button_t console_tab;
@@ -40,7 +42,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
 }
 
 void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
-    script_context_t *context = script_context_shared();
+    script_t *context = script_shared();
     int align = dev_tool->snap_align;
     f64 width = dev_tool->width;
     f64 height = dev_tool->height;
@@ -60,7 +62,7 @@ void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
 }
 
 void ui_dev_tool_set_visible(ui_dev_tool_t* dev_tool, bool visible) {
-    script_context_t *context = script_context_shared();
+    script_t *context = script_shared();
     dev_tool->visible = visible;
 
     if (!visible) {
@@ -88,7 +90,7 @@ void ui_dev_tool(ui_dev_tool_t* dev_tool) {
         return;
 
     ui_dev_tool_resize(dev_tool);
-    script_context_t *context = script_context_shared();
+    script_t *context = script_shared();
 
     fill_round_rect(0, ui_theme_shared()->bg, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
     stroke_round_rect(0, ui_theme_shared()->panel_1, dev_tool->rect, 6.f, 0, TRIANGLE_SOLID);
@@ -123,7 +125,7 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
         } else if (ustring_view_start_with_ustring(text, command_close)) {
             ui_dev_tool_set_visible(dev_tool, false);
         } else if (ustring_view_start_with_ustring(text, command_capture)) {
-            os_window_capture_require(script_context_shared()->window);
+            os_window_capture_require(script_shared()->window);
         } else {
             ustring result = ustring_NULL;
             ustring content = ustring_view_to_ustring(&text);

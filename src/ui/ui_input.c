@@ -1,7 +1,7 @@
 #include "ui/ui_input.h"
 #include "os/os.h"
 #include "foundation/ustring.h"
-#include "script/script_context.h"
+#include "script/script.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_label.h"
@@ -92,13 +92,13 @@ void ui_input_handle_edit(ui_input_t *input) {
         }
         if (ui_state_is_key_press(KEY_C)) {
 #ifdef UI_NATIVE
-            os_window_set_clipboard(script_context_shared()->window, input->label.text);
+            os_window_set_clipboard(script_shared()->window, input->label.text);
 #endif
             ui_state_delete_key_press(KEY_C);
         }
         if (ui_state_is_key_press(KEY_X)) {
 #ifdef UI_NATIVE
-            os_window_set_clipboard(script_context_shared()->window, ustring_view_sub_view(&input->label.text, from, to));
+            os_window_set_clipboard(script_shared()->window, ustring_view_sub_view(&input->label.text, from, to));
 #endif
             ustring_view_erase(&input->label.text, from, to);
             input->label.cursor_index = from;
@@ -111,7 +111,7 @@ void ui_input_handle_edit(ui_input_t *input) {
 #ifdef UI_NATIVE
             if (from != to)
                 ustring_view_erase(&input->label.text, from, to);
-            ustring pasted = os_window_get_clipboard(script_context_shared()->window);
+            ustring pasted = os_window_get_clipboard(script_shared()->window);
             ustring_view_insert_ustring(&input->label.text, from, &pasted);
             input->label.cursor_index = from + pasted.length;
             input->label.start_index = from + pasted.length;

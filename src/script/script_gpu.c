@@ -1,5 +1,5 @@
 #include "script_gpu.h"
-#include "script/script_context.h"
+#include "script/script.h"
 #include "foundation/global.h"
 #include "gpu/gpu.h"
 
@@ -203,7 +203,7 @@ static JSValue js_gpu_commit(JSContext *ctx, JSValueConst this_val, int argc, JS
 }
 
 
-static const JSCFunctionListEntry js_union_proto_func[] = {
+static const JSCFunctionListEntry js_gpu_proto_func[] = {
     JS_CFUNC_DEF("gpu_request_device", 0, js_gpu_request_device),
     JS_CFUNC_DEF("gpu_create_buffer", 1, js_gpu_func),
     JS_CFUNC_DEF("gpu_create_texture", 1, js_gpu_func),
@@ -238,19 +238,25 @@ static const JSCFunctionListEntry js_union_proto_func[] = {
 };
 
 static const JSCFunctionListEntry js_union_func[] = {
-    JS_OBJECT_DEF("native_adapter", js_union_proto_func, count_of(js_union_proto_func), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+    JS_OBJECT_DEF("gpu", js_gpu_proto_func, count_of(js_gpu_proto_func), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
 };
 
 void script_gpu_setup(void) {
-    JSContext *ctx = script_context_internal();                                                                                \
+    JSContext *ctx = script_internal();                                                                                \
     JSRuntime *rt = script_runtime_internal();                                                                                 \
     if (ctx == NULL || rt == NULL)                                                                                             \
         return;
     JSValue global = JS_GetGlobalObject(ctx);
-    JS_SetPropertyFunctionList(ctx, global, js_union_func, count_of(js_union_func));
+    JSValue adapter = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, adapter, js_union_func, count_of(js_union_func));
+    JS_SetPropertyStr(ctx, global, "native_adapter", adapter);
     JS_FreeValue(ctx, global);
 }
 
 void script_gpu_cleanup(void) {
     
+}
+
+void script_gpu_tick(void) {
+
 }
