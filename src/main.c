@@ -9,7 +9,7 @@ static gpu_render_pass screen_pass;
 void on_launch(os_window_t* window) {
     logger_init(logger_global());
     script_init(window);
-    ustring_view uri = ustring_view_from_ustring(ustring_STR("http://localhost:3003/main.js"));
+    ustring_view uri = ustring_view_from_ustring(ustring_STR("http://127.0.0.1:3003/main.js"));
     script_eval_uri(uri);
 
     gpu_render_pass_desc desc;

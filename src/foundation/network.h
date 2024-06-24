@@ -11,7 +11,7 @@ typedef struct url_t {
     ustring_view url;
     ustring_view protocol;
     ustring_view host;
-    ustring_view port;
+    i32 port;
     ustring_view path;
     ustring_view query;
 } url_t;

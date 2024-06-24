@@ -39,6 +39,14 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
     console_input.label.element.constraint.margin.left = 3.f;
 
     ui_scroll_view_init(&console_view, 20);
+
+    console_labels = (ui_label_t*)malloc(sizeof(ui_label_t) * 127);
+    for (u32 i = console_label_count; i < 127; i++) {
+        ui_label_init(&console_labels[i], ustring_view_STR(""));
+        console_labels[i].element.constraint.alignment = LEFT | CENTER_VERTICAL;
+        console_labels[i].element.constraint.margin.left = 4.f;
+        console_labels[i].scale = 0.7f;
+    }
 }
 
 void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
@@ -154,16 +162,6 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     console_view.item_count = line_count;
     u32 start = ui_scroll_view_item_start(&console_view, scroll_view_rect);
     u32 count = ui_scroll_view_item_count(&console_view, scroll_view_rect);
-    if (count > console_label_count) {
-        console_labels = realloc(console_labels, sizeof(ui_label_t) * count);
-        for (u32 i = console_label_count; i < count; i++) {
-            ui_label_init(&console_labels[i], ustring_view_STR(""));
-            console_labels[i].element.constraint.alignment = LEFT | CENTER_VERTICAL;
-            console_labels[i].element.constraint.margin.left = 4.f;
-            console_labels[i].scale = 0.7f;
-        }
-        console_label_count = count;
-    }
 
     ui_rect label_rect = scroll_view_rect;
     label_rect.y -= fmodf(console_view.offset_y, console_view.item_height);
