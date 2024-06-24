@@ -40,4 +40,4 @@ void script_mouse_button(MOUSE_BUTTON button, BUTTON_ACTION action);
 void script_key_action(KEYCODE key, BUTTON_ACTION action);
 void script_resize(i32 width, i32 height);
 
-void script_loop_tick();
+void script_tick();

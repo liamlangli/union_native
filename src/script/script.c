@@ -163,7 +163,7 @@ int script_eval_direct(ustring source, ustring *result) {
 }
 
 static void on_remote_script_download(net_request_t request, net_response_t response) {
-    ULOG_INFO_FMT("download remote script: {v}", request.url);
+    ULOG_INFO_FMT("remote script downloaded: {v}", request.url);
     ULOG_INFO_FMT("status: {d}", response.status);
     ULOG_INFO_FMT("content_length: {d}", response.content_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
@@ -198,14 +198,14 @@ int script_eval_uri(ustring_view uri) {
     return 0;
 }
 
-void script_loop_tick() {
+void script_tick() {
     if (!shared_context.invalid_script) script_gpu_tick();
 #ifdef UI_NATIVE
     ui_dev_tool(&shared_context.dev_tool);
 #endif
     ui_renderer_render();
     ui_state_update();
-    
+
     int finished;
     JSContext *ctx;
     while ((finished = JS_ExecutePendingJob(script_runtime_internal(), &ctx)) != 0) {

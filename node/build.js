@@ -18,7 +18,7 @@ const no_side_effects = {
 
 build({
     entryPoints: [
-        'node/src/simple.ts',
+        'node/src/main.ts',
     ],
     bundle: true,
     outdir: "node/public",

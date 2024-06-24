@@ -84,7 +84,7 @@ void ui_renderer_init() {
     _renderer.primitive_offset = 0;
     _renderer.preserved_primitive_offset = 0;
 
-    ui_font_init(ui_font_shared(), msdf_font_system_font(), 14);
+    ui_font_init(ui_font_shared(), msdf_font_system_font(), 16);
     ui_renderer_write_msdf_font(ui_font_shared()->font);
 
     // gpu

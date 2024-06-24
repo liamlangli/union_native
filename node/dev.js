@@ -19,13 +19,11 @@ const no_side_effects = {
 
 let ctx = await context({
     entryPoints: [
-        "node/src/simple.ts",
+        "node/src/main.ts",
     ],
     bundle: true,
-    sourcemap: "inline",
-    sourcesContent: true,
     outdir: "node/public",
-    plugins: [ no_side_effects ]
+    plugins: [no_side_effects]
 });
 
 let { host, port } = await ctx.serve({ servedir: "node/public" });
