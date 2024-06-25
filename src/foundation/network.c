@@ -138,7 +138,6 @@ static ustring_view net_url_to_req_body(url_t url) {
                                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
     // ULOG_INFO_FMT("{v}", body);
-    printf("%s", body.base.data);
     return body;
 }
 
@@ -160,7 +159,7 @@ static void on_close(uv_handle_t *handle) {
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
-    printf("%s", response->body.base.data);
+    ustring_view header_view = ustring_view_from_ustring(header);
     if (header.length < 12)
         return false;
     if (strncmp(header.data, "HTTP/1.1 ", 9) != 0)
@@ -170,10 +169,11 @@ static bool try_parse_response_header(net_response_t *response, ustring header) 
     response->status = atoi(status_code.data);
 
     // find content length length
-    const char *length = strstr(header.data, "Content-Length: ");
-    if (length == NULL)
+    ustring_view content_length_keyword = ustring_view_STR("Content-Length: ");
+    i32 index = ustring_view_find_ignore_case(&header_view, &content_length_keyword);
+    if (index == -1)
         return false;
-    length += 16;
+    const char* length = header.data + index + content_length_keyword.length;
 
     // find content length end
     const char *end = strstr(length, "\r\n");

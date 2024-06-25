@@ -74,3 +74,6 @@ u32 ustring_view_append_ustring_view(ustring_view *a, ustring_view *b); // may a
 u32 ustring_view_append_STR(ustring_view *a, const char *b);  // may allocate new memory
 
 #define ustring_view_start_with_ustring(v, a) ((v).length >= (a).length && strncmp((v).base.data + (v).start, (a).data, (a).length) == 0)
+
+i32 ustring_view_find(ustring_view *v, ustring_view *s); // no memory allocation
+i32 ustring_view_find_ignore_case(ustring_view *v, ustring_view *s); // no memory allocation

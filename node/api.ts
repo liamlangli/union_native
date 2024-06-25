@@ -1,9 +1,8 @@
 import { gpu_backend, gpu_binding, gpu_binding_desc, gpu_buffer, gpu_buffer_desc, gpu_mesh, gpu_mesh_desc, gpu_pipeline, gpu_pipeline_desc, gpu_sampler, gpu_sampler_desc, gpu_shader, gpu_shader_desc, gpu_texture, gpu_texture_desc } from "@unionengine/core";
 import { gpu_extent3d, gpu_pipeline_reflection, gpu_render_pass, gpu_render_pass_desc } from "@unionengine/core/src/gpu/gpu_type";
 
-export function is_union_native(): native_api | undefined {
-   if (!/union_native/i.test(navigator.userAgent)) return;
-   return (navigator as any).native_adapter as native_api;
+export function request_native_adapter(): native_api | undefined {
+   return (globalThis as any).native_adapter as native_api
 }
 
 export interface native_gpu_api {

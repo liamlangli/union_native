@@ -1,9 +1,9 @@
-import { is_union_native } from "../api";
+import { request_native_adapter } from "../api";
 
 async function main() {
     console.log("main func");
-    const api = is_union_native();
-    console.log(api);
+    const api = request_native_adapter();
+    console.log(api?.gpu.gpu_request_device());
 }
 
 main().then();

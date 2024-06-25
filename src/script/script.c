@@ -96,8 +96,52 @@ void script_cleanup(void) {
     script_destroy();
 }
 
+static JSValue js_console_log(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
+    for (int i = 0; i < argc; ++i) {
+        const char *str = JS_ToCString(ctx, argv[i]);
+        ULOG_INFO(str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_console_warn(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
+    for (int i = 0; i < argc; ++i) {
+        const char *str = JS_ToCString(ctx, argv[i]);
+        ULOG_WARN(str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_console_error(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
+    for (int i = 0; i < argc; ++i) {
+        const char *str = JS_ToCString(ctx, argv[i]);
+        ULOG_ERROR("{}", str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+static const JSCFunctionListEntry js_console_proto_funcs[] = {
+    JS_CFUNC_DEF("log", 1, js_console_log),
+    JS_CFUNC_DEF("warn", 1, js_console_warn),
+    JS_CFUNC_DEF("error", 1, js_console_error),
+};
+
+static const JSCFunctionListEntry js_console_funcs[] = {
+    JS_OBJECT_DEF("console", js_console_proto_funcs, count_of(js_console_proto_funcs), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE),
+};
+
+
 void script_setup(void) {
     shared_module.context = JS_NewContext(shared_module.runtime);
+
+    JSContext *ctx = shared_module.context;
+    JSValue global = JS_GetGlobalObject(ctx);
+    JS_SetPropertyFunctionList(ctx, global, js_console_funcs, count_of(js_console_funcs));
+    JS_FreeValue(ctx, global);
+
     script_gpu_setup();
 }
 
@@ -166,6 +210,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
     // ULOG_INFO_FMT("remote script downloaded: {v}", request.url);
     ULOG_INFO_FMT("status: {d}", response.status);
     ULOG_INFO_FMT("content_length: {d}", response.content_length);
+    ULOG_INFO_FMT("header_length: {d}", response.header_length);
     shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
     script_t *ctx = script_shared();
 
