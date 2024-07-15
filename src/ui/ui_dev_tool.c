@@ -29,7 +29,7 @@ static ui_label_t *console_labels;
 static u32 console_label_count = 0;
 
 void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
-    dev_tool->snap_align = RIGHT;
+    dev_tool->snap_align = BOTTOM;
     dev_tool->width = 480;
     dev_tool->height = 320;
     dev_tool->visible = true;
@@ -37,6 +37,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
 
     ui_input_init(&console_input, ustring_view_STR(""));
     console_input.label.element.constraint.margin.left = 3.f;
+    console_input.label.scale = 0.8f;
 
     ui_scroll_view_init(&console_view, 20);
 

@@ -137,8 +137,7 @@ void ui_input_handle_edit(ui_input_t *input) {
 
         ;
         const bool shift = ui_state_is_key_pressed(KEY_LEFT_SHIFT) || ui_state_is_key_pressed(KEY_RIGHT_SHIFT);
-        // u32 count = ui_keycode_parse(&state->edit_str, state->key_press, shift);
-        u32 count = 0;
+        u32 count = ui_keycode_parse(&state->edit_str, state->key_press, shift);
         if (count <= 0)
             return;
 

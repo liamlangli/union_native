@@ -234,13 +234,11 @@ static os_on_terminate terminate_func = NULL;
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-    ui_state_t *state = ui_state_get();
     const NSRect rect = [mtk_view frame];
     const NSPoint point = [event locationInWindow];
     float x = (float)point.x;
     float y = (float)(rect.size.height - point.y);
-    state->pointer_location = (float2){.x = x, .y = y};
-    script_mouse_move(x, y);
+    os_window_on_mouse_move(&_window, x, y);
 }
 
 - (void)rightMouseDown:(NSEvent*)event {

@@ -16,10 +16,19 @@ ustring os_cwd() {
     return (ustring){ .data = shared_buffer, .length = (u32)strlen(shared_buffer) };
 }
 
-void os_window_on_scroll(os_window_t* window, double x, double y) {
+void os_window_on_mouse_move(os_window_t* window, f64 x, f64 y) {
     script_t *ctx = script_shared();
     ui_state_t *state = ui_state_get();
-    if (state->active == -1 && state->hover == -1) script_mouse_move(x, y);
+    state->pointer_location.x = (f32)x;
+    state->pointer_location.y = (f32)y;
+    window->mouse_x = x;
+    window->mouse_y = y;
+    script_mouse_move((f32)x, (f32)y);
+}
+
+void os_window_on_scroll(os_window_t* window, f64 x, f64 y) {
+    script_t *ctx = script_shared();
+    ui_state_t *state = ui_state_get();
     const bool shift = ui_state_is_key_pressed(KEY_LEFT_SHIFT) || ui_state_is_key_pressed(KEY_RIGHT_SHIFT);
     state->pointer_scroll.x = (f32)(x * (shift ? state->smooth_factor : 1.f));
     state->pointer_scroll.y = (f32)(-y * (shift ? state->smooth_factor : 1.f));
@@ -29,7 +38,11 @@ void os_window_on_mouse_btn(os_window_t* window, MOUSE_BUTTON button, BUTTON_ACT
     script_t *ctx = script_shared();
     if (ctx == NULL) return;
 
-    ui_state_mouse_down(button);
+    if (action == BUTTON_ACTION_PRESS) {
+        ui_state_mouse_down(button);
+    } else if (action == BUTTON_ACTION_RELEASE) {
+        ui_state_mouse_up(button);
+    }
     script_mouse_button(button, action);
     ui_state_set_mouse_location(window->mouse_x, window->mouse_y);
 }
