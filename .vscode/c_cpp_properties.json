@@ -28,7 +28,27 @@
                 "OS_MACOS",
                 "USER_AGENT",
                 "ENABLE_MIMALLOC",
-                "UI_NATIVE"
+                "UI_NATIVE",
+                "SCRIPT_BACKEND_QJS"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "macos-clang-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "iOS",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/third_party/include"
+            ],
+            "defines": [
+                "OS_iOS",
+                "USER_AGENT",
+                "ENABLE_MIMALLOC",
+                "UI_NATIVE",
+                "ENABLE_ARC",
+                "SCRIPT_BACKEND_JSC"
             ],
             "compilerPath": "/usr/bin/clang",
             "intelliSenseMode": "macos-clang-x64",

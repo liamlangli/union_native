@@ -171,11 +171,13 @@ bool gpu_request_device(os_window_t *window) {
 }
 
 void gpu_destroy_device() {
+#ifndef ENABLE_ARC
     [_state.cmd_encoder release];
     [_state.cmd_buffer release];
     [_state.cmd_queue release];
     [_state.device.device release];
     dispatch_release(_state.semaphore);
+#endif
 }
 
 gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
@@ -280,10 +282,14 @@ gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
 
 void gpu_update_buffer(gpu_buffer buffer, udata data) {
     gpu_buffer_mtl _buffer = _state.buffers[buffer.id];
+#if defined(OS_MACOS)
     memcpy([_buffer.buffer contents], data.data, data.length);
     if (_buffer.options & MTLResourceStorageModeManaged) {
         [_buffer.buffer didModifyRange: NSMakeRange(0, data.length)];
     }
+#elif defined(OS_IOS)
+    
+#endif
 }
 
 bool ustring_match(ustring a, NSString *b) {
@@ -292,16 +298,19 @@ bool ustring_match(ustring a, NSString *b) {
 }
 
 i32 get_parameter_index(ustring a, MTLRenderPipelineReflection *reflection) {
-    for (u32 i = 0; i < reflection.vertexBindings.count; ++i) {
-        id<MTLBinding> binding = reflection.vertexBindings[i];
-        if (ustring_match(a, binding.name)) {
-            return (i32)binding.index + 1;
+    if (@available(iOS 16.0, *)) {
+        for (u32 i = 0; i < reflection.vertexBindings.count; ++i) {
+            id<MTLBinding> binding = reflection.vertexBindings[i];
+            if (ustring_match(a, binding.name)) {
+                return (i32)binding.index + 1;
+            }
         }
-    }
-    for (u32 i = 0; i < reflection.fragmentBindings.count; ++i) {
-        id<MTLBinding> binding = reflection.fragmentBindings[i];
-        if (ustring_match(a, binding.name)) {
-            return - ((i32)binding.index + 1);
+        for (u32 i = 0; i < reflection.fragmentBindings.count; ++i) {
+            
+            id<MTLBinding> binding = reflection.fragmentBindings[i];
+            if (ustring_match(a, binding.name)) {
+                return - ((i32)binding.index + 1);
+            }
         }
     }
     return 0;
@@ -479,7 +488,9 @@ id<MTLLibrary> _mtl_library_from_bytecode(udata src) {
         NSLog(@"Error: %@", err);
         NSLog(@"Source: %s", [err.localizedDescription UTF8String]);
     }
+#ifndef ENABLE_ARC
     dispatch_release(data);
+#endif
     return lib;
 }
 
@@ -506,30 +517,41 @@ gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
         vertex_lib = _mtl_library_from_bytecode(desc->vertex.bytecode);
         fragment_lib = _mtl_library_from_bytecode(desc->fragment.bytecode);
         if (nil == vertex_lib || nil == fragment_lib) {
-            goto failed;
+#ifndef ENABLE_ARC
+            if (vertex_lib) [vertex_lib release];
+            if (fragment_lib) [fragment_lib release];
+#endif
+            return (gpu_shader){ .id = 0 };
         }
         vertex_func = [vertex_lib newFunctionWithName: [NSString stringWithUTF8String: desc->vertex.entry.data]];
         fragment_func = [fragment_lib newFunctionWithName: [NSString stringWithUTF8String:desc->fragment.entry.data]];
     } else if (desc->vertex.source.length > 0 && desc->fragment.source.length > 0) {
         vertex_lib = _mtl_library_from_code(desc->vertex.source);
         fragment_lib = _mtl_library_from_code(desc->fragment.source);
-        if (nil == vertex_lib || nil == fragment_lib) {
-            goto failed;
-        }
+#ifndef ENABLE_ARC
+        if (vertex_lib) [vertex_lib release];
+        if (fragment_lib) [fragment_lib release];
+#endif
+        return (gpu_shader){ .id = 0 };
         vertex_func = [vertex_lib newFunctionWithName: [NSString stringWithUTF8String: desc->vertex.entry.data]];
         fragment_func = [fragment_lib newFunctionWithName: [NSString stringWithUTF8String:desc->fragment.entry.data]];
     } else {
-        goto failed;
+        return (gpu_shader){ .id = 0 };
     }
 
     if (nil == vertex_func) {
         ULOG_ERROR("Failed to create vertex function");
-        goto failed;
+#ifndef ENABLE_ARC
+        if (vertex_func) [vertex_func release];
+#endif
+        return (gpu_shader){ .id = 0 };
     }
 
     if (nil == fragment_func) {
-        ULOG_ERROR("Failed to create fragment function");
-        goto failed;
+#ifndef ENABLE_ARC
+        if (fragment_func) [fragment_func release];
+#endif
+        return (gpu_shader){ .id = 0 };
     }
 
     gpu_shader_mtl _shader = (gpu_shader_mtl){
@@ -541,13 +563,6 @@ gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
     
     _state.shaders[_state.shader_count] = _shader;
     return (gpu_shader){.id = _state.shader_count};
-
-failed:
-    if (vertex_lib) [vertex_lib release];
-    if (fragment_lib) [fragment_lib release];
-    if (vertex_func) [vertex_func release];
-    if (fragment_func) [fragment_func release];
-    return (gpu_shader){ .id = 0 };
 }
 
 gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
@@ -608,7 +623,9 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     NSError *err = nil;
     MTLRenderPipelineReflection *reflection = nil;
     id<MTLRenderPipelineState> pso = [_state.device.device newRenderPipelineStateWithDescriptor: pip_desc options: MTLPipelineOptionBindingInfo reflection: &reflection error: &err];
+#ifndef ENABLE_ARC
     [pip_desc release];
+#endif
     _pipeline.reflection = reflection;
 
     if (nil == pso) {
@@ -641,7 +658,9 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
             ds_desc.frontFaceStencil.writeMask = stencil->write_mask;
         }
         id<MTLDepthStencilState> dso = [_state.device.device newDepthStencilStateWithDescriptor: ds_desc];
+#ifndef ENABLE_ARC
         [ds_desc release];
+#endif
         if (nil == dso) {
             return (gpu_pipeline){ .id = 0 };
         }

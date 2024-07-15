@@ -1,3 +1,5 @@
+#if defined(SCRIPT_BACKEND_QJS)
+
 #include "script/script.h"
 #include "script/script_gpu.h"
 #include "foundation/global.h"
@@ -278,3 +280,5 @@ void script_resize(i32 width, i32 height) {
 void script_mouse_button(MOUSE_BUTTON button, BUTTON_ACTION action) {
 
 }
+
+#endif

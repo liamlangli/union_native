@@ -64,8 +64,6 @@ static id mtk_view_controller;
 
     _window.width = width;
     _window.height = height;
-    _window.native_window = mtk_view;
-    _window.gpu_device = mtl_device;
 
     // call the init function
     if (launch_func) {
@@ -74,6 +72,7 @@ static id mtk_view_controller;
 
     return YES;
 }
+@end
 
 //------------------------------------------------------------------------------
 @implementation UNViewDelegate
