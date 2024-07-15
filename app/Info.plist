@@ -15,7 +15,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleIdentifier</key>
-	<string>io.unionengine.un</string>
+	<string>com.liamlangli.un</string>
 	<key>CFBundleName</key>
 	<string>union</string>
 	<key>CFBundleDisplayName</key>
