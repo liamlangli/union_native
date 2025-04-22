@@ -22,7 +22,7 @@
   "homepage": "https://github.com/liamlangli/union_native#readme",
   "devDependencies": {
     "@unionengine/core": "^0.1.1",
-    "esbuild": "^0.21.5",
+    "esbuild": "^0.25.2",
     "typescript": "^5.4.4"
   }
 }
