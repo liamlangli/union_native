@@ -26,13 +26,16 @@ Active branch: `claude/simplify-webgpu-dawn-cVEUO`
 
 Auto-selected in `cmake/Options.cmake` — do not override manually.
 
-### ImGui integration
+### URL address bar (self-hosted, no ImGui)
 - `src/imgui_layer.h` / `src/imgui_layer.cpp`
-- Shows a floating address bar (URL input) at top of window on launch.
-- Uses `imgui_impl_wgpu` with raw WGPUDevice / WGPURenderPassEncoder from Dawn.
-- `imgui_layer_new_frame(window)` builds the UI; `imgui_layer_render()` flushes
-  draw data into the active render pass (call after `gpu_begin_render_pass`).
-- ImGui source compiled directly from `third_party/source/imgui/` (no pre-built lib).
+- Shows a floating URL bar at top of window on launch.
+- Built entirely on the project's own native UI system — **no Dear ImGui**.
+- Key widgets used: `ui_input_t` (text field), `ui_button_t` (Load / Hide),
+  `fill_round_rect` (panel background), `ui_theme_t` (colours).
+- Rendered at `BAR_LAYER = 3` (top-most layer) so it appears above script content.
+- `imgui_layer_new_frame(window)` draws bar widgets into the native UI buffers.
+- `imgui_layer_render()` is a no-op — `ui_renderer_render()` inside `script_tick()` flushes everything.
+- On Enter / Load: calls `script_eval_uri(s_url_input.label.text)` directly.
 
 ### Frame loop (main.cpp)
 ```

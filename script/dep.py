@@ -111,21 +111,6 @@ deps = [
     },
 
     # -----------------------------------------------------------------------
-    # Dear ImGui — immediate-mode GUI (all platforms)
-    # -----------------------------------------------------------------------
-    {
-        'name': 'imgui',
-        'git': 'https://github.com/ocornut/imgui.git',
-        'head': 'v1.91.5',
-        'platforms': ['Darwin', 'Linux', 'Windows'],
-        # ImGui is compiled directly into the project from its source tree;
-        # we only need the headers copied to include/imgui/.
-        'includes': ['.', 'backends'],
-        'libs': [],  # no pre-built lib — source files added to CMakeLists
-        'build_toolchain': 'header_only',
-    },
-
-    # -----------------------------------------------------------------------
     # Dawn — WebGPU reference implementation (all platforms)
     # -----------------------------------------------------------------------
     {

@@ -29,7 +29,11 @@ static gpu_render_pass screen_pass;
 extern "C" void on_launch(os_window_t *window) {
     logger_init(logger_global());
 
-    // ImGui URL bar — must be initialised after the GPU device is ready
+    // Initialise the script runtime (sets up ui_renderer, ui_state, etc.)
+    // No URL is loaded yet — the user enters one via the address bar.
+    script_init(window);
+
+    // Native URL address bar (built on the project's own UI system, no ImGui)
     imgui_layer_init(window);
 
     // Main screen render pass

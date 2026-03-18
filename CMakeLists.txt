@@ -92,22 +92,6 @@ else() # LINUX
 endif()
 
 # -----------------------------------------------------------------------
-# ImGui source files (compiled directly into the project)
-# -----------------------------------------------------------------------
-set(IMGUI_DIR ${THIRD_PARTY}/source/imgui)
-if (EXISTS ${IMGUI_DIR})
-    set(IMGUI_SRC
-        ${IMGUI_DIR}/imgui.cpp
-        ${IMGUI_DIR}/imgui_draw.cpp
-        ${IMGUI_DIR}/imgui_tables.cpp
-        ${IMGUI_DIR}/imgui_widgets.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_wgpu.cpp)
-    list(APPEND PROJECT_SRC ${IMGUI_SRC})
-    source_group(third_party\\imgui FILES ${IMGUI_SRC})
-    set_source_files_properties(${IMGUI_SRC} PROPERTIES UNITY_GROUP "imgui")
-endif()
-
-# -----------------------------------------------------------------------
 # Third-party (zip, stb, cgltf)
 # -----------------------------------------------------------------------
 include(${CMAKE_SOURCE_DIR}/cmake/ThirdParty.cmake)

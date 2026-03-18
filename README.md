@@ -65,12 +65,15 @@ The script engine is auto-selected by CMake based on the host platform.
 Scripts are loaded from a URL (default: `http://127.0.0.1:3003/main.js`)
 entered via the ImGui address bar at runtime.
 
-## ImGui URL Bar
+## URL Address Bar
 
-On launch the application shows a floating address bar at the top of the
-window. Enter any `http://` URL and press **Enter** or **Load** to fetch
-and execute the JavaScript page. Press **Hide** to dismiss the bar once
-a page is loaded.
+On launch a floating address bar appears at the top of the window.
+Enter any `http://` URL and press **Enter** or **Load** to fetch and
+execute the JavaScript page. Press **Hide** to dismiss the bar.
+
+The bar is implemented entirely with the project's own native UI system
+(`ui_input_t`, `ui_button_t`, `fill_round_rect`) — no external GUI
+library is required.
 
 ## Build
 
@@ -145,7 +148,6 @@ union_native/
 | Library | Version | Purpose |
 |---------|---------|---------|
 | Dawn | chromium/6736 | WebGPU implementation |
-| Dear ImGui | v1.91.5 | URL address bar UI |
 | libuv | pinned | Async event loop |
 | JavaScriptCore | system | JS engine (macOS) |
 | V8 | 12.3 | JS engine (Windows) |
