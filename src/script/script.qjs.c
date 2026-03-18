@@ -5,6 +5,7 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"
+#include "foundation/html_parser.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
 #include "ui/ui_dev_tool.h"
@@ -208,13 +209,45 @@ int script_eval_direct(ustring source, ustring *result) {
     return ret;
 }
 
+static void on_html_script_download(net_request_t request, net_response_t response) {
+    ULOG_INFO_FMT("status: {d}", response.status);
+    ustring source = ustring_view_to_ustring(&response.body);
+    shared_context.invalid_script = script_eval(source, request.url.url) != 0;
+
+    os_window_t *window = shared_context.window;
+    os_window_on_resize(window, window->width, window->height);
+}
+
 static void on_remote_script_download(net_request_t request, net_response_t response) {
-    // ULOG_INFO_FMT("remote script downloaded: {v}", request.url);
     ULOG_INFO_FMT("status: {d}", response.status);
     ULOG_INFO_FMT("content_length: {d}", response.content_length);
     ULOG_INFO_FMT("header_length: {d}", response.header_length);
-    shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
-    script_t *ctx = script_shared();
+
+    const char *body_data = response.body.base.data + response.body.start;
+    u32 body_len = response.body.length;
+
+    if (html_is_html(body_data, body_len)) {
+        ULOG_INFO("html_parser: detected HTML page, extracting scripts");
+        html_parse_result_t parsed = html_parse_scripts(body_data, body_len, request.url);
+        for (u32 i = 0; i < parsed.count; i++) {
+            html_script_t *s = &parsed.scripts[i];
+            if (s->src.length > 0) {
+                ustring_view src_view = ustring_view_from_ustring(s->src);
+                url_t script_url = url_parse(src_view);
+                if (script_url.valid) {
+                    ULOG_INFO_FMT("html_parser: loading script: {}", s->src.data);
+                    net_download_async(script_url, on_html_script_download);
+                }
+                ustring_free(&s->src);
+            } else if (s->code.length > 0) {
+                ustring_view filename = ustring_view_STR("<inline>");
+                shared_context.invalid_script = script_eval(s->code, filename) != 0;
+                ustring_free(&s->code);
+            }
+        }
+    } else {
+        shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
+    }
 
     os_window_t *window = shared_context.window;
     os_window_on_resize(window, window->width, window->height);
