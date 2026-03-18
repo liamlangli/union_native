@@ -28,6 +28,7 @@ lib_path     = os.path.join(base_path, 'third_party', 'lib')
 IS_WINDOWS = platform.system() == 'Windows'
 IS_MACOS   = platform.system() == 'Darwin'
 IS_LINUX   = platform.system() == 'Linux'
+IS_APPLE_SILICON = IS_MACOS and platform.machine() == 'arm64'
 
 BUILD_TYPE = 'Debug' if debug else 'Release'
 
@@ -49,6 +50,12 @@ DAWN_CMAKE_FLAGS = ' '.join([
     '-DBUILD_SHARED_LIBS=OFF',
 ])
 
+if IS_APPLE_SILICON:
+    DAWN_CMAKE_FLAGS = ' '.join([
+        DAWN_CMAKE_FLAGS,
+        '-DCMAKE_OSX_ARCHITECTURES=arm64',
+    ])
+
 # V8: pre-built binaries via the v8-cmake mirror.
 # On Windows use the pre-built package from the v8-cmake release.
 V8_CMAKE_FLAGS = ' '.join([
@@ -57,59 +64,19 @@ V8_CMAKE_FLAGS = ' '.join([
     '-DBUILD_SHARED_LIBS=OFF',
 ])
 
+DAWN_LIB_OUTPUTS = [
+    'build/src/dawn/native/libdawn_native.a',
+    'build/src/dawn/libdawn_proc.a',
+]
+
+if IS_WINDOWS:
+    DAWN_LIB_OUTPUTS.append('build/src/dawn/native/webgpu_dawn.lib')
+elif IS_MACOS:
+    DAWN_LIB_OUTPUTS.append('build/src/dawn/native/libwebgpu_dawn.dylib')
+else:
+    DAWN_LIB_OUTPUTS.append('build/src/dawn/native/libwebgpu_dawn.so')
+
 deps = [
-    # -----------------------------------------------------------------------
-    # libuv — async I/O event loop
-    # -----------------------------------------------------------------------
-    {
-        'name': 'libuv',
-        'git': 'https://github.com/liamlangli/libuv.git',
-        'head': '520eb622',
-        'platforms': ['Darwin', 'Linux', 'Windows'],
-        'includes': ['include'],
-        'libs': ['build/libuv.a'],
-        'build_toolchain': 'cmake',
-        'build_cmd': (
-            f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={BUILD_TYPE} '
-            f'-DBUILD_TESTING=OFF .. > cmake.log'
-        ),
-    },
-
-    # -----------------------------------------------------------------------
-    # mimalloc — optional high-performance allocator
-    # -----------------------------------------------------------------------
-    {
-        'name': 'mimalloc',
-        'git': 'https://github.com/liamlangli/mimalloc.git',
-        'head': 'cc3c14f',
-        'platforms': ['Darwin', 'Linux', 'Windows'],
-        'includes': ['include'],
-        'libs': ['build/libmimalloc.a', 'build/libmimalloc-static.a'],
-        'build_toolchain': 'cmake',
-        'build_cmd': (
-            f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={BUILD_TYPE} '
-            f'-DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON '
-            f'-DMI_BUILD_TESTS=OFF .. > cmake.log'
-        ),
-    },
-
-    # -----------------------------------------------------------------------
-    # QuickJS — JavaScript engine (Linux only; macOS uses JSC, Windows uses V8)
-    # -----------------------------------------------------------------------
-    {
-        'name': 'quickjs',
-        'git': 'https://github.com/liamlangli/quickjs.git',
-        'head': '3b45d15',
-        'platforms': ['Linux'],
-        'includes': ['quickjs.h', 'quickjs-libc.h'],
-        'libs': ['libquickjs.a'],
-        'build_toolchain': 'make',
-        'build_cmd': (
-            'make libquickjs.a CONFIG_MIMALLOC=y CONFIG_VERSION=\\"0.0.1\\" '
-            'CONFIG_BIGNUM=y CONFIG_STR_EVAL=y CONFIG_LTO=y'
-        ),
-    },
-
     # -----------------------------------------------------------------------
     # Dawn — WebGPU reference implementation (all platforms)
     # -----------------------------------------------------------------------
@@ -118,12 +85,8 @@ deps = [
         'git': 'https://dawn.googlesource.com/dawn',
         'head': 'chromium/6736',
         'platforms': ['Darwin', 'Linux', 'Windows'],
-        'includes': ['include'],
-        'libs': [
-            'out/Release/libdawn_native.a',
-            'out/Release/libdawn_proc.a',
-            'out/Release/libwebgpu_dawn.a',
-        ],
+        'includes': ['include', 'build/gen/include'],
+        'libs': DAWN_LIB_OUTPUTS,
         'build_toolchain': 'cmake',
         'build_cmd': (
             f'cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={BUILD_TYPE} '
@@ -177,6 +140,49 @@ def current_platform():
 
 def dep_applies(dep):
     return current_platform() in dep.get('platforms', [])
+
+
+def replace_once(file_path, old_text, new_text):
+        if not os.path.exists(file_path):
+                return False
+
+        with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+
+        if new_text in content:
+                return False
+
+        if old_text not in content:
+                return False
+
+        content = content.replace(old_text, new_text, 1)
+
+        with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(content)
+
+        return True
+
+
+def patch_dawn_for_apple_silicon(dep_dir):
+        if not IS_APPLE_SILICON:
+                return False
+
+        abseil_copts = os.path.join(
+                dep_dir,
+                'third_party',
+                'abseil-cpp',
+                'absl',
+                'copts',
+                'AbseilConfigureCopts.cmake',
+        )
+
+        old_text = 'if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES [[Clang]])'
+        new_text = 'if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")\n  set(ABSL_RANDOM_RANDEN_COPTS "${ABSL_RANDOM_HWAES_ARM64_FLAGS}")\nelseif(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES [[Clang]])'
+
+        patched = replace_once(abseil_copts, old_text, new_text)
+        if patched:
+                print('  patched Dawn Abseil Randen flags for Apple Silicon')
+        return patched
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +244,10 @@ def compile():
             build_dir = os.path.join(dep_dir, 'build')
             os.makedirs(build_dir, exist_ok=True)
             run_cmd(dep['build_cmd'], cwd=build_dir)
+            if dep['name'] == 'dawn' and patch_dawn_for_apple_silicon(dep_dir):
+                shutil.rmtree(build_dir)
+                os.makedirs(build_dir, exist_ok=True)
+                run_cmd(dep['build_cmd'], cwd=build_dir)
             run_cmd('make -j$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)', cwd=build_dir)
 
         elif toolchain == 'gn':

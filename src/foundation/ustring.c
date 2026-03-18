@@ -161,7 +161,7 @@ u32 ustring_view_append_STR(ustring_view *a, const char *b) {
     return new_size;
 }
 
-i32 tolower(i32 c) {
+static i32 ustring_tolower(i32 c) {
     if (c >= 'A' && c <= 'Z')
         return c + 32;
     return c;
@@ -187,9 +187,9 @@ i32 ustring_view_find_ignore_case(ustring_view *v, ustring_view *s) {
     if (s->length == 0)
         return -1;
     for (u32 i = 0; i < v->length; i++) {
-        if (tolower(v->base.data[v->start + i]) == tolower(s->base.data[s->start])) {
+        if (ustring_tolower(v->base.data[v->start + i]) == ustring_tolower(s->base.data[s->start])) {
             u32 j = 1;
-            while (j < s->length && i + j < v->length && tolower(v->base.data[v->start + i + j]) == tolower(s->base.data[s->start + j])) {
+            while (j < s->length && i + j < v->length && ustring_tolower(v->base.data[v->start + i + j]) == ustring_tolower(s->base.data[s->start + j])) {
                 j++;
             }
             if (j == s->length)

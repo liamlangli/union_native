@@ -4,8 +4,6 @@
 #include "foundation/udata.h"
 #include "foundation/ustring.h"
 
-#include <libuv/uv.h>
-
 typedef struct url_t {
     bool valid;
     ustring_view url;
@@ -17,8 +15,8 @@ typedef struct url_t {
 } url_t;
 
 typedef struct net_request_t {
-    uv_tcp_t socket;
     url_t url;
+    int socket_fd;
 } net_request_t;
 
 typedef struct net_response_t {
@@ -35,3 +33,4 @@ void url_dump(url_t url);
 
 typedef void(*url_session_cb)(net_request_t request, net_response_t response, void *userdata);
 int net_download_async(url_t url, url_session_cb cb, void *userdata);
+void net_poll(void);

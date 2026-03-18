@@ -132,7 +132,7 @@ void imgui_layer_new_frame(os_window_t *window) {
     if (submitted || load_clicked) {
         /* s_url_input.label.text is the live ustring_view — pass it directly */
         ustring_view uri = s_url_input.label.text;
-        LOG_INFO("url_bar", uri.base.data ? uri.base.data + uri.start : "(empty)");
+        ULOG_INFO_FMT("url_bar: {}", uri.base.data ? uri.base.data + uri.start : "(empty)");
         script_eval_uri(uri);
         s_visible = false;
     }

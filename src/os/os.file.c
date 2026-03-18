@@ -1,15 +1,8 @@
 #include "os.h"
 
-#include <libuv/uv.h>
+#include <sys/stat.h>
 
 extern bool os_file_exists(ustring path) {
-    uv_fs_t req;
-    int result = uv_fs_stat(NULL, &req, path.data, NULL);
-    uv_fs_req_cleanup(&req);
-    
-    if (result == 0) {
-        return true;
-    } else {
-        return false;;
-    }
+    struct stat path_stat;
+    return path.data != NULL && stat(path.data, &path_stat) == 0;
 }

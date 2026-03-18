@@ -4,6 +4,10 @@
 #include "foundation/ustring.h"
 #include "foundation/format.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum ULOG_TYPE {
     ULOG_INFO,
     ULOG_WARN,
@@ -42,3 +46,7 @@ void logger_input(logger_t *logger, int type, ustring message);
 #define ULOG_INFO_FMT(fmt, ...) logger_input(logger_global(), ULOG_INFO, uformat(fmt, __VA_ARGS__))
 #define ULOG_WARN_FMT(fmt, ...) logger_input(logger_global(), ULOG_WARN, uformat(fmt, __VA_ARGS__))
 #define ULOG_ERROR_FMT(fmt, ...) logger_input(logger_global(), ULOG_ERROR, uformat(fmt, __VA_ARGS__))
+
+#ifdef __cplusplus
+}
+#endif

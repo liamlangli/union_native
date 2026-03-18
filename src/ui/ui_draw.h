@@ -4,6 +4,10 @@
 #include "ui/ui_renderer.h"
 #include "ui/ui_font.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum UI_PRIMITIVE_TYPE {
     UI_PRIMITIVE_TYPE_RECTANGLE = (1 << 26),
     UI_PRIMITIVE_TYPE_TRIANGLE = (2 << 26),
@@ -76,3 +80,7 @@ UN_EXPORT void stroke_round_rect_pre_corner(u32 layer_index, ui_style style, ui_
 
 
 UN_EXPORT void draw_glyph(u32 layer_index, float2 origin, ui_font *font, ustring_view text, u32 clip, f32 scale, ui_style style);
+
+#ifdef __cplusplus
+}
+#endif

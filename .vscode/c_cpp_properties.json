@@ -27,9 +27,8 @@
             "defines": [
                 "OS_MACOS",
                 "USER_AGENT",
-                "ENABLE_MIMALLOC",
                 "UI_NATIVE",
-                "SCRIPT_BACKEND_QJS"
+                "SCRIPT_BACKEND_JSC"
             ],
             "compilerPath": "/usr/bin/clang",
             "intelliSenseMode": "macos-clang-x64",
@@ -45,7 +44,6 @@
             "defines": [
                 "OS_iOS",
                 "USER_AGENT",
-                "ENABLE_MIMALLOC",
                 "UI_NATIVE",
                 "ENABLE_ARC",
                 "SCRIPT_BACKEND_JSC"

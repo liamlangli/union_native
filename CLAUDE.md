@@ -22,7 +22,7 @@ Active branch: `claude/simplify-webgpu-dawn-cVEUO`
 |----------|--------|-------------|-------------|
 | macOS    | JavaScriptCore | `SCRIPT_BACKEND_JSC` | `script.jsc.c` |
 | Windows  | V8     | `SCRIPT_BACKEND_V8`  | `script.v8.cpp` |
-| Linux    | QuickJS| `SCRIPT_BACKEND_QJS` | `script.qjs.c` |
+| Linux    | Stub | `SCRIPT_BACKEND_STUB` | `script.stub.c` |
 
 Auto-selected in `cmake/Options.cmake` — do not override manually.
 
@@ -36,6 +36,7 @@ Auto-selected in `cmake/Options.cmake` — do not override manually.
 - `imgui_layer_new_frame(window)` draws bar widgets into the native UI buffers.
 - `imgui_layer_render()` is a no-op — `ui_renderer_render()` inside `script_tick()` flushes everything.
 - On Enter / Load: calls `script_eval_uri(s_url_input.label.text)` directly.
+- Entry contract: only `.js` / `.mjs` script URLs or files are supported; no HTML scraping or wasm entry pipeline.
 
 ### Frame loop (main.cpp)
 ```
@@ -68,7 +69,7 @@ on_frame():
 | `src/script/script.h` | Script engine API |
 | `src/script/script.v8.cpp` | V8 backend (Windows) |
 | `src/script/script.jsc.c` | JSC backend (macOS) |
-| `src/script/script.qjs.c` | QuickJS backend (Linux) |
+| `src/script/script.stub.c` | Stub backend (Linux) |
 | `src/apple/os.macos.mm` | macOS window / event layer (Obj-C++) |
 | `src/apple/os.m` | Shared Apple OS utilities |
 | `src/os/os.h` | os_window_t + OS abstraction API |
@@ -76,7 +77,7 @@ on_frame():
 | `cmake/Options.cmake` | Script backend auto-selection + GPU define |
 | `cmake/Link.cmake` | Dawn libs + per-platform links |
 | `cmake/Include.cmake` | Dawn + ImGui include dirs |
-| `script/dep.py` | Dependency manager (Dawn, ImGui, V8, libuv, QuickJS) |
+| `script/dep.py` | Dependency manager (Dawn, V8) |
 
 ---
 
@@ -86,23 +87,16 @@ on_frame():
 third_party/
   include/
     dawn/          ← Dawn + WebGPU headers (from dep.py compile)
-    libuv/         ← libuv headers
-    quickjs/       ← QuickJS headers (Linux)
     v8/            ← V8 headers (Windows)
     stb/           ← stb_image, stb_ds (header-only)
-    cgltf/         ← cgltf (header-only)
   lib/
     libdawn_native.a / dawn_native.lib
     libdawn_proc.a  / dawn_proc.lib
     libwebgpu_dawn.a / webgpu_dawn.lib
-    libuv.a
-    libquickjs.a   (Linux)
     v8.lib / libv8.a (Windows)
   source/
     dawn/          ← Dawn source (built via dep.py)
     imgui/         ← ImGui source (compiled into project via CMakeLists)
-    libuv/
-    quickjs/
     v8/
 ```
 
@@ -147,7 +141,7 @@ mkdir -p build && cd build && cmake .. && make && ./un
 | `src/apple/metal.h` | Replaced by Dawn |
 | `src/vulkan/device.c` | Replaced by Dawn |
 | `MTKView` / MetalKit in window | Replaced by NSView + CAMetalLayer |
-| `SCRIPT_BACKEND QuickJS` on macOS/Win | Now JSC / V8 respectively |
+| QuickJS runtime dependency | Removed; Linux uses the stub backend |
 | `ios` target (iOS.cmake) | Simplified to desktop only |
 
 ---

@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // constant string data
 typedef struct ustring {
     i8 *data;
@@ -77,3 +81,7 @@ u32 ustring_view_append_STR(ustring_view *a, const char *b);  // may allocate ne
 
 i32 ustring_view_find(ustring_view *v, ustring_view *s); // no memory allocation
 i32 ustring_view_find_ignore_case(ustring_view *v, ustring_view *s); // no memory allocation
+
+#ifdef __cplusplus
+}
+#endif

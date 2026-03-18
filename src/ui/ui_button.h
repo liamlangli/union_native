@@ -2,6 +2,10 @@
 
 #include "ui/ui_label.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ui_button_t {
     ui_element element;
     ui_label_t label;
@@ -10,3 +14,7 @@ typedef struct ui_button_t {
 
 UN_EXPORT void ui_button_init(ui_button_t *button, ustring_view text);
 UN_EXPORT bool ui_button(ui_button_t *label, ui_style style, ui_rect rect, u32 layer_index, u32 clip);
+
+#ifdef __cplusplus
+}
+#endif

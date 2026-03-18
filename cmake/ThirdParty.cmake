@@ -12,8 +12,3 @@ set(STB_SRC
     ${THIRD_PARTY}/include/stb/stb_image.h
     ${THIRD_PARTY}/include/stb/stb_image_write.h)
 source_group(third_party\\stb FILES ${STB_SRC})
-
-set(CGLTF_SRC
-    ${THIRD_PARTY}/include/cgltf/cgltf.h
-    ${THIRD_PARTY}/include/cgltf/cgltf_write.h)
-source_group(third_party\\cgltf FILES ${CGLTF_SRC})

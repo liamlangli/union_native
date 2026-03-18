@@ -8,9 +8,6 @@ else()
     message(WARNING "Dawn headers not found at ${DAWN_INCLUDE_DIR}. Run: python script/dep.py download && python script/dep.py compile")
 endif()
 
-# libuv headers (still needed for async I/O)
-include_directories(${THIRD_PARTY}/include/libuv)
-
 include_directories(
     ${THIRD_PARTY}/include
 )

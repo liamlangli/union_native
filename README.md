@@ -34,10 +34,10 @@
 | GPU abstraction | `src/gpu/gpu.h` | Platform-agnostic GPU API |
 | ImGui layer | `src/imgui_layer.cpp` | URL input bar (imgui_impl_wgpu) |
 | OS / window | `src/os/` + `src/apple/` | Native window, input, clipboard |
-| Script engine | `src/script/` | JSC (macOS) · V8 (Windows) · QuickJS (Linux) |
+| Script engine | `src/script/` | JSC (macOS) · V8 (Windows) · Stub (Linux) |
 | UI framework | `src/ui/` | Immediate-mode UI renderer |
 | Foundation | `src/foundation/` | Strings, I/O, networking, logging, jobs |
-| Event loop | libuv | Async I/O and timers |
+| Networking | `src/foundation/network.c` | Native sockets + worker thread queue |
 
 ## GPU Backend — Dawn (WebGPU)
 
@@ -59,17 +59,18 @@ No Metal, Vulkan, or D3D code exists in the application layer.
 |----------|--------|-------|
 | macOS    | JavaScriptCore | System framework, zero extra build step |
 | Windows  | V8 | Requires separate V8 build (see dep.py) |
-| Linux    | QuickJS | Lightweight, built from source |
+| Linux    | Stub | No embedded script runtime dependency |
 
 The script engine is auto-selected by CMake based on the host platform.
-Scripts are loaded from a URL (default: `http://127.0.0.1:3003/main.js`)
+Scripts are loaded from a JavaScript URL or file entry (default: `http://127.0.0.1:3003/main.js`)
 entered via the ImGui address bar at runtime.
 
 ## URL Address Bar
 
 On launch a floating address bar appears at the top of the window.
-Enter any `http://` URL and press **Enter** or **Load** to fetch and
-execute the JavaScript page. Press **Hide** to dismiss the bar.
+Enter a `.js` or `.mjs` URL and press **Enter** or **Load** to fetch and
+execute the JavaScript entry. HTML pages and wasm bundles are not supported.
+Press **Hide** to dismiss the bar.
 
 The bar is implemented entirely with the project's own native UI system
 (`ui_input_t`, `ui_button_t`, `fill_round_rect`) — no external GUI
@@ -81,7 +82,7 @@ library is required.
 # 1. Clone / pin dependency sources
 python script/dep.py download
 
-# 2. Compile dependencies (Dawn, ImGui, libuv, script engine)
+# 2. Compile dependencies (Dawn and platform script engine)
 python script/dep.py compile
 # or debug build:
 python script/dep.py --debug compile
@@ -131,13 +132,13 @@ union_native/
 │   │   ├── script.h          # Script engine API
 │   │   ├── script.jsc.c      # JavaScriptCore backend (macOS)
 │   │   ├── script.v8.cpp     # V8 backend (Windows)
-│   │   └── script.qjs.c      # QuickJS backend (Linux)
+│   │   └── script.stub.c     # Stub backend (Linux)
 │   └── apple/
 │       ├── os.m              # Shared Apple OS utils
 │       └── os.macos.mm       # macOS window (NSView + CAMetalLayer)
 ├── cmake/                    # CMake modules
 ├── script/
-│   └── dep.py                # Dependency manager (Dawn, ImGui, V8, libuv)
+│   └── dep.py                # Dependency manager (Dawn, V8)
 ├── third_party/              # Headers + compiled libs (generated)
 │   └── source/imgui/         # ImGui source (compiled into project)
 └── node/                     # TypeScript / esbuild dev toolchain
@@ -148,9 +149,6 @@ union_native/
 | Library | Version | Purpose |
 |---------|---------|---------|
 | Dawn | chromium/6736 | WebGPU implementation |
-| libuv | pinned | Async event loop |
 | JavaScriptCore | system | JS engine (macOS) |
 | V8 | 12.3 | JS engine (Windows) |
-| QuickJS | pinned | JS engine (Linux) |
 | stb | header | Image loading, data structures |
-| cgltf | header | glTF file format |

@@ -13,10 +13,6 @@
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
 
-extern "C" {
-#include <uv.h>
-}
-
 // ---------------------------------------------------------------------------
 // Frame-level GPU render pass
 // ---------------------------------------------------------------------------
@@ -81,10 +77,11 @@ extern "C" void on_terminate(os_window_t *window) {
 int main(int argc, char **argv) {
     const int window_width  = 1280;
     const int window_height = 800;
+    static i8 window_title[] = "union native";
 
     os_setup(argc, argv);
     os_window_create(
-        ustring_STR("union native"),
+        ustring_str(window_title),
         window_width, window_height,
         on_launch, on_frame, on_terminate);
     return 0;

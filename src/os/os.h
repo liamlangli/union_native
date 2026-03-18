@@ -3,6 +3,10 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum CURSOR_TYPE {
     CURSOR_Default = 0x00036001,
     CURSOR_Text = 0x00036002,
@@ -70,3 +74,7 @@ extern ustring os_get_bundle_path(ustring path);
 
 extern void os_time_init();
 extern long os_time();
+
+#ifdef __cplusplus
+}
+#endif

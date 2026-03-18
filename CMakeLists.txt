@@ -62,12 +62,14 @@ list(APPEND PROJECT_SRC ${UI_SOURCES})
 # Script engine (C) — backend selected in Options.cmake
 # -----------------------------------------------------------------------
 file(GLOB SCRIPT_HEADERS src/script/*.h)
-if (SCRIPT_BACKEND STREQUAL "JavaScriptCore")
+if (SCRIPT_BACKEND STREQUAL "Stub")
+    set(SCRIPT_SOURCES src/script/script.stub.c)
+elseif (SCRIPT_BACKEND STREQUAL "JavaScriptCore")
     set(SCRIPT_SOURCES src/script/script.jsc.c)
 elseif (SCRIPT_BACKEND STREQUAL "V8")
     set(SCRIPT_SOURCES src/script/script.v8.cpp)
 else()
-    set(SCRIPT_SOURCES src/script/script.qjs.c)
+    message(FATAL_ERROR "Unsupported script backend: ${SCRIPT_BACKEND}")
 endif()
 list(APPEND SCRIPT_SOURCES src/script/script_gpu.c)
 list(APPEND PROJECT_SRC ${SCRIPT_SOURCES})
@@ -92,7 +94,7 @@ else() # LINUX
 endif()
 
 # -----------------------------------------------------------------------
-# Third-party (zip, stb, cgltf)
+# Third-party (zip, stb)
 # -----------------------------------------------------------------------
 include(${CMAKE_SOURCE_DIR}/cmake/ThirdParty.cmake)
 

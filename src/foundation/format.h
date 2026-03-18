@@ -1,6 +1,10 @@
 #pragma once
 #include "foundation/ustring.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int find_char(const char *fmt, char c);
 int find_char_range(const char *fmt, int start, int end, char c);
 int atoi_range(const char *str, int start, int end);
@@ -16,3 +20,7 @@ char* ftoa(float num, char* str, int precision);
  *        ustring: {s}
 */
 ustring uformat(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif

@@ -54,5 +54,11 @@
     },
     "cmake.debugConfig": {
         "workingDirectory": "${workspaceRoot}/build",
+    },
+    "chat.tools.terminal.autoApprove": {
+        "/^python script/dep\\.py compile$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

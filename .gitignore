@@ -26,8 +26,6 @@ third_party/renderdoc/lib/macos
 
 node/public/*.js
 
-third_party/include/libuv
-third_party/include/mimalloc
-third_party/include/quickjs
 third_party/lib
 third_party/source
+third_party/include/dawn/*

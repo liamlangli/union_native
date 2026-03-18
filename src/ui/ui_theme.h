@@ -2,6 +2,10 @@
 
 #include "ui/ui_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ui_theme_t {
     ui_style bg;
     ui_style panel_0;
@@ -22,3 +26,7 @@ typedef struct ui_theme_t {
 } ui_theme_t;
 
 UN_EXPORT ui_theme_t *ui_theme_shared();
+
+#ifdef __cplusplus
+}
+#endif

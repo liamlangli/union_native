@@ -128,14 +128,14 @@ static WGPUAddressMode wgpu_wrap(gpu_wrap w) {
 
 static WGPUCompareFunction wgpu_compare(gpu_compare_func f) {
     switch (f) {
-    case COMPARE_FUNC_NEVER:         return WGPUCompareFunction_Never;
-    case COMPARE_FUNC_LESS:          return WGPUCompareFunction_Less;
-    case COMPARE_FUNC_EQUAL:         return WGPUCompareFunction_Equal;
-    case COMPARE_FUNC_LESS_EQUAL:    return WGPUCompareFunction_LessEqual;
-    case COMPARE_FUNC_GREATER:       return WGPUCompareFunction_Greater;
-    case COMPARE_FUNC_NOT_EQUAL:     return WGPUCompareFunction_NotEqual;
-    case COMPARE_FUNC_GREATER_EQUAL: return WGPUCompareFunction_GreaterEqual;
-    case COMPARE_FUNC_ALWAYS:        return WGPUCompareFunction_Always;
+    case COMPARE_NEVER:         return WGPUCompareFunction_Never;
+    case COMPARE_LESS:          return WGPUCompareFunction_Less;
+    case COMPARE_EQUAL:         return WGPUCompareFunction_Equal;
+    case COMPARE_LESS_EQUAL:    return WGPUCompareFunction_LessEqual;
+    case COMPARE_GREATER:       return WGPUCompareFunction_Greater;
+    case COMPARE_NOT_EQUAL:     return WGPUCompareFunction_NotEqual;
+    case COMPARE_GREATER_EQUAL: return WGPUCompareFunction_GreaterEqual;
+    case COMPARE_ALWAYS:        return WGPUCompareFunction_Always;
     default:                         return WGPUCompareFunction_Always;
     }
 }
@@ -169,18 +169,18 @@ static WGPUBlendOperation wgpu_blend_op(gpu_blend_op op) {
 
 static WGPUPrimitiveTopology wgpu_primitive(gpu_primitive_type t) {
     switch (t) {
-    case PRIMITIVE_TYPE_POINTS:         return WGPUPrimitiveTopology_PointList;
-    case PRIMITIVE_TYPE_LINES:          return WGPUPrimitiveTopology_LineList;
-    case PRIMITIVE_TYPE_LINE_STRIP:     return WGPUPrimitiveTopology_LineStrip;
-    case PRIMITIVE_TYPE_TRIANGLE_STRIP: return WGPUPrimitiveTopology_TriangleStrip;
+    case PRIMITIVE_POINTS:         return WGPUPrimitiveTopology_PointList;
+    case PRIMITIVE_LINES:          return WGPUPrimitiveTopology_LineList;
+    case PRIMITIVE_LINE_STRIP:     return WGPUPrimitiveTopology_LineStrip;
+    case PRIMITIVE_TRIANGLE_STRIP: return WGPUPrimitiveTopology_TriangleStrip;
     default:                            return WGPUPrimitiveTopology_TriangleList;
     }
 }
 
 static WGPUCullMode wgpu_cull(gpu_cull_mode m) {
     switch (m) {
-    case CULL_MODE_FRONT: return WGPUCullMode_Front;
-    case CULL_MODE_BACK:  return WGPUCullMode_Back;
+    case CULL_FRONT: return WGPUCullMode_Front;
+    case CULL_BACK:  return WGPUCullMode_Back;
     default:              return WGPUCullMode_None;
     }
 }
@@ -212,7 +212,7 @@ static WGPUVertexFormat wgpu_vertex_format(gpu_attribute_format fmt, int size) {
 }
 
 static WGPUIndexFormat wgpu_index_format(gpu_index_type t) {
-    return (t == INDEX_TYPE_UINT32) ? WGPUIndexFormat_Uint32 : WGPUIndexFormat_Uint16;
+    return (t == INDEX_UINT32) ? WGPUIndexFormat_Uint32 : WGPUIndexFormat_Uint16;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,12 +220,13 @@ static WGPUIndexFormat wgpu_index_format(gpu_index_type t) {
 // ---------------------------------------------------------------------------
 
 bool gpu_request_device(os_window_t *window) {
+    dawn::native::Adapter selected_adapter;
+
     // Install Dawn proc table so that raw webgpu.h calls work
     dawnProcSetProcs(&dawn::native::GetProcs());
 
     // Create Dawn instance
     g.dawn_instance = new dawn::native::Instance();
-    g.dawn_instance->DiscoverDefaultAdapters();
     g.instance = g.dawn_instance->Get();
 
     g.surface_width  = window->framebuffer_width  ? window->framebuffer_width  : window->width;
@@ -239,18 +240,18 @@ bool gpu_request_device(os_window_t *window) {
 #if defined(OS_MACOS)
         // native_window is a CAMetalLayer* (set by os.macos.mm)
         WGPUSurfaceDescriptorFromMetalLayer metal_desc = {};
-        metal_desc.chain.sType = WGPUSType_SurfaceDescriptorFromMetalLayer;
+    metal_desc.chain.sType = WGPUSType_SurfaceSourceMetalLayer;
         metal_desc.layer       = window->native_window;
         surf_desc.nextInChain  = &metal_desc.chain;
 #elif defined(OS_WINDOWS)
         WGPUSurfaceDescriptorFromWindowsHWND win_desc = {};
-        win_desc.chain.sType   = WGPUSType_SurfaceDescriptorFromWindowsHWND;
+    win_desc.chain.sType   = WGPUSType_SurfaceSourceWindowsHWND;
         win_desc.hwnd          = window->native_window;
         win_desc.hinstance     = GetModuleHandle(nullptr);
         surf_desc.nextInChain  = &win_desc.chain;
 #elif defined(OS_LINUX)
         WGPUSurfaceDescriptorFromXlibWindow x11_desc = {};
-        x11_desc.chain.sType   = WGPUSType_SurfaceDescriptorFromXlibWindow;
+    x11_desc.chain.sType   = WGPUSType_SurfaceSourceXlibWindow;
         x11_desc.window        = (uint32_t)(uintptr_t)window->native_window;
         surf_desc.nextInChain  = &x11_desc.chain;
 #endif
@@ -264,26 +265,29 @@ bool gpu_request_device(os_window_t *window) {
         opts.powerPreference      = WGPUPowerPreference_HighPerformance;
         opts.backendType          = WGPUBackendType_Undefined; // let Dawn pick
 
-        std::vector<dawn::native::Adapter> adapters = g.dawn_instance->GetAdapters();
+        std::vector<dawn::native::Adapter> adapters = g.dawn_instance->EnumerateAdapters(&opts);
         if (adapters.empty()) {
-            LOG_ERROR("gpu.dawn", "no WebGPU adapters found");
+            ULOG_ERROR("gpu.dawn: no WebGPU adapters found");
             return false;
         }
-        g.adapter = adapters[0].Get();
+        selected_adapter = adapters[0];
+        g.adapter = selected_adapter.Get();
     }
 
     // Request device (synchronous)
     {
         WGPUDeviceDescriptor dev_desc = {};
         dev_desc.label = "dawn_device";
-        g.device = wgpuAdapterRequestDeviceSync(g.adapter, &dev_desc, nullptr);
+        dev_desc.defaultQueue.label = "dawn_queue";
+        g.device = selected_adapter.CreateDevice(&dev_desc);
         if (!g.device) {
-            LOG_ERROR("gpu.dawn", "failed to create WebGPU device");
+            ULOG_ERROR("gpu.dawn: failed to create WebGPU device");
             return false;
         }
         wgpuDeviceSetUncapturedErrorCallback(g.device,
             [](WGPUErrorType type, const char* msg, void*) {
-                LOG_ERROR("gpu.dawn", msg);
+                (void)type;
+                ULOG_ERROR_FMT("gpu.dawn: {}", msg ? msg : "uncaptured WebGPU error");
             }, nullptr);
     }
 
@@ -302,7 +306,7 @@ bool gpu_request_device(os_window_t *window) {
     }
 
     window->gpu_device = g.device;
-    LOG_INFO("gpu.dawn", "WebGPU device created via Dawn");
+    ULOG_INFO("gpu.dawn: WebGPU device created via Dawn");
     return true;
 }
 
@@ -325,7 +329,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     WGPUTextureDescriptor td = {};
     td.label         = "texture";
     td.usage         = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
-    if (desc->usage == GPU_USAGE_RENDER_TARGET)
+    if ((desc->usage & TEXTURE_USAGE_RENDER_TARGET) != 0)
         td.usage |= WGPUTextureUsage_RenderAttachment;
     td.dimension     = WGPUTextureDimension_2D;
     td.size          = { (uint32_t)desc->width, (uint32_t)desc->height, 1 };
@@ -344,7 +348,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
     vd.arrayLayerCount = 1;
     t.view = wgpuTextureCreateView(t.handle, &vd);
 
-    if (desc->data.ptr && desc->data.size > 0) {
+    if (desc->data.data && desc->data.length > 0) {
         WGPUImageCopyTexture dst = {};
         dst.texture  = t.handle;
         dst.mipLevel = 0;
@@ -352,7 +356,7 @@ gpu_texture gpu_create_texture(gpu_texture_desc *desc) {
         layout.bytesPerRow  = (uint32_t)gpu_pixel_format_row_pitch(desc->format, desc->width, 1);
         layout.rowsPerImage = (uint32_t)desc->height;
         WGPUExtent3D extent = { (uint32_t)desc->width, (uint32_t)desc->height, 1 };
-        wgpuQueueWriteTexture(g.queue, &dst, desc->data.ptr, desc->data.size, &layout, &extent);
+        wgpuQueueWriteTexture(g.queue, &dst, desc->data.data, desc->data.length, &layout, &extent);
     }
 
     u32 id = g.next_id++;
@@ -379,7 +383,7 @@ void gpu_update_texture(gpu_texture texture, udata data) {
     layout.bytesPerRow  = t.desc.size.width * 4; // assumed RGBA8
     layout.rowsPerImage = t.desc.size.height;
     WGPUExtent3D extent = t.desc.size;
-    wgpuQueueWriteTexture(g.queue, &dst, data.ptr, data.size, &layout, &extent);
+    wgpuQueueWriteTexture(g.queue, &dst, data.data, data.length, &layout, &extent);
 }
 
 // ---------------------------------------------------------------------------
@@ -395,7 +399,7 @@ gpu_sampler gpu_create_sampler(gpu_sampler_desc *desc) {
     sd.minFilter     = wgpu_filter(desc->min_filter);
     sd.mipmapFilter  = WGPUMipmapFilterMode_Nearest;
     sd.maxAnisotropy = desc->max_anisotropy > 0 ? (uint16_t)desc->max_anisotropy : 1;
-    if (desc->compare_func != COMPARE_FUNC_NONE)
+    if (desc->compare_func != COMPARE_AUTO)
         sd.compare = wgpu_compare(desc->compare_func);
 
     GpuSampler s;
@@ -418,10 +422,11 @@ void gpu_destroy_sampler(gpu_sampler sampler) {
 // ---------------------------------------------------------------------------
 
 gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
-    WGPUBufferUsageFlags usage = WGPUBufferUsage_CopyDst;
-    if (desc->type == BUFFER_TYPE_VERTEX)  usage |= WGPUBufferUsage_Vertex;
-    if (desc->type == BUFFER_TYPE_INDEX)   usage |= WGPUBufferUsage_Index;
-    if (desc->type == BUFFER_TYPE_UNIFORM) usage |= WGPUBufferUsage_Uniform;
+    WGPUBufferUsage usage = WGPUBufferUsage_CopyDst;
+    if (desc->type == BUFFER_VERTEX)  usage |= WGPUBufferUsage_Vertex;
+    if (desc->type == BUFFER_INDEX)   usage |= WGPUBufferUsage_Index;
+    if (desc->type == BUFFER_UNIFORM) usage |= WGPUBufferUsage_Uniform;
+    if (desc->type == BUFFER_STORAGE) usage |= WGPUBufferUsage_Storage;
 
     WGPUBufferDescriptor bd = {};
     bd.label = "buffer";
@@ -432,8 +437,8 @@ gpu_buffer gpu_create_buffer(gpu_buffer_desc *desc) {
     b.handle = wgpuDeviceCreateBuffer(g.device, &bd);
     b.desc   = bd;
 
-    if (desc->data.ptr && desc->data.size > 0)
-        wgpuQueueWriteBuffer(g.queue, b.handle, 0, desc->data.ptr, desc->data.size);
+    if (desc->data.data && desc->data.length > 0)
+        wgpuQueueWriteBuffer(g.queue, b.handle, 0, desc->data.data, desc->data.length);
 
     u32 id = g.next_id++;
     g.buffers[id] = b;
@@ -450,7 +455,7 @@ void gpu_destroy_buffer(gpu_buffer buffer) {
 void gpu_update_buffer(gpu_buffer buffer, udata data) {
     auto it = g.buffers.find(buffer.id);
     if (it == g.buffers.end()) return;
-    wgpuQueueWriteBuffer(g.queue, it->second.handle, 0, data.ptr, data.size);
+    wgpuQueueWriteBuffer(g.queue, it->second.handle, 0, data.data, data.length);
 }
 
 // ---------------------------------------------------------------------------
@@ -459,9 +464,10 @@ void gpu_update_buffer(gpu_buffer buffer, udata data) {
 
 gpu_shader gpu_create_shader(gpu_shader_desc *desc) {
     auto make_module = [&](const gpu_shader_stage_desc &stage) -> WGPUShaderModule {
-        WGPUShaderModuleWGSLDescriptor wgsl = {};
-        wgsl.chain.sType = WGPUSType_ShaderModuleWGSLDescriptor;
-        wgsl.code        = stage.source.data;
+        WGPUShaderSourceWGSL wgsl = {};
+        wgsl.chain.sType = WGPUSType_ShaderSourceWGSL;
+        wgsl.code.data   = stage.source.data;
+        wgsl.code.length = stage.source.length;
 
         WGPUShaderModuleDescriptor smd = {};
         smd.nextInChain = &wgsl.chain;
@@ -545,7 +551,7 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
         blend_states.push_back(bs);
 
         WGPUColorTargetState cts = {};
-        cts.format    = wgpu_pixel_format(ct.format != PIXELFORMAT_DEFAULT
+        cts.format    = wgpu_pixel_format(ct.format != _PIXELFORMAT_DEFAULT
                             ? ct.format : PIXELFORMAT_BGRA8);
         cts.blend     = ct.blend.enabled ? &blend_states.back() : nullptr;
         cts.writeMask = WGPUColorWriteMask_All;
@@ -560,22 +566,22 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
 
     // Depth/stencil
     WGPUDepthStencilState ds_state = {};
-    bool has_depth = (desc->depth.format != PIXELFORMAT_NONE && desc->depth.format != PIXELFORMAT_DEFAULT);
+    bool has_depth = (desc->depth.format != PIXELFORMAT_NONE && desc->depth.format != _PIXELFORMAT_DEFAULT);
     if (has_depth) {
         ds_state.format            = wgpu_pixel_format(desc->depth.format);
-        ds_state.depthWriteEnabled = desc->depth.write_enabled;
+        ds_state.depthWriteEnabled = desc->depth.write_enabled ? WGPUOptionalBool_True : WGPUOptionalBool_False;
         ds_state.depthCompare      = wgpu_compare(desc->depth.compare_func);
     }
 
     WGPUVertexState vert_state = {};
     vert_state.module     = sh.vert;
-    vert_state.entryPoint = desc->vertex.entry.data ? desc->vertex.entry.data : "vs_main";
+    vert_state.entryPoint = sh.orig.vertex.entry.data ? sh.orig.vertex.entry.data : "vs_main";
     vert_state.bufferCount = (uint32_t)vert_bufs.size();
     vert_state.buffers     = vert_bufs.data();
 
     WGPUFragmentState frag_state = {};
     frag_state.module      = sh.frag;
-    frag_state.entryPoint  = desc->fragment.entry.data ? desc->fragment.entry.data : "fs_main";
+    frag_state.entryPoint  = sh.orig.fragment.entry.data ? sh.orig.fragment.entry.data : "fs_main";
     frag_state.targetCount = (uint32_t)color_targets.size();
     frag_state.targets     = color_targets.data();
 
@@ -584,8 +590,8 @@ gpu_pipeline gpu_create_pipeline(gpu_pipeline_desc *desc) {
     rp_desc.vertex    = vert_state;
     rp_desc.primitive = {
         .topology         = wgpu_primitive(desc->primitive_type),
-        .stripIndexFormat = (desc->primitive_type == PRIMITIVE_TYPE_TRIANGLE_STRIP ||
-                             desc->primitive_type == PRIMITIVE_TYPE_LINE_STRIP)
+        .stripIndexFormat = (desc->primitive_type == PRIMITIVE_TRIANGLE_STRIP ||
+                             desc->primitive_type == PRIMITIVE_LINE_STRIP)
                             ? wgpu_index_format(desc->index_type) : WGPUIndexFormat_Undefined,
         .frontFace        = wgpu_winding(desc->face_winding),
         .cullMode         = wgpu_cull(desc->cull_mode),
@@ -844,7 +850,7 @@ void gpu_set_mesh(gpu_mesh mesh) {
 void gpu_draw(int base, int count, int instance_count) {
     if (!g.pass_encoder) return;
     auto pit = g.pipelines.find(g.active_pipeline);
-    bool indexed = (pit != g.pipelines.end() && pit->second.orig.index_type != INDEX_TYPE_NONE);
+    bool indexed = (pit != g.pipelines.end() && pit->second.orig.index_type != INDEX_NONE);
     if (indexed) {
         wgpuRenderPassEncoderDrawIndexed(g.pass_encoder,
             (uint32_t)count, (uint32_t)instance_count, (uint32_t)base, 0, 0);

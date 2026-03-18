@@ -1,18 +1,17 @@
 #pragma once
 
 #include <stdbool.h>
-#if defined(ENABLE_MIMALLOC)
-    #include <mimalloc/mimalloc.h>
 
-    // Standard C allocation
-    #define malloc(n)               mi_malloc(n)
-    #define calloc(n,c)             mi_calloc(n,c)
-    #define realloc(p,n)            mi_realloc(p,n)
-    #define free(p)                 mi_free(p)
-#endif
-
-#ifndef bool
-    #define bool int
+#ifndef __cplusplus
+    #ifndef bool
+        #define bool int
+    #endif
+    #ifndef false
+        #define false 0
+    #endif
+    #ifndef true
+        #define true 1
+    #endif
 #endif
 
 #ifndef F32_PI
@@ -24,9 +23,6 @@
     #define F64_PI 3.14159265358979323846
     #define F64_2PI 6.28318530717958647692
 #endif
-
-#define false 0
-#define true 1
 
 #define UN_EXPORT __attribute__((visibility("default")))
 #define FORCE_INLINE static inline

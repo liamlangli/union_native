@@ -218,6 +218,8 @@ static int osx_key_map(int k) {
     if (g_launch_func) g_launch_func(&g_os_window);
 
     // CVDisplayLink drives the render loop at the display refresh rate
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CVDisplayLinkCreateWithActiveCGDisplays(&g_display_link);
     CVDisplayLinkSetOutputCallback(g_display_link,
         [](CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*,
@@ -226,6 +228,7 @@ static int osx_key_map(int k) {
             return kCVReturnSuccess;
         }, nullptr);
     CVDisplayLinkStart(g_display_link);
+#pragma clang diagnostic pop
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
@@ -236,8 +239,11 @@ static int osx_key_map(int k) {
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender {
     (void)sender;
     if (g_display_link) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         CVDisplayLinkStop(g_display_link);
         CVDisplayLinkRelease(g_display_link);
+#pragma clang diagnostic pop
         g_display_link = nullptr;
     }
     if (g_terminate_func) g_terminate_func(&g_os_window);
@@ -298,7 +304,7 @@ void os_window_set_clipboard(os_window_t *window, ustring_view text) {
     (void)window;
     NSPasteboard *pb  = [NSPasteboard generalPasteboard];
     [pb clearContents];
-    NSString *str = [[NSString alloc] initWithBytes:text.data
+    NSString *str = [[NSString alloc] initWithBytes:text.base.data + text.start
                                              length:text.length
                                            encoding:NSUTF8StringEncoding];
     [pb setString:str forType:NSPasteboardTypeString];

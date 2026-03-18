@@ -5,6 +5,10 @@
 #include "gpu_const.h"
 #include "os/os.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Only Dawn (WebGPU) is supported as the GPU backend. */
 typedef enum gpu_backend {
     GPU_BACKEND_NONE   = 0,
@@ -274,7 +278,7 @@ typedef struct gpu_render_pass_depth_stencil_attachment {
     gpu_load_action load_action;
     gpu_store_action store_action;
     f32 clear_value;
-    bool private;
+    bool is_private;
 } gpu_render_pass_depth_stencil_attachment;
 
 typedef struct gpu_render_pass_desc {
@@ -335,3 +339,7 @@ int gpu_pixel_format_row_count(gpu_pixel_format format, int height);
 int gpu_pixel_format_size(gpu_pixel_format format);
 int gpu_pixel_format_surface_pitch(gpu_pixel_format format, int width, int height, int row_alignment);
 int gpu_pixel_format_row_pitch(gpu_pixel_format format, int width, int row_alignment);
+
+#ifdef __cplusplus
+}
+#endif

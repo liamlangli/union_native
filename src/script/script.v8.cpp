@@ -18,7 +18,6 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"
-#include "foundation/html_parser.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
 #include "ui/ui_dev_tool.h"
@@ -52,6 +51,13 @@ static V8Module  g_mod    = {};
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+static bool has_script_extension(const char *path, u32 length) {
+    if (path == nullptr || length < 3) return false;
+    if (length >= 3 && strncmp(path + length - 3, ".js", 3) == 0) return true;
+    if (length >= 4 && strncmp(path + length - 4, ".mjs", 4) == 0) return true;
+    return false;
+}
 
 static std::string v8_to_std(Isolate* iso, Local<Value> val) {
     String::Utf8Value utf8(iso, val);
@@ -418,39 +424,12 @@ int script_eval_direct(ustring source, ustring *result) {
     return 0;
 }
 
-static void on_html_script_download(net_request_t request, net_response_t response, void *userdata) {
-    LOG_INFO("script.v8", "html script downloaded");
-    g_ctx.invalid_script =
-        script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
-
-    os_window_t *window = g_ctx.window;
-    os_window_on_resize(window, window->width, window->height);
-}
-
 static void on_remote_script_download(net_request_t request, net_response_t response, void *userdata) {
-    LOG_INFO("script.v8", "remote content downloaded");
+    LOG_INFO("script.v8", "remote script downloaded");
 
-    const char *body_data = response.body.base.data + response.body.start;
-    u32 body_len = response.body.length;
-
-    if (html_is_html(body_data, body_len)) {
-        LOG_INFO("script.v8", "detected HTML page, extracting scripts");
-        html_parse_result_t parsed = html_parse_scripts(body_data, body_len, request.url);
-        for (u32 i = 0; i < parsed.count; i++) {
-            html_script_t *s = &parsed.scripts[i];
-            if (s->src.length > 0) {
-                ustring_view src_view = ustring_view_from_ustring(s->src);
-                url_t script_url = url_parse(src_view);
-                if (script_url.valid) {
-                    net_download_async(script_url, on_html_script_download, NULL);
-                }
-                ustring_free(&s->src);
-            } else if (s->code.length > 0) {
-                ustring_view filename = ustring_view_STR("<inline>");
-                g_ctx.invalid_script = script_eval(s->code, filename) != 0;
-                ustring_free(&s->code);
-            }
-        }
+    if (response.status < 200 || response.status >= 300) {
+        LOG_WARN("script.v8", "failed to download remote script");
+        g_ctx.invalid_script = true;
     } else {
         g_ctx.invalid_script =
             script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
@@ -467,8 +446,16 @@ int script_eval_uri(ustring_view uri) {
             LOG_WARN("script.v8", "invalid url");
             return -1;
         }
+        if (!has_script_extension(url.path.base.data + url.path.start, url.path.length)) {
+            LOG_WARN("script.v8", "only .js and .mjs URLs are supported");
+            return -1;
+        }
         net_download_async(url, on_remote_script_download, NULL);
     } else {
+        if (!has_script_extension(uri.base.data + uri.start, uri.length)) {
+            LOG_WARN("script.v8", "only .js and .mjs files are supported");
+            return -1;
+        }
         ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
         if (content.length == 0) {
             LOG_WARN("script.v8", "failed to read file");
@@ -495,7 +482,7 @@ void script_tick(void) {
         g_mod.isolate->PerformMicrotaskCheckpoint();
     }
 
-    uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+    net_poll();
 }
 
 void script_key_action(KEYCODE key, BUTTON_ACTION action)    {}

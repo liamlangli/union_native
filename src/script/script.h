@@ -7,6 +7,10 @@
 #include "ui/ui_state.h"
 #include "ui/ui_keycode.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct script_t {
     os_window_t *window;
     void *module;
@@ -41,3 +45,7 @@ void script_key_action(KEYCODE key, BUTTON_ACTION action);
 void script_resize(i32 width, i32 height);
 
 void script_tick();
+
+#ifdef __cplusplus
+}
+#endif

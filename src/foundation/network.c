@@ -2,17 +2,129 @@
 #include "foundation/global.h"
 #include "foundation/logger.h"
 #include "foundation/ustring.h"
-#include <stdlib.h>
 
-#include <uv.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#else
+#include <netdb.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 typedef struct net_session_t {
     net_request_t request;
     net_response_t response;
     url_session_cb cb;
     void *userdata;
-    ustring url_buf; // owned copy of URL string — ensures url_t views stay valid
+    ustring url_buf;
 } net_session_t;
+
+typedef struct net_completion_t {
+    net_session_t *session;
+    struct net_completion_t *next;
+} net_completion_t;
+
+#if defined(_WIN32)
+static CRITICAL_SECTION g_net_lock;
+static INIT_ONCE g_net_init_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK net_init_once(PINIT_ONCE once, PVOID param, PVOID *context) {
+    (void)once;
+    (void)param;
+    (void)context;
+
+    WSADATA wsa_data;
+    WSAStartup(MAKEWORD(2, 2), &wsa_data);
+    InitializeCriticalSection(&g_net_lock);
+    return TRUE;
+}
+
+static void net_lock(void) {
+    InitOnceExecuteOnce(&g_net_init_once, net_init_once, NULL, NULL);
+    EnterCriticalSection(&g_net_lock);
+}
+
+static void net_unlock(void) {
+    LeaveCriticalSection(&g_net_lock);
+}
+
+static void net_close_socket(int socket_fd) {
+    if (socket_fd >= 0) {
+        closesocket((SOCKET)socket_fd);
+    }
+}
+
+static const char *net_last_error_string(void) {
+    static char buffer[64];
+    _snprintf(buffer, sizeof(buffer), "winsock error %d", WSAGetLastError());
+    return buffer;
+}
+#else
+static pthread_mutex_t g_net_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void net_lock(void) {
+    pthread_mutex_lock(&g_net_lock);
+}
+
+static void net_unlock(void) {
+    pthread_mutex_unlock(&g_net_lock);
+}
+
+static void net_close_socket(int socket_fd) {
+    if (socket_fd >= 0) {
+        close(socket_fd);
+    }
+}
+
+static const char *net_last_error_string(void) {
+    return strerror(errno);
+}
+#endif
+
+static net_completion_t *g_completion_head = NULL;
+static net_completion_t *g_completion_tail = NULL;
+
+static void net_set_error(net_response_t *response, const char *message) {
+    ustring_view_free(&response->error);
+    response->error = ustring_view_STR(message != NULL ? message : "network error");
+}
+
+static void net_queue_completion(net_session_t *session) {
+    net_completion_t *completion = malloc(sizeof(net_completion_t));
+    completion->session = session;
+    completion->next = NULL;
+
+    net_lock();
+    if (g_completion_tail != NULL) {
+        g_completion_tail->next = completion;
+    } else {
+        g_completion_head = completion;
+    }
+    g_completion_tail = completion;
+    net_unlock();
+}
+
+static net_completion_t *net_pop_completion(void) {
+    net_lock();
+    net_completion_t *completion = g_completion_head;
+    if (completion != NULL) {
+        g_completion_head = completion->next;
+        if (g_completion_head == NULL) {
+            g_completion_tail = NULL;
+        }
+    }
+    net_unlock();
+    return completion;
+}
 
 url_t url_parse(ustring_view url) {
     url_t body = {0};
@@ -95,7 +207,7 @@ end:
     body.valid = 1;
     body.protocol = ustring_view_range(&url, 0, colon);
     body.host = ustring_view_range(&url, colon + 3, port_colon ? port_colon : slash);
-    body.port = port_colon ? atoi_range(url.base.data, port_colon + 1, slash) : 80;
+    body.port = port_colon ? atoi(data + port_colon + 1) : 80;
     body.path = ustring_view_range(&url, slash, question);
     body.query = ustring_view_range(&url, question, terminate);
     return body;
@@ -128,9 +240,8 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_STR(&body, "Host: ");
     ustring_view_append_ustring_view(&body, &url.host);
     if (url.port != 80 && url.port != 443) {
-        ustring_view_append_STR(&body, ":");
-        char port_str[6];
-        itoa(url.port, port_str, 10);
+        char port_str[16];
+        snprintf(port_str, sizeof(port_str), ":%d", url.port);
         ustring_view_append_STR(&body, port_str);
     }
     ustring_view_append_STR(&body, "\r\n");
@@ -139,62 +250,39 @@ static ustring_view net_url_to_req_body(url_t url) {
     ustring_view_append_STR(&body, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
     ustring_view_append_STR(&body, "\r\n");
-    // ULOG_INFO_FMT("{v}", body);
     return body;
-}
-
-static void on_write(uv_write_t *write, int status) {
-    if (status < 0) {
-        ULOG_ERROR_FMT("write error {}\n", uv_err_name(status));
-    }
-    free(write);
-}
-
-static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-    buf->base = malloc(suggested_size);
-    buf->len = suggested_size;
-}
-
-static void on_close(uv_handle_t *handle) {
-    net_session_t *session = (net_session_t *)handle;
-    ustring_free(&session->url_buf);
-    free(session);
-    ULOG_INFO("closed.\n");
 }
 
 static bool try_parse_response_header(net_response_t *response, ustring header) {
     ustring_view header_view = ustring_view_from_ustring(header);
-    if (header.length < 12)
-        return false;
-    if (strncmp(header.data, "HTTP/1.1 ", 9) != 0)
-        return false;
-
-    ustring status_code = ustring_range(header.data + 9, 3);
-    response->status = atoi(status_code.data);
-
-    // find content length length
     ustring_view content_length_keyword = ustring_view_STR("Content-Length: ");
-    i32 index = ustring_view_find_ignore_case(&header_view, &content_length_keyword);
-    if (index == -1)
+    i32 index;
+    const char *header_end;
+
+    if (header.length < 12) {
+        ustring_view_free(&content_length_keyword);
         return false;
-    const char* length = header.data + index + content_length_keyword.length;
-
-    // find content length end
-    const char *end = strstr(length, "\r\n");
-    if (end == NULL)
+    }
+    if (strncmp(header.data, "HTTP/1.1 ", 9) != 0 && strncmp(header.data, "HTTP/1.0 ", 9) != 0) {
+        ustring_view_free(&content_length_keyword);
         return false;
+    }
 
-    // fined the end of header
-    const char *header_end = strstr(header.data, "\r\n\r\n");
-    if (header_end == NULL)
+    response->status = (u32)atoi(header.data + 9);
+
+    header_end = strstr(header.data, "\r\n\r\n");
+    if (header_end == NULL) {
+        ustring_view_free(&content_length_keyword);
         return false;
+    }
 
-    u32 header_length = (u32)(header_end - header.data + 4);
-    response->header_length = header_length;
+    response->header_length = (u32)(header_end - header.data + 4);
+    index = ustring_view_find_ignore_case(&header_view, &content_length_keyword);
+    if (index != -1) {
+        response->content_length = (u32)atoi(header.data + index + 16);
+    }
 
-    // parse content length
-    ustring content_length = ustring_range((i8 *)header.data + (length - header.data), end - length);
-    response->content_length = atoi(content_length.data);
+    ustring_view_free(&content_length_keyword);
     response->header_parsed = true;
     return true;
 }
@@ -203,84 +291,167 @@ static void parse_response(net_response_t *response) {
     response->header = (ustring_view){
         .base = ustring_range(response->data.data, response->header_length), .start = 0, .length = response->header_length};
     response->body =
-        (ustring_view){.base = ustring_range(response->data.data + response->header_length, response->content_length),
-                       .start = 0,
-                       .length = response->content_length};
+        (ustring_view){.base = ustring_range(response->data.data + response->header_length, response->content_length), .start = 0, .length = response->content_length};
 }
 
 static bool body_read_end(net_response_t *response) {
+    if (response->content_length == 0) {
+        return response->header_parsed && response->data.length >= response->header_length;
+    }
     return response->data.length >= response->content_length + response->header_length;
 }
 
-static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-    net_session_t *session = stream->data;
-    if (nread < 0) {
-        if (nread != UV_EOF) {
-            ULOG_ERROR_FMT("read error {}", uv_err_name((int)nread));
-        }
-        session->cb(session->request, session->response, session->userdata);
-        uv_close((uv_handle_t *)stream, on_close);
-    } else if (nread > 0) {
-        if (!session->response.header_parsed) {
-            ustring header = ustring_range(buf->base, nread);
-            try_parse_response_header(&session->response, header);
-        }
-
-        udata_append_raw(&session->response.data, buf->base, (int)nread);
-
-        if (body_read_end(&session->response)) {
-            parse_response(&session->response);
-            session->cb(session->request, session->response, session->userdata);
-            uv_read_stop(stream);
-            uv_close((uv_handle_t *)stream, on_close);
-            udata_free(&session->response.data);
-        }
+static void net_finalize_response(net_session_t *session) {
+    if (!session->response.header_parsed) {
+        session->response.header_parsed = try_parse_response_header(
+            &session->response,
+            ustring_range(session->response.data.data, session->response.data.length));
     }
 
-    free(buf->base);
-}
-
-static void on_read_error(uv_stream_t *stream, net_session_t *session) {
-    session->cb(session->request, session->response, session->userdata);
-    uv_close((uv_handle_t *)stream, on_close);
-}
-
-static void on_connect(uv_connect_t *conn, int status) {
-    if (status < 0) {
-        ULOG_ERROR_FMT("connection error {}", uv_err_name(status));
-        net_session_t *session = conn->data;
-        on_read_error(conn->handle, session);
-        free(conn);
+    if (!session->response.header_parsed) {
+        net_set_error(&session->response, "invalid HTTP response");
         return;
     }
 
-    net_session_t *session = conn->data;
-    uv_stream_t *stream = conn->handle;
-    stream->data = session;
+    if (session->response.content_length == 0 && session->response.data.length >= session->response.header_length) {
+        session->response.content_length = session->response.data.length - session->response.header_length;
+    }
 
-    uv_write_t *write_req = malloc(sizeof(uv_write_t));
-    write_req->data = session;
+    if (!body_read_end(&session->response)) {
+        net_set_error(&session->response, "incomplete HTTP response");
+        return;
+    }
 
-    ustring_view body = net_url_to_req_body(session->request.url);
-    uv_buf_t buf = uv_buf_init((char *)body.base.data, body.base.length);
-    uv_write(write_req, stream, &buf, 1, on_write);
-    uv_read_start(stream, on_alloc, on_read);
-    free(conn);
+    parse_response(&session->response);
 }
 
+static int net_open_socket(net_session_t *session) {
+    char port_str[16];
+    struct addrinfo hints;
+    struct addrinfo *result = NULL;
+    int socket_fd = -1;
+    ustring host = ustring_view_to_new_ustring(&session->request.url.host);
+
+    snprintf(port_str, sizeof(port_str), "%d", session->request.url.port);
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(host.data, port_str, &hints, &result) != 0) {
+        net_set_error(&session->response, "failed to resolve host");
+        ustring_free(&host);
+        return -1;
+    }
+    ustring_free(&host);
+
+    for (struct addrinfo *addr = result; addr != NULL; addr = addr->ai_next) {
+        socket_fd = (int)socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+        if (socket_fd < 0) {
+            continue;
+        }
+        if (connect(socket_fd, addr->ai_addr, (socklen_t)addr->ai_addrlen) == 0) {
+            break;
+        }
+        net_close_socket(socket_fd);
+        socket_fd = -1;
+    }
+
+    freeaddrinfo(result);
+
+    if (socket_fd < 0) {
+        net_set_error(&session->response, net_last_error_string());
+        return -1;
+    }
+
+    session->request.socket_fd = socket_fd;
+    return 0;
+}
+
+static int net_send_request(net_session_t *session) {
+    ustring_view body = net_url_to_req_body(session->request.url);
+    const char *cursor = body.base.data + body.start;
+    u32 remaining = body.length;
+
+    while (remaining > 0) {
+#if defined(_WIN32)
+        int sent = send((SOCKET)session->request.socket_fd, cursor, (int)remaining, 0);
+#else
+        ssize_t sent = send(session->request.socket_fd, cursor, remaining, 0);
+#endif
+        if (sent <= 0) {
+            ustring_view_free(&body);
+            net_set_error(&session->response, net_last_error_string());
+            return -1;
+        }
+        cursor += sent;
+        remaining -= (u32)sent;
+    }
+
+    ustring_view_free(&body);
+    return 0;
+}
+
+static int net_read_response(net_session_t *session) {
+    char buffer[8192];
+
+    for (;;) {
+#if defined(_WIN32)
+        int received = recv((SOCKET)session->request.socket_fd, buffer, (int)sizeof(buffer), 0);
+#else
+        ssize_t received = recv(session->request.socket_fd, buffer, sizeof(buffer), 0);
+#endif
+        if (received == 0) {
+            break;
+        }
+        if (received < 0) {
+            net_set_error(&session->response, net_last_error_string());
+            return -1;
+        }
+        udata_append_raw(&session->response.data, buffer, (u32)received);
+    }
+
+    net_finalize_response(session);
+    return session->response.error.length > 0 ? -1 : 0;
+}
+
+static void net_session_run(net_session_t *session) {
+    if (net_open_socket(session) == 0 && net_send_request(session) == 0) {
+        net_read_response(session);
+    }
+
+    net_close_socket(session->request.socket_fd);
+    session->request.socket_fd = -1;
+    net_queue_completion(session);
+}
+
+#if defined(_WIN32)
+static DWORD WINAPI net_worker_thread(LPVOID param) {
+    net_session_t *session = (net_session_t *)param;
+    net_session_run(session);
+    return 0;
+}
+#else
+static void *net_worker_thread(void *param) {
+    net_session_t *session = (net_session_t *)param;
+    net_session_run(session);
+    return NULL;
+}
+#endif
+
 int net_download_async(url_t url, url_session_cb cb, void *userdata) {
-    // Copy the URL string so views in url_t remain valid for the lifetime of the request.
     ustring url_copy = ustring_view_to_new_ustring(&url.url);
     ustring_view url_view = ustring_view_from_ustring(url_copy);
     url_t url_owned = url_parse(url_view);
 
-    ustring host = ustring_view_to_new_ustring(&url_owned.host);
-
-    struct sockaddr_in addr;
-    uv_ip4_addr(host.data, url_owned.port, &addr);
-    ustring_free(&host);
+    if (!url_owned.valid) {
+        ustring_free(&url_copy);
+        return -1;
+    }
 
     net_session_t *session = malloc(sizeof(net_session_t));
+    memset(session, 0, sizeof(*session));
+    session->request.socket_fd = -1;
+    session->request.url = url_owned;
     session->response.data = (udata){.data = NULL, .length = 0};
     session->response.error = ustring_view_STR("");
     session->response.header_parsed = false;
@@ -288,11 +459,38 @@ int net_download_async(url_t url, url_session_cb cb, void *userdata) {
     session->userdata = userdata;
     session->url_buf = url_copy;
 
-    uv_tcp_init(uv_default_loop(), &session->request.socket);
-    session->request.url = url_owned;
+#if defined(_WIN32)
+    HANDLE thread = CreateThread(NULL, 0, net_worker_thread, session, 0, NULL);
+    if (thread == NULL) {
+        ustring_view_free(&session->response.error);
+        ustring_free(&session->url_buf);
+        free(session);
+        return -1;
+    }
+    CloseHandle(thread);
+#else
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, net_worker_thread, session) != 0) {
+        ustring_view_free(&session->response.error);
+        ustring_free(&session->url_buf);
+        free(session);
+        return -1;
+    }
+    pthread_detach(thread);
+#endif
 
-    uv_connect_t *connect = malloc(sizeof(uv_connect_t));
-    connect->data = session;
-    uv_tcp_connect(connect, &session->request.socket, (const struct sockaddr *)&addr, on_connect);
     return 0;
+}
+
+void net_poll(void) {
+    net_completion_t *completion;
+    while ((completion = net_pop_completion()) != NULL) {
+        net_session_t *session = completion->session;
+        session->cb(session->request, session->response, session->userdata);
+        udata_free(&session->response.data);
+        ustring_view_free(&session->response.error);
+        ustring_free(&session->url_buf);
+        free(session);
+        free(completion);
+    }
 }
