@@ -33,5 +33,5 @@ typedef struct net_response_t {
 url_t url_parse(ustring_view url);
 void url_dump(url_t url);
 
-typedef void(*url_session_cb)(net_request_t request, net_response_t response);
-int net_download_async(url_t url, url_session_cb cb);
+typedef void(*url_session_cb)(net_request_t request, net_response_t response, void *userdata);
+int net_download_async(url_t url, url_session_cb cb, void *userdata);

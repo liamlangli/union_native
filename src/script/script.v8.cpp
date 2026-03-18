@@ -125,6 +125,143 @@ static void v8_bind_console(Isolate *iso, Local<Context> ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// fetch() — returns Promise<Response>; Response has .arrayBuffer()/.text()/.json()
+// ---------------------------------------------------------------------------
+
+struct V8FetchCtx {
+    Global<Promise::Resolver> resolver;
+    Global<Context>           js_ctx;
+};
+
+static void cb_response_array_buffer(const FunctionCallbackInfo<Value> &args) {
+    Isolate *iso = args.GetIsolate();
+    Local<Context> ctx = iso->GetCurrentContext();
+    Local<Object> self = args.This();
+    Local<Value> body = self->Get(ctx,
+        String::NewFromUtf8(iso, "_body").ToLocalChecked()).ToLocalChecked();
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(ctx).ToLocalChecked();
+    resolver->Resolve(ctx, body).Check();
+    args.GetReturnValue().Set(resolver->GetPromise());
+}
+
+static void cb_response_text(const FunctionCallbackInfo<Value> &args) {
+    Isolate *iso = args.GetIsolate();
+    Local<Context> ctx = iso->GetCurrentContext();
+    Local<Object> self = args.This();
+    Local<Value> body_val = self->Get(ctx,
+        String::NewFromUtf8(iso, "_body").ToLocalChecked()).ToLocalChecked();
+    Local<ArrayBuffer> ab = Local<ArrayBuffer>::Cast(body_val);
+    auto store = ab->GetBackingStore();
+    Local<String> text = String::NewFromUtf8(iso,
+        (const char *)store->Data(), NewStringType::kNormal,
+        (int)store->ByteLength()).ToLocalChecked();
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(ctx).ToLocalChecked();
+    resolver->Resolve(ctx, text).Check();
+    args.GetReturnValue().Set(resolver->GetPromise());
+}
+
+static void cb_response_json(const FunctionCallbackInfo<Value> &args) {
+    Isolate *iso = args.GetIsolate();
+    Local<Context> ctx = iso->GetCurrentContext();
+    Local<Object> self = args.This();
+    Local<Value> body_val = self->Get(ctx,
+        String::NewFromUtf8(iso, "_body").ToLocalChecked()).ToLocalChecked();
+    Local<ArrayBuffer> ab = Local<ArrayBuffer>::Cast(body_val);
+    auto store = ab->GetBackingStore();
+    Local<String> text = String::NewFromUtf8(iso,
+        (const char *)store->Data(), NewStringType::kNormal,
+        (int)store->ByteLength()).ToLocalChecked();
+    Local<Value> json;
+    if (JSON::Parse(ctx, text).ToLocal(&json)) {
+        Local<Promise::Resolver> resolver = Promise::Resolver::New(ctx).ToLocalChecked();
+        resolver->Resolve(ctx, json).Check();
+        args.GetReturnValue().Set(resolver->GetPromise());
+    }
+}
+
+static void on_v8_fetch_done(net_request_t request, net_response_t response, void *userdata) {
+    V8FetchCtx *fc = (V8FetchCtx *)userdata;
+    Isolate *iso = g_mod.isolate;
+    Isolate::Scope iso_scope(iso);
+    HandleScope scope(iso);
+    Local<Context> ctx = fc->js_ctx.Get(iso);
+    Context::Scope ctx_scope(ctx);
+    Local<Promise::Resolver> resolver = fc->resolver.Get(iso);
+
+    if (response.status == 0) {
+        Local<String> err = String::NewFromUtf8(iso, "network error").ToLocalChecked();
+        resolver->Reject(ctx, err).Check();
+    } else {
+        const char *body = response.body.base.data + response.body.start;
+        u32 body_len = response.body.length;
+
+        Local<ArrayBuffer> ab = ArrayBuffer::New(iso, body_len);
+        memcpy(ab->GetBackingStore()->Data(), body, body_len);
+
+        Local<Object> resp = Object::New(iso);
+        resp->Set(ctx, String::NewFromUtf8(iso, "status").ToLocalChecked(),
+                  Integer::New(iso, response.status)).Check();
+        resp->Set(ctx, String::NewFromUtf8(iso, "ok").ToLocalChecked(),
+                  Boolean::New(iso, response.status >= 200 && response.status < 300)).Check();
+        resp->Set(ctx, String::NewFromUtf8(iso, "_body").ToLocalChecked(), ab).Check();
+
+        auto add_method = [&](const char *name, FunctionCallback cb) {
+            Local<Function> fn = Function::New(ctx, cb).ToLocalChecked();
+            resp->Set(ctx, String::NewFromUtf8(iso, name).ToLocalChecked(), fn).Check();
+        };
+        add_method("arrayBuffer", cb_response_array_buffer);
+        add_method("text",        cb_response_text);
+        add_method("json",        cb_response_json);
+
+        resolver->Resolve(ctx, resp).Check();
+    }
+
+    fc->resolver.Reset();
+    fc->js_ctx.Reset();
+    delete fc;
+}
+
+static void cb_fetch(const FunctionCallbackInfo<Value> &args) {
+    Isolate *iso = args.GetIsolate();
+    Local<Context> ctx = iso->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(ctx).ToLocalChecked();
+
+    if (args.Length() < 1 || !args[0]->IsString()) {
+        Local<String> err = String::NewFromUtf8(iso, "fetch: expected URL string").ToLocalChecked();
+        resolver->Reject(ctx, err).Check();
+        args.GetReturnValue().Set(resolver->GetPromise());
+        return;
+    }
+
+    String::Utf8Value url_utf8(iso, args[0]);
+    ustring url_ustr = ustring_str(*url_utf8);
+    ustring_view url_view = ustring_view_from_ustring(url_ustr);
+    url_t url = url_parse(url_view);
+
+    if (!url.valid) {
+        Local<String> err = String::NewFromUtf8(iso, "fetch: invalid URL").ToLocalChecked();
+        resolver->Reject(ctx, err).Check();
+        args.GetReturnValue().Set(resolver->GetPromise());
+        return;
+    }
+
+    V8FetchCtx *fc = new V8FetchCtx;
+    fc->resolver.Reset(iso, resolver);
+    fc->js_ctx.Reset(iso, ctx);
+
+    // net_download_async copies the URL string internally.
+    net_download_async(url, on_v8_fetch_done, fc);
+    args.GetReturnValue().Set(resolver->GetPromise());
+}
+
+static void v8_bind_fetch(Isolate *iso, Local<Context> ctx) {
+    Local<Function> fn = Function::New(ctx, cb_fetch).ToLocalChecked();
+    ctx->Global()->Set(ctx,
+        String::NewFromUtf8(iso, "fetch").ToLocalChecked(), fn).Check();
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -200,6 +337,7 @@ void script_setup(void) {
 
     Context::Scope ctx_scope(ctx);
     v8_bind_console(iso, ctx);
+    v8_bind_fetch(iso, ctx);
     script_gpu_setup();
 }
 
@@ -280,7 +418,7 @@ int script_eval_direct(ustring source, ustring *result) {
     return 0;
 }
 
-static void on_html_script_download(net_request_t request, net_response_t response) {
+static void on_html_script_download(net_request_t request, net_response_t response, void *userdata) {
     LOG_INFO("script.v8", "html script downloaded");
     g_ctx.invalid_script =
         script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
@@ -289,7 +427,7 @@ static void on_html_script_download(net_request_t request, net_response_t respon
     os_window_on_resize(window, window->width, window->height);
 }
 
-static void on_remote_script_download(net_request_t request, net_response_t response) {
+static void on_remote_script_download(net_request_t request, net_response_t response, void *userdata) {
     LOG_INFO("script.v8", "remote content downloaded");
 
     const char *body_data = response.body.base.data + response.body.start;
@@ -304,7 +442,7 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
                 ustring_view src_view = ustring_view_from_ustring(s->src);
                 url_t script_url = url_parse(src_view);
                 if (script_url.valid) {
-                    net_download_async(script_url, on_html_script_download);
+                    net_download_async(script_url, on_html_script_download, NULL);
                 }
                 ustring_free(&s->src);
             } else if (s->code.length > 0) {
@@ -329,7 +467,7 @@ int script_eval_uri(ustring_view uri) {
             LOG_WARN("script.v8", "invalid url");
             return -1;
         }
-        net_download_async(url, on_remote_script_download);
+        net_download_async(url, on_remote_script_download, NULL);
     } else {
         ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
         if (content.length == 0) {
