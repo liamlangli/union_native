@@ -5,6 +5,7 @@
 #include "foundation/global.h"
 #include "foundation/ustring.h"
 #include "foundation/network.h"
+#include "foundation/html_parser.h"
 #include "foundation/logger.h"
 #include "foundation/io.h"
 #include "ui/ui_dev_tool.h"
@@ -142,6 +143,7 @@ void script_setup(void) {
     JSContext *ctx = shared_module.context;
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyFunctionList(ctx, global, js_console_funcs, count_of(js_console_funcs));
+    JS_SetPropertyStr(ctx, global, "fetch", JS_NewCFunction(ctx, js_fetch, "fetch", 1));
     JS_FreeValue(ctx, global);
 
     script_gpu_setup();
@@ -208,13 +210,181 @@ int script_eval_direct(ustring source, ustring *result) {
     return ret;
 }
 
-static void on_remote_script_download(net_request_t request, net_response_t response) {
-    // ULOG_INFO_FMT("remote script downloaded: {v}", request.url);
+// ---------------------------------------------------------------------------
+// fetch() — returns Promise<Response>; Response has .arrayBuffer()/.text()/.json()
+// ---------------------------------------------------------------------------
+
+typedef struct qjs_fetch_ctx_t {
+    JSContext *ctx;
+    JSValue resolve;
+    JSValue reject;
+} qjs_fetch_ctx_t;
+
+static JSValue js_response_array_buffer(JSContext *ctx, JSValueConst this_val,
+                                         int argc, JSValueConst *argv,
+                                         int magic, JSValue *func_data) {
+    JSValue ab = JS_DupValue(ctx, func_data[0]);
+    JSValue resolving_funcs[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+    JS_Call(ctx, resolving_funcs[0], JS_UNDEFINED, 1, &ab);
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    JS_FreeValue(ctx, ab);
+    return promise;
+}
+
+static JSValue js_response_text(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv,
+                                 int magic, JSValue *func_data) {
+    size_t byte_len;
+    JS_GetArrayBuffer(ctx, &byte_len, func_data[0]);
+    uint8_t *buf = JS_GetArrayBuffer(ctx, &byte_len, func_data[0]);
+    JSValue text = JS_NewStringLen(ctx, (const char *)buf, byte_len);
+    JSValue resolving_funcs[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+    JS_Call(ctx, resolving_funcs[0], JS_UNDEFINED, 1, &text);
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    JS_FreeValue(ctx, text);
+    return promise;
+}
+
+static JSValue js_response_json(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv,
+                                 int magic, JSValue *func_data) {
+    size_t byte_len;
+    uint8_t *buf = JS_GetArrayBuffer(ctx, &byte_len, func_data[0]);
+    JSValue json = JS_ParseJSON(ctx, (const char *)buf, byte_len, "<fetch>");
+    JSValue resolving_funcs[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+    JS_Call(ctx, resolving_funcs[0], JS_UNDEFINED, 1, &json);
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    JS_FreeValue(ctx, json);
+    return promise;
+}
+
+static void on_qjs_fetch_done(net_request_t request, net_response_t response, void *userdata) {
+    qjs_fetch_ctx_t *fc = (qjs_fetch_ctx_t *)userdata;
+    JSContext *ctx = fc->ctx;
+
+    if (response.status == 0) {
+        JSValue err = JS_NewString(ctx, "network error");
+        JS_Call(ctx, fc->reject, JS_UNDEFINED, 1, &err);
+        JS_FreeValue(ctx, err);
+    } else {
+        const char *body = response.body.base.data + response.body.start;
+        u32 body_len = response.body.length;
+
+        JSValue ab = JS_NewArrayBufferCopy(ctx, (const uint8_t *)body, body_len);
+
+        JSValue resp = JS_NewObject(ctx);
+        JS_SetPropertyStr(ctx, resp, "status", JS_NewInt32(ctx, (i32)response.status));
+        JS_SetPropertyStr(ctx, resp, "ok",
+            JS_NewBool(ctx, response.status >= 200 && response.status < 300));
+        JS_SetPropertyStr(ctx, resp, "arrayBuffer",
+            JS_NewCFunctionData(ctx, js_response_array_buffer, 0, 0, 1, &ab));
+        JS_SetPropertyStr(ctx, resp, "text",
+            JS_NewCFunctionData(ctx, js_response_text, 0, 0, 1, &ab));
+        JS_SetPropertyStr(ctx, resp, "json",
+            JS_NewCFunctionData(ctx, js_response_json, 0, 0, 1, &ab));
+        JS_FreeValue(ctx, ab);
+
+        JS_Call(ctx, fc->resolve, JS_UNDEFINED, 1, &resp);
+        JS_FreeValue(ctx, resp);
+    }
+
+    JS_FreeValue(ctx, fc->resolve);
+    JS_FreeValue(ctx, fc->reject);
+    free(fc);
+}
+
+static JSValue js_fetch(JSContext *ctx, JSValueConst _, int argc, JSValueConst *argv) {
+    JSValue resolving_funcs[2];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+
+    if (argc < 1 || !JS_IsString(argv[0])) {
+        JSValue err = JS_NewString(ctx, "fetch: expected URL string");
+        JS_Call(ctx, resolving_funcs[1], JS_UNDEFINED, 1, &err);
+        JS_FreeValue(ctx, err);
+        JS_FreeValue(ctx, resolving_funcs[0]);
+        JS_FreeValue(ctx, resolving_funcs[1]);
+        return promise;
+    }
+
+    const char *url_str = JS_ToCString(ctx, argv[0]);
+    ustring url_ustring = ustring_str(url_str);
+    ustring_view url_view = ustring_view_from_ustring(url_ustring);
+    url_t url = url_parse(url_view);
+
+    if (!url.valid) {
+        JSValue err = JS_NewString(ctx, "fetch: invalid URL");
+        JS_Call(ctx, resolving_funcs[1], JS_UNDEFINED, 1, &err);
+        JS_FreeValue(ctx, err);
+        JS_FreeCString(ctx, url_str);
+        JS_FreeValue(ctx, resolving_funcs[0]);
+        JS_FreeValue(ctx, resolving_funcs[1]);
+        return promise;
+    }
+
+    qjs_fetch_ctx_t *fc = malloc(sizeof(qjs_fetch_ctx_t));
+    fc->ctx = ctx;
+    fc->resolve = JS_DupValue(ctx, resolving_funcs[0]);
+    fc->reject  = JS_DupValue(ctx, resolving_funcs[1]);
+
+    // net_download_async copies the URL string internally, safe to free url_str after.
+    net_download_async(url, on_qjs_fetch_done, fc);
+    JS_FreeCString(ctx, url_str);
+
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    return promise;
+}
+
+// ---------------------------------------------------------------------------
+// HTML / script download callbacks
+// ---------------------------------------------------------------------------
+
+static void on_html_script_download(net_request_t request, net_response_t response, void *userdata) {
+    ULOG_INFO_FMT("status: {d}", response.status);
+    ustring source = ustring_view_to_ustring(&response.body);
+    shared_context.invalid_script = script_eval(source, request.url.url) != 0;
+
+    os_window_t *window = shared_context.window;
+    os_window_on_resize(window, window->width, window->height);
+}
+
+static void on_remote_script_download(net_request_t request, net_response_t response, void *userdata) {
     ULOG_INFO_FMT("status: {d}", response.status);
     ULOG_INFO_FMT("content_length: {d}", response.content_length);
     ULOG_INFO_FMT("header_length: {d}", response.header_length);
-    shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
-    script_t *ctx = script_shared();
+
+    const char *body_data = response.body.base.data + response.body.start;
+    u32 body_len = response.body.length;
+
+    if (html_is_html(body_data, body_len)) {
+        ULOG_INFO("html_parser: detected HTML page, extracting scripts");
+        html_parse_result_t parsed = html_parse_scripts(body_data, body_len, request.url);
+        for (u32 i = 0; i < parsed.count; i++) {
+            html_script_t *s = &parsed.scripts[i];
+            if (s->src.length > 0) {
+                ustring_view src_view = ustring_view_from_ustring(s->src);
+                url_t script_url = url_parse(src_view);
+                if (script_url.valid) {
+                    ULOG_INFO_FMT("html_parser: loading script: {}", s->src.data);
+                    // net_download_async copies the URL, safe to free s->src after.
+                    net_download_async(script_url, on_html_script_download, NULL);
+                }
+                ustring_free(&s->src);
+            } else if (s->code.length > 0) {
+                ustring_view filename = ustring_view_STR("<inline>");
+                shared_context.invalid_script = script_eval(s->code, filename) != 0;
+                ustring_free(&s->code);
+            }
+        }
+    } else {
+        shared_context.invalid_script = script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
+    }
 
     os_window_t *window = shared_context.window;
     os_window_on_resize(window, window->width, window->height);
@@ -229,7 +399,7 @@ int script_eval_uri(ustring_view uri) {
         }
         ULOG_INFO_FMT("download remote script: {v}", uri);
         url_dump(url);
-        net_download_async(url, on_remote_script_download);
+        net_download_async(url, on_remote_script_download, NULL);
     } else {
         ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
         if (content.length == 0) {

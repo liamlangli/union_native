@@ -10,6 +10,8 @@ typedef struct net_session_t {
     net_request_t request;
     net_response_t response;
     url_session_cb cb;
+    void *userdata;
+    ustring url_buf; // owned copy of URL string — ensures url_t views stay valid
 } net_session_t;
 
 url_t url_parse(ustring_view url) {
@@ -154,7 +156,9 @@ static void on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) 
 }
 
 static void on_close(uv_handle_t *handle) {
-    free(handle);
+    net_session_t *session = (net_session_t *)handle;
+    ustring_free(&session->url_buf);
+    free(session);
     ULOG_INFO("closed.\n");
 }
 
@@ -214,7 +218,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         if (nread != UV_EOF) {
             ULOG_ERROR_FMT("read error {}", uv_err_name((int)nread));
         }
-        session->cb(session->request, session->response);
+        session->cb(session->request, session->response, session->userdata);
         uv_close((uv_handle_t *)stream, on_close);
     } else if (nread > 0) {
         if (!session->response.header_parsed) {
@@ -226,7 +230,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
         if (body_read_end(&session->response)) {
             parse_response(&session->response);
-            session->cb(session->request, session->response);
+            session->cb(session->request, session->response, session->userdata);
             uv_read_stop(stream);
             uv_close((uv_handle_t *)stream, on_close);
             udata_free(&session->response.data);
@@ -236,9 +240,17 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     free(buf->base);
 }
 
+static void on_read_error(uv_stream_t *stream, net_session_t *session) {
+    session->cb(session->request, session->response, session->userdata);
+    uv_close((uv_handle_t *)stream, on_close);
+}
+
 static void on_connect(uv_connect_t *conn, int status) {
     if (status < 0) {
         ULOG_ERROR_FMT("connection error {}", uv_err_name(status));
+        net_session_t *session = conn->data;
+        on_read_error(conn->handle, session);
+        free(conn);
         return;
     }
 
@@ -253,23 +265,31 @@ static void on_connect(uv_connect_t *conn, int status) {
     uv_buf_t buf = uv_buf_init((char *)body.base.data, body.base.length);
     uv_write(write_req, stream, &buf, 1, on_write);
     uv_read_start(stream, on_alloc, on_read);
+    free(conn);
 }
 
-int net_download_async(url_t url, url_session_cb cb) {
-    uv_getaddrinfo_t resolver;
-    ustring host = ustring_view_to_new_ustring(&url.host);
+int net_download_async(url_t url, url_session_cb cb, void *userdata) {
+    // Copy the URL string so views in url_t remain valid for the lifetime of the request.
+    ustring url_copy = ustring_view_to_new_ustring(&url.url);
+    ustring_view url_view = ustring_view_from_ustring(url_copy);
+    url_t url_owned = url_parse(url_view);
+
+    ustring host = ustring_view_to_new_ustring(&url_owned.host);
 
     struct sockaddr_in addr;
-    uv_ip4_addr(host.data, url.port, &addr);
+    uv_ip4_addr(host.data, url_owned.port, &addr);
+    ustring_free(&host);
 
     net_session_t *session = malloc(sizeof(net_session_t));
     session->response.data = (udata){.data = NULL, .length = 0};
     session->response.error = ustring_view_STR("");
     session->response.header_parsed = false;
     session->cb = cb;
+    session->userdata = userdata;
+    session->url_buf = url_copy;
 
     uv_tcp_init(uv_default_loop(), &session->request.socket);
-    session->request.url = url;
+    session->request.url = url_owned;
 
     uv_connect_t *connect = malloc(sizeof(uv_connect_t));
     connect->data = session;
