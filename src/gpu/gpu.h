@@ -5,11 +5,10 @@
 #include "gpu_const.h"
 #include "os/os.h"
 
+/* Only Dawn (WebGPU) is supported as the GPU backend. */
 typedef enum gpu_backend {
-    none,
-    webgl,
-    webgpu,
-    union_gpu,
+    GPU_BACKEND_NONE   = 0,
+    GPU_BACKEND_WEBGPU = 1,
 } gpu_backend;
 
 typedef struct gpu_texture {
