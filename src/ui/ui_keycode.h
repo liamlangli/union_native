@@ -4,8 +4,9 @@
 #define KEY_SPACE_MACOS 9
 #define MAX_KEY_COUNT 255
 
-#include "foundation/ustring.h"
 #include "ui/ui_type.h"
+
+#include <string>
 
 typedef enum {
     KEY_SPACE = 32,
@@ -132,4 +133,4 @@ typedef enum {
     KEY_MENU = 348,
 } KEYCODE;
 
-UN_EXPORT u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift);
+UN_EXPORT u32 ui_keycode_parse(std::string *view, u8 *keys, bool shift);

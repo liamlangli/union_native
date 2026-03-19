@@ -1,7 +1,7 @@
 #include "ui_keycode.h"
 
-u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift) {
-    ustring_view_clear(view);
+u32 ui_keycode_parse(std::string *view, u8 *keys, bool shift) {
+    view->clear();
     u32 valid_char_count = 0;
     for (int i = 0, l = MAX_KEY_COUNT; i < l; i++) {
         if (keys[i] == 0)
@@ -11,7 +11,7 @@ u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift) {
             if (!shift) {
                 key = key - KEY_A + KEY_LOWER_CASE_A;
             }
-            ustring_view_push(view, key);
+            view->push_back((char)key);
             valid_char_count++;
         } else {
             bool valid = true;
@@ -97,7 +97,7 @@ u32 ui_keycode_parse(ustring_view *view, u8 *keys, bool shift) {
                 break;
             }
             if (valid) {
-                ustring_view_push(view, key);
+                view->push_back((char)key);
                 valid_char_count++;
             }
         }

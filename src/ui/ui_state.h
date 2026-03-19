@@ -4,6 +4,8 @@
 #include "ui/ui_type.h"
 #include "ui/ui_keycode.h"
 
+#include <string>
+
 typedef struct ui_state_t {
     ui_rect window_rect;
 
@@ -22,7 +24,7 @@ typedef struct ui_state_t {
     u8 key_press[MAX_KEY_COUNT];
     u8 key_release[MAX_KEY_COUNT];
     u8 key_pressed[MAX_KEY_COUNT];
-    ustring_view edit_str;
+    std::string edit_str;
 
     bool updated;
     u32 cursor_type;

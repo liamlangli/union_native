@@ -1,17 +1,21 @@
 #if defined(SCRIPT_BACKEND_STUB)
 
 #include "script/script.h"
+
+#include "core/global.h"
+#include "core/io.h"
+#include "core/logger.h"
+#include "core/network.h"
+#include "core/text.h"
 #include "script/script_gpu.h"
-#include "foundation/global.h"
-#include "foundation/ustring.h"
-#include "foundation/network.h"
-#include "foundation/logger.h"
-#include "foundation/io.h"
 #include "ui/ui_dev_tool.h"
 #include "ui/ui_renderer.h"
 #include "ui/ui_state.h"
 
-static script_t g_stub_context = {0};
+#include <cstring>
+
+static script_t g_stub_context = {};
+static i8 g_http_prefix[] = "http";
 
 static bool stub_has_script_extension(const char *path, u32 length) {
     if (path == NULL || length < 3) return false;
@@ -21,7 +25,7 @@ static bool stub_has_script_extension(const char *path, u32 length) {
 }
 
 void script_init(os_window_t *window) {
-    g_stub_context = (script_t){0};
+    g_stub_context = {};
     g_stub_context.window = window;
     script_gpu_setup();
 }
@@ -39,39 +43,39 @@ void script_cleanup(void) {
 
 void script_setup(void) {}
 
-int script_eval(ustring source, ustring_view filename) {
+int script_eval(std::string_view source, std::string_view filename) {
     (void)source;
     (void)filename;
     return 0;
 }
 
-int script_eval_uri(ustring_view uri) {
-    if (ustring_view_start_with_ustring(uri, ustring_STR("http"))) {
+int script_eval_uri(std::string_view uri) {
+    std::string uri_string(uri);
+    if (text_starts_with(uri, g_http_prefix)) {
         url_t url = url_parse(uri);
-        if (!url.valid || !stub_has_script_extension(url.path.base.data + url.path.start, url.path.length)) {
-            ULOG_WARN_FMT("script.stub: only .js and .mjs URLs are supported: {v}", uri);
+        if (!url.valid || !stub_has_script_extension(url.path.c_str(), (u32)url.path.size())) {
+            ULOG_WARN(uri_string.c_str());
             return -1;
         }
-        ULOG_WARN_FMT("script.stub: remote JavaScript loading is disabled on this backend: {v}", uri);
+        ULOG_WARN("script.stub: remote JavaScript loading is disabled on this backend");
         return -1;
     }
 
-    if (!stub_has_script_extension(uri.base.data + uri.start, uri.length)) {
-        ULOG_WARN_FMT("script.stub: only .js and .mjs files are supported: {v}", uri);
+    if (!stub_has_script_extension(uri.data(), (u32)uri.size())) {
+        ULOG_WARN(uri_string.c_str());
         return -1;
     }
 
-    ustring content = io_read_file(os_get_bundle_path(ustring_view_to_new_ustring(&uri)));
-    if (content.length == 0) {
-        ULOG_WARN_FMT("script.stub: failed to read file: {v}", uri);
+    std::string content = io_read_file(os_get_bundle_path(uri));
+    if (content.empty()) {
+        ULOG_WARN("script.stub: failed to read file");
         return -1;
     }
 
-    ustring_free(&content);
     return 0;
 }
 
-int script_eval_direct(ustring source, ustring *result) {
+int script_eval_direct(std::string_view source, std::string *result) {
     (void)source;
     (void)result;
     return 0;

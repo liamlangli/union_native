@@ -13,8 +13,7 @@
 
 #include "imgui_layer.h"
 #include "script/script.h"
-#include "foundation/ustring.h"
-#include "foundation/logger.h"
+#include "core/logger.h"
 
 /* Native UI system */
 #include "ui/ui_draw.h"
@@ -40,9 +39,9 @@ static constexpr float INNER_PAD  = 6.0f;
 static constexpr float RADIUS     = 5.0f;
 
 // ---------------------------------------------------------------------------
-// Mutable URL buffer (ui_input edits in-place)
+// URL input state
 // ---------------------------------------------------------------------------
-static char s_url_buf[2048] = "http://127.0.0.1:3003/main.js";
+static constexpr const char *kInitialUrl = "http://127.0.0.1:3003/main.js";
 
 // ---------------------------------------------------------------------------
 // State
@@ -62,16 +61,13 @@ static ui_button_t  s_hide_btn    = {};
 void imgui_layer_init(os_window_t *window) {
     s_window = window;
 
-    /* ui_input needs a mutable ustring_view backed by s_url_buf */
-    ustring url_ustr = ustring_str(s_url_buf);
-    ustring_view url_view = ustring_view_from_ustring(url_ustr);
-    ui_input_init(&s_url_input, url_view);
+    ui_input_init(&s_url_input, kInitialUrl);
     s_url_input.radiuses = (float4){ RADIUS, RADIUS, RADIUS, RADIUS };
 
-    ui_button_init(&s_load_btn, ustring_view_STR("Load"));
+    ui_button_init(&s_load_btn, "Load");
     s_load_btn.radiuses = (float4){ RADIUS, RADIUS, RADIUS, RADIUS };
 
-    ui_button_init(&s_hide_btn, ustring_view_STR("Hide"));
+    ui_button_init(&s_hide_btn, "Hide");
     s_hide_btn.radiuses = (float4){ RADIUS, RADIUS, RADIUS, RADIUS };
 
     s_initialized = true;
@@ -130,9 +126,8 @@ void imgui_layer_new_frame(os_window_t *window) {
 
     /* On Enter / Load: evaluate the URL */
     if (submitted || load_clicked) {
-        /* s_url_input.label.text is the live ustring_view — pass it directly */
-        ustring_view uri = s_url_input.label.text;
-        ULOG_INFO_FMT("url_bar: {}", uri.base.data ? uri.base.data + uri.start : "(empty)");
+        const std::string &uri = s_url_input.label.text;
+        ULOG_INFO(uri.empty() ? "(empty)" : uri.c_str());
         script_eval_uri(uri);
         s_visible = false;
     }

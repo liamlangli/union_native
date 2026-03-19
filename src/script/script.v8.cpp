@@ -15,11 +15,11 @@
 
 #include "script/script.h"
 #include "script/script_gpu.h"
-#include "foundation/global.h"
-#include "foundation/ustring.h"
-#include "foundation/network.h"
-#include "foundation/logger.h"
-#include "foundation/io.h"
+#include "core/global.h"
+#include "core/text.h"
+#include "core/network.h"
+#include "core/logger.h"
+#include "core/io.h"
 #include "ui/ui_dev_tool.h"
 #include "ui/ui_renderer.h"
 #include "ui/ui_state.h"
@@ -198,8 +198,8 @@ static void on_v8_fetch_done(net_request_t request, net_response_t response, voi
         Local<String> err = String::NewFromUtf8(iso, "network error").ToLocalChecked();
         resolver->Reject(ctx, err).Check();
     } else {
-        const char *body = response.body.base.data + response.body.start;
-        u32 body_len = response.body.length;
+        const char *body = response.body.data();
+        u32 body_len = (u32)response.body.size();
 
         Local<ArrayBuffer> ab = ArrayBuffer::New(iso, body_len);
         memcpy(ab->GetBackingStore()->Data(), body, body_len);
@@ -241,8 +241,7 @@ static void cb_fetch(const FunctionCallbackInfo<Value> &args) {
     }
 
     String::Utf8Value url_utf8(iso, args[0]);
-    ustring url_ustr = ustring_str(*url_utf8);
-    ustring_view url_view = ustring_view_from_ustring(url_ustr);
+    std::string_view url_view(*url_utf8, url_utf8.length());
     url_t url = url_parse(url_view);
 
     if (!url.valid) {
@@ -288,7 +287,7 @@ void script_init(os_window_t *window) {
         ArrayBuffer::Allocator::NewDefaultAllocator();
     g_mod.isolate = Isolate::New(g_mod.create_params);
 
-    ustring bundle_path = os_get_bundle_path(ustring_STR("db"));
+    std::string bundle_path = os_get_bundle_path("db");
     g_ctx.db = db_open(bundle_path);
 
     ui_renderer_init();
@@ -347,8 +346,8 @@ void script_setup(void) {
     script_gpu_setup();
 }
 
-int script_eval(ustring source, ustring_view filename) {
-    if (source.length == 0) {
+int script_eval(std::string_view source, std::string_view filename) {
+    if (source.empty()) {
         LOG_INFO("script.v8", "source is empty");
         return -1;
     }
@@ -363,10 +362,10 @@ int script_eval(ustring source, ustring_view filename) {
     Context::Scope ctx_scope(ctx);
 
     TryCatch tc(iso);
-    Local<String> src_str  = String::NewFromUtf8(iso, source.data,
-        NewStringType::kNormal, (int)source.length).ToLocalChecked();
+    Local<String> src_str  = String::NewFromUtf8(iso, source.data(),
+        NewStringType::kNormal, (int)source.size()).ToLocalChecked();
     Local<String> file_str = String::NewFromUtf8(iso,
-        filename.base.data ? filename.base.data : "<eval>").ToLocalChecked();
+        filename.empty() ? "<eval>" : std::string(filename).c_str()).ToLocalChecked();
 
     ScriptOrigin origin(iso, file_str);
     Local<Script> script;
@@ -383,8 +382,8 @@ int script_eval(ustring source, ustring_view filename) {
     return 0;
 }
 
-int script_eval_direct(ustring source, ustring *result) {
-    if (source.length == 0) return -1;
+int script_eval_direct(std::string_view source, std::string *result) {
+    if (source.empty()) return -1;
 
     Isolate *iso = g_mod.isolate;
     if (!iso) return -1;
@@ -399,8 +398,8 @@ int script_eval_direct(ustring source, ustring *result) {
     Context::Scope ctx_scope(ctx);
 
     TryCatch tc(iso);
-    Local<String> src_str = String::NewFromUtf8(iso, source.data,
-        NewStringType::kNormal, (int)source.length).ToLocalChecked();
+    Local<String> src_str = String::NewFromUtf8(iso, source.data(),
+        NewStringType::kNormal, (int)source.size()).ToLocalChecked();
     ScriptOrigin origin(iso, String::NewFromUtf8(iso, "<direct>").ToLocalChecked());
     Local<Script> script;
     if (!Script::Compile(ctx, src_str, &origin).ToLocal(&script)) {
@@ -415,11 +414,7 @@ int script_eval_direct(ustring source, ustring *result) {
 
     if (result) {
         String::Utf8Value utf8(iso, val);
-        size_t len = utf8.length();
-        char  *buf = (char*)malloc(len + 1);
-        memcpy(buf, *utf8, len);
-        buf[len] = '\0';
-        *result = (ustring){ .data = buf, .length = (u32)len, .null_terminated = true, .is_static = false };
+        *result = *utf8 ? std::string(*utf8, utf8.length()) : std::string();
     }
     return 0;
 }
@@ -432,37 +427,36 @@ static void on_remote_script_download(net_request_t request, net_response_t resp
         g_ctx.invalid_script = true;
     } else {
         g_ctx.invalid_script =
-            script_eval(ustring_view_to_ustring(&response.body), request.url.url) != 0;
+            script_eval(response.body, request.url.url) != 0;
     }
 
     os_window_t *window = g_ctx.window;
     os_window_on_resize(window, window->width, window->height);
 }
 
-int script_eval_uri(ustring_view uri) {
-    if (ustring_view_start_with_ustring(uri, ustring_STR("http"))) {
+int script_eval_uri(std::string_view uri) {
+    if (text_starts_with(uri, "http")) {
         url_t url = url_parse(uri);
         if (!url.valid) {
             LOG_WARN("script.v8", "invalid url");
             return -1;
         }
-        if (!has_script_extension(url.path.base.data + url.path.start, url.path.length)) {
+        if (!has_script_extension(url.path.c_str(), (u32)url.path.size())) {
             LOG_WARN("script.v8", "only .js and .mjs URLs are supported");
             return -1;
         }
         net_download_async(url, on_remote_script_download, NULL);
     } else {
-        if (!has_script_extension(uri.base.data + uri.start, uri.length)) {
+        if (!has_script_extension(uri.data(), (u32)uri.size())) {
             LOG_WARN("script.v8", "only .js and .mjs files are supported");
             return -1;
         }
-        ustring content = io_read_file(os_get_bundle_path(ustring_view_to_ustring(&uri)));
-        if (content.length == 0) {
+        std::string content = io_read_file(os_get_bundle_path(uri));
+        if (content.empty()) {
             LOG_WARN("script.v8", "failed to read file");
             return -1;
         }
         g_ctx.invalid_script = script_eval(content, uri) != 0;
-        ustring_free(&content);
     }
     os_window_t *window = g_ctx.window;
     os_window_on_resize(window, window->width, window->height);

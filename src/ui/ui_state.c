@@ -14,7 +14,8 @@ void ui_state_init() {
     _state.focus = -1;
     _state.smooth_factor = 0.1;
 
-    ustring_view_reserve(&_state.edit_str, 32);
+    _state.edit_str.clear();
+    _state.edit_str.reserve(32);
 }
 
 ui_state_t *ui_state_get() { return &_state; }

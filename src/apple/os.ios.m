@@ -4,7 +4,7 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-#include "foundation/api.h"
+#include "core/api.h"
 #include "os/os.h"
 
 @interface UNAppDelegate : NSObject<UIApplicationDelegate>
@@ -161,7 +161,7 @@ void metal_capture_end(void) {
     }
 }
 
-os_window_t* os_window_create(ustring title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate) {
+os_window_t* os_window_create(std::string_view title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate) {
     launch_func = on_launch;
     frame_func = on_frame;
     terminate_func = on_terminate;
@@ -170,15 +170,15 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
     _window.height = height;
     _window.ui_scale = 2.0;
     _window.title = title;
-    osx_start(width, height, title.data);
+    osx_start(width, height, title.data());
     return &_window;
 }
 
-ustring os_window_get_clipboard(os_window_t *window) {
-    return ustring_NULL;
+std::string os_window_get_clipboard(os_window_t *window) {
+    return {};
 }
 
-void os_window_set_clipboard(os_window_t *window, ustring_view text) {}
+void os_window_set_clipboard(os_window_t *window, std::string_view text) {}
 
 void os_window_close(os_window_t *window) {
     free(window);

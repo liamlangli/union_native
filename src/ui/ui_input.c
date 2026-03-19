@@ -1,6 +1,5 @@
 #include "ui/ui_input.h"
 #include "os/os.h"
-#include "foundation/ustring.h"
 #include "script/script.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_keycode.h"
@@ -8,7 +7,7 @@
 #include "ui/ui_state.h"
 #include "ui/ui_theme.h"
 
-void ui_input_init(ui_input_t *input, ustring_view text) {
+void ui_input_init(ui_input_t *input, std::string_view text) {
     ui_label_init(&input->label, text);
     ui_element_init(&input->element);
     input->radiuses = (float4){4.f, 4.f, 4.f, 4.f};
@@ -53,19 +52,19 @@ void ui_input_handle_edit(ui_input_t *input) {
 
     if (ui_state_is_key_press(KEY_BACKSPACE)) {
         if (control_pressed) {
-            to == input->label.text.length ? ustring_view_clear(&input->label.text)
-                                           : ustring_view_erase(&input->label.text, 0, to);
+            if (to == (int)input->label.text.size()) input->label.text.clear();
+            else input->label.text.erase(0, to);
             input->label.cursor_index = 0;
             input->label.start_index = 0;
         } else {
             if (from == to) {
                 if (from > 0) {
-                    ustring_view_erase(&input->label.text, from - 1, from);
+                    input->label.text.erase((size_t)(from - 1), 1);
                     input->label.cursor_index = from - 1;
                     input->label.start_index = from - 1;
                 }
             } else {
-                ustring_view_erase(&input->label.text, from, to);
+                input->label.text.erase((size_t)from, (size_t)(to - from));
                 input->label.cursor_index = from;
                 input->label.start_index = from;
             }
@@ -78,7 +77,7 @@ void ui_input_handle_edit(ui_input_t *input) {
     if (control_pressed) {
         if (ui_state_is_key_press(KEY_A)) {
             input->label.cursor_index = 0;
-            input->label.start_index = input->label.text.length;
+            input->label.start_index = (int)input->label.text.size();
             input->label.render_selected = true;
             ui_state_delete_key_press(KEY_A);
         }
@@ -87,7 +86,7 @@ void ui_input_handle_edit(ui_input_t *input) {
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(KEY_RIGHT)) {
-            input->label.cursor_index = input->label.text.length;
+            input->label.cursor_index = (int)input->label.text.size();
             input->label.render_selected = false;
         }
         if (ui_state_is_key_press(KEY_C)) {
@@ -98,9 +97,9 @@ void ui_input_handle_edit(ui_input_t *input) {
         }
         if (ui_state_is_key_press(KEY_X)) {
 #ifdef UI_NATIVE
-            os_window_set_clipboard(script_shared()->window, ustring_view_sub_view(&input->label.text, from, to));
+            os_window_set_clipboard(script_shared()->window, std::string_view(input->label.text).substr((size_t)from, (size_t)(to - from)));
 #endif
-            ustring_view_erase(&input->label.text, from, to);
+            input->label.text.erase((size_t)from, (size_t)(to - from));
             input->label.cursor_index = from;
             input->label.start_index = from;
             input->label.render_selected = false;
@@ -110,11 +109,11 @@ void ui_input_handle_edit(ui_input_t *input) {
         if (ui_state_is_key_press(KEY_V)) {
 #ifdef UI_NATIVE
             if (from != to)
-                ustring_view_erase(&input->label.text, from, to);
-            ustring pasted = os_window_get_clipboard(script_shared()->window);
-            ustring_view_insert_ustring(&input->label.text, from, &pasted);
-            input->label.cursor_index = from + pasted.length;
-            input->label.start_index = from + pasted.length;
+                input->label.text.erase((size_t)from, (size_t)(to - from));
+            std::string pasted = os_window_get_clipboard(script_shared()->window);
+            input->label.text.insert((size_t)from, pasted);
+            input->label.cursor_index = from + (int)pasted.size();
+            input->label.start_index = from + (int)pasted.size();
             input->label.render_selected = false;
             ui_label_compute_size_and_offset(&input->label);
             ui_state_delete_key_press(KEY_V);
@@ -129,8 +128,8 @@ void ui_input_handle_edit(ui_input_t *input) {
         }
 
         if (ui_state_is_key_press(KEY_RIGHT)) {
-            if (input->label.cursor_index < input->label.text.length) {
-                input->label.cursor_index = MACRO_MIN(input->label.cursor_index + 1, input->label.text.length);
+            if (input->label.cursor_index < (int)input->label.text.size()) {
+                input->label.cursor_index = MACRO_MIN(input->label.cursor_index + 1, (int)input->label.text.size());
                 input->label.start_index = input->label.cursor_index;
             }
         }
@@ -142,18 +141,18 @@ void ui_input_handle_edit(ui_input_t *input) {
             return;
 
         if (from != to) {
-            ustring_view_erase(&input->label.text, from, to);
+            input->label.text.erase((size_t)from, (size_t)(to - from));
             input->label.cursor_index = from;
             input->label.start_index = from;
             input->label.render_selected = false;
         }
 
-        if (input->label.cursor_index == input->label.text.length) {
-            ustring_view_append_ustring_view(&input->label.text, &state->edit_str);
+        if (input->label.cursor_index == (int)input->label.text.size()) {
+            input->label.text += state->edit_str;
         } else {
-            ustring_view_insert_ustring_view(&input->label.text, input->label.cursor_index, &state->edit_str);
+            input->label.text.insert((size_t)input->label.cursor_index, state->edit_str);
         }
-        input->label.cursor_index += count;
+        input->label.cursor_index += (int)count;
         input->label.start_index = input->label.cursor_index;
 
         if (count > 0)
@@ -193,19 +192,18 @@ bool ui_input(ui_input_t *input, ui_style style, ui_rect rect, u32 layer_index, 
             ui_state_clear_active();
             ui_state_clear_focus();
             ui_state_delete_key_press(KEY_ENTER);
-            input->label.cursor_index = input->label.text.length;
+            input->label.cursor_index = (int)input->label.text.size();
             input->label.render_selected = false;
-            ustring_view_set_null_terminated(&input->label.text);
         }
 
         if (ui_state_is_key_press(KEY_ESCAPE)) {
-            result = !ustring_view_equals(&input->unmodified_text, &input->label.text);
+            result = input->unmodified_text != input->label.text;
             ui_state_clear_active();
             ui_state_clear_focus();
             ui_state_delete_key_press(KEY_ESCAPE);
-            ustring_view_set_ustring_view(&input->label.text, &input->unmodified_text);
+            input->label.text = input->unmodified_text;
             ui_label_compute_size_and_offset(&input->label);
-            input->label.cursor_index = input->label.text.length;
+            input->label.cursor_index = (int)input->label.text.size();
             input->label.render_selected = false;
         }
     }
@@ -213,7 +211,7 @@ bool ui_input(ui_input_t *input, ui_style style, ui_rect rect, u32 layer_index, 
     if (hover && (ui_state_is_key_press(KEY_ENTER) || (state->left_mouse_release && last_active))) {
         ui_state_set_active(id);
         ui_state_set_focus(id);
-        ustring_view_set_ustring_view(&input->unmodified_text, &input->label.text);
+        input->unmodified_text = input->label.text;
         input->label.start_index = input->label.cursor_index;
     }
 

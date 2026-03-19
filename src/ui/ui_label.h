@@ -3,11 +3,14 @@
 #include "ui/ui_state.h"
 #include "ui/ui_type.h"
 
+#include <string>
+#include <string_view>
+
 #define MAX_CHAR_LENGTH 256
 
 typedef struct ui_label_t {
     ui_element element;
-    ustring_view text;
+    std::string text;
     float2 text_size;
     f32 scale;
     f32 char_offsets[MAX_CHAR_LENGTH];
@@ -17,8 +20,8 @@ typedef struct ui_label_t {
     ui_style text_style;
 } ui_label_t;
 
-UN_EXPORT void ui_label_init(ui_label_t *label, ustring_view text);
-UN_EXPORT void ui_label_update_text(ui_label_t *label, ustring_view text);
+UN_EXPORT void ui_label_init(ui_label_t *label, std::string_view text);
+UN_EXPORT void ui_label_update_text(ui_label_t *label, std::string_view text);
 UN_EXPORT void ui_label_compute_size_and_offset(ui_label_t *label);
 
 UN_EXPORT u32 ui_label_locate_cursor(ui_label_t *label, ui_rect rect, float2 location);

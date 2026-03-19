@@ -2,16 +2,16 @@
 
 #ifdef OS_WINDOWS
 
-#include <windows.h>
-#include "gpu/gpu.h"
+#include "webgpu_context.h"
 
 #include <assert.h>
+#include <windows.h>
 
 static os_window_t _os_window;
 
 typedef struct native_window_t {
-
 } native_window_t;
+
 native_window_t _window;
 
 LRESULT CALLBACK win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -27,13 +27,12 @@ LRESULT CALLBACK win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-os_window_t* os_window_create(ustring title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate) {
+os_window_t *os_window_create(std::string_view title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate) {
     _os_window.title = title;
     _os_window.width = width;
     _os_window.height = height;
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
-    // Define the window class
     WNDCLASS wc = {0};
     const char CLASS_NAME[] = "un";
 
@@ -41,18 +40,21 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
 
-    // Register the window class
     RegisterClass(&wc);
 
-    // Create the window
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME,title.data,
+    HWND hwnd = CreateWindowEx(
+        0,
+        CLASS_NAME,
+        _os_window.title.c_str(),
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        width,
+        height,
         NULL,
         NULL,
         hInstance,
-        NULL
-    );
+        NULL);
     _os_window.native_window = hwnd;
 
     if (hwnd == NULL) {
@@ -60,8 +62,8 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
     }
 
     ShowWindow(hwnd, SW_SHOW);
-    
-    if(!gpu_request_device(&_os_window)) {
+
+    if (!webgpu_context_init(&_os_window)) {
         assert(false);
     }
 
@@ -78,23 +80,26 @@ os_window_t* os_window_create(ustring title, int width, int height, os_on_launch
 }
 
 void os_window_set_cursor(os_window_t *window, int cursor_type) {
-
+    (void)window;
+    (void)cursor_type;
 }
 
 void os_window_close(os_window_t *window) {
-
+    (void)window;
 }
 
 void os_window_capture_require(os_window_t *window) {
-
+    (void)window;
 }
 
-void os_window_set_clipboard(os_window_t *window, ustring_view text) {
-
+void os_window_set_clipboard(os_window_t *window, std::string_view text) {
+    (void)window;
+    (void)text;
 }
 
-ustring os_window_get_clipboard(os_window_t *window) {
-    return ustring_NULL;
+std::string os_window_get_clipboard(os_window_t *window) {
+    (void)window;
+    return {};
 }
 
 #endif

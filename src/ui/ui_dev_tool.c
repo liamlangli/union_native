@@ -1,7 +1,6 @@
 #ifdef UI_NATIVE
 #include "ui/ui_dev_tool.h"
-#include "foundation/ustring.h"
-#include "foundation/logger.h"
+#include "core/logger.h"
 #include "script/script.h"
 
 #include "ui/ui_draw.h"
@@ -12,7 +11,7 @@
 #include "ui/ui_button.h"
 #include "ui/ui_scroll_view.h"
 
-#include <stb/stb_ds.h>
+#include <cmath>
 
 // tab ui
 static ui_button_t console_tab;
@@ -35,7 +34,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
     dev_tool->visible = true;
     dev_tool->tab = DEVTOOL_CONSOLE;
 
-    ui_input_init(&console_input, ustring_view_STR(""));
+    ui_input_init(&console_input, "");
     console_input.label.element.constraint.margin.left = 3.f;
     console_input.label.scale = 0.8f;
 
@@ -43,7 +42,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
 
     console_labels = (ui_label_t*)malloc(sizeof(ui_label_t) * 127);
     for (u32 i = console_label_count; i < 127; i++) {
-        ui_label_init(&console_labels[i], ustring_view_STR(""));
+        ui_label_init(&console_labels[i], "");
         console_labels[i].element.constraint.alignment = LEFT | CENTER_VERTICAL;
         console_labels[i].element.constraint.margin.left = 4.f;
         console_labels[i].scale = 0.7f;
@@ -58,13 +57,13 @@ void ui_dev_tool_resize(ui_dev_tool_t* dev_tool) {
 
     ui_rect rect = ui_state_get()->window_rect;
     if (align & LEFT) {
-        rect = (ui_rect){ 0, 0, width, rect.h};
+        rect = (ui_rect){ 0, 0, (f32)width, rect.h};
     } else if (align & RIGHT) {
-        rect = (ui_rect){ rect.w - width, 0, width, rect.h};
+        rect = (ui_rect){ (f32)(rect.w - width), 0, (f32)width, rect.h};
     } else if (align & TOP) {
-        rect = (ui_rect){ 0, 0, rect.w, height};
+        rect = (ui_rect){ 0, 0, rect.w, (f32)height};
     } else if (align & BOTTOM) {
-        rect = (ui_rect){ 0, rect.h - height, rect.w, height};
+        rect = (ui_rect){ 0, (f32)(rect.h - height), rect.w, (f32)height};
     }
     rect = ui_rect_shrink(rect, 8.f, 8.f);
     dev_tool->rect = rect;
@@ -112,10 +111,10 @@ void ui_dev_tool(ui_dev_tool_t* dev_tool) {
     }
 }
 
-static ustring command_open = ustring_STR("open ");
-static ustring command_close = ustring_STR("close");
-static ustring command_exit = ustring_STR("exit");
-static ustring command_capture = ustring_STR("gpu.capture");
+static constexpr std::string_view command_open = "open ";
+static constexpr std::string_view command_close = "close";
+static constexpr std::string_view command_exit = "exit";
+static constexpr std::string_view command_capture = "gpu.capture";
 #define DEV_TOOL_INPUT_HEIGHT 32.f
 
 void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
@@ -124,29 +123,28 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     input_rect.y = rect.y + rect.h - input_rect.h;
     input_rect = ui_rect_shrink(input_rect, 4.f, 4.f);
     if (ui_input(&console_input, ui_theme_shared()->panel_0, input_rect, 0, 0)) {
-        ustring_view text = console_input.label.text;
-        if (ustring_view_start_with_ustring(text, command_open)) {
-            int start = command_open.length;
-            while (start < text.length && text.base.data[start] == ' ') start++;
-            ustring_view uri = ustring_view_sub_view(&text, start, text.length);
-            ULOG_INFO_FMT("try load script: {v}", uri);
+        std::string_view text = console_input.label.text;
+        if (text_starts_with(text, command_open)) {
+            size_t start = command_open.size();
+            while (start < text.size() && text[start] == ' ') start++;
+            std::string_view uri = text.substr(start);
+            ULOG_INFO(std::string(uri).c_str());
             script_eval_uri(uri);
-        } else if (ustring_view_start_with_ustring(text, command_close)) {
+        } else if (text == command_close) {
             ui_dev_tool_set_visible(dev_tool, false);
-        } else if (ustring_view_start_with_ustring(text, command_capture)) {
+        } else if (text == command_capture) {
             os_window_capture_require(script_shared()->window);
         } else {
-            ustring result = ustring_NULL;
-            ustring content = ustring_view_to_ustring(&text);
+            std::string result;
+            std::string content(text);
             int err = script_eval_direct(content, &result);
-            if (err != -1 && result.length > 0) {
-                ULOG_INFO_FMT("{u}", result);
+            if (err != -1 && !result.empty()) {
+                ULOG_INFO(result.c_str());
             }
-            ULOG_INFO("do eval: {u}", content);
-            ustring_free(&result);
+            ULOG_INFO(content.c_str());
         }
 
-        ustring_view_clear(&console_input.label.text);
+        console_input.label.text.clear();
         ui_label_compute_size_and_offset(&console_input.label);
     }
 
@@ -159,7 +157,7 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     u32 clip = ui_layer_write_clip(0, clip_rect, 0);
 
     logger_t *logger = logger_global();
-    u32 line_count = (u32)arrlen(logger->lines);
+    u32 line_count = (u32)logger->lines.size();
     console_view.item_count = line_count;
     u32 start = ui_scroll_view_item_start(&console_view, scroll_view_rect);
     u32 count = ui_scroll_view_item_count(&console_view, scroll_view_rect);
@@ -169,7 +167,7 @@ void ui_dev_tool_console(ui_dev_tool_t* dev_tool, ui_rect rect) {
     label_rect.h = console_view.item_height;
     for (int i = start; i < start + count; i++) {
         ui_label_t *label = &console_labels[i];
-        ui_label_update_text(label, ustring_view_from_ustring(logger->lines[i].line));
+        ui_label_update_text(label, logger->lines[i].line);
         ui_label(label, ui_theme_shared()->text, label_rect, 0, clip);
         label_rect.y += console_view.item_height;
     }

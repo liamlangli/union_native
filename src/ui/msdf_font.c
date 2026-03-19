@@ -1,25 +1,25 @@
 #include "ui/msdf_font.h"
-#include "foundation/io.h"
-#include "foundation/udata.h"
-#include "foundation/ustring.h"
-#include "gpu/gpu_const.h"
+#include "core/io.h"
 #include "os/os.h"
+#include "webgpu_context.h"
 
 msdf_font *msdf_alloc() {
     msdf_font *font = (msdf_font *)malloc(sizeof(msdf_font));
     return font;
 }
 
-msdf_font *msdf_font_load(ustring json_path, ustring image_path) {
+msdf_font *msdf_font_load(std::string_view json_path, std::string_view image_path) {
     msdf_font *font = msdf_alloc();
+    (void)json_path;
+    (void)image_path;
     return font;
 }
 
-float2 msdf_font_compute_size_and_offset(msdf_font *font, ustring_view text, f32 *offsets) {
+float2 msdf_font_compute_size_and_offset(msdf_font *font, std::string_view text, f32 *offsets) {
     float2 size = (float2){.x = 0.f, .y = (f32)font->line_height};
     int prev_id = -1;
-    for (int i = 0; i < text.length; ++i) {
-        int char_code = (int)text.base.data[i];
+    for (int i = 0; i < (int)text.size(); ++i) {
+        int char_code = (int)text[(size_t)i];
         msdf_glyph g = msdf_font_get_glyph(font, char_code);
         if (g.id == 0)
             continue;
@@ -42,7 +42,7 @@ msdf_font *msdf_font_system_font() {
         return &system_font;
     system_font_initialized = true;
 
-    system_font.name = ustring_STR("Lato-Regular");
+    system_font.name = "Lato-Regular";
     system_font.line_height = 50;
     system_font.size = 42;
     system_font.texture_width = 512;
@@ -184,15 +184,39 @@ msdf_font *msdf_font_system_font() {
     }
 
 #ifdef UI_NATIVE
-    ustring image_path = os_get_bundle_path(ustring_STR("public/font/Lato-Regular.png"));
+    std::string image_path = os_get_bundle_path("public/font/Lato-Regular.png");
     int width, height, channel;
     u8 *data = io_load_image(image_path, &width, &height, &channel, 4);
 
-    gpu_texture_desc desc = {.width = width, .height = height};
-    desc.format = PIXELFORMAT_RGBA8;
-    desc.data = (udata){.data = (i8 *)data, .length = width * height * 4};
-    desc.resource_usage = USAGE_PRIVATE;
-    system_font.texture = gpu_create_texture(&desc);
+    WGPUTextureDescriptor texture_desc = {};
+    texture_desc.label = "system_font_texture";
+    texture_desc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
+    texture_desc.dimension = WGPUTextureDimension_2D;
+    texture_desc.size = (WGPUExtent3D){(u32)width, (u32)height, 1};
+    texture_desc.format = WGPUTextureFormat_RGBA8Unorm;
+    texture_desc.mipLevelCount = 1;
+    texture_desc.sampleCount = 1;
+
+    system_font.texture = wgpuDeviceCreateTexture(webgpu_device(), &texture_desc);
+
+    WGPUTextureViewDescriptor view_desc = {};
+    view_desc.format = texture_desc.format;
+    view_desc.dimension = WGPUTextureViewDimension_2D;
+    view_desc.baseMipLevel = 0;
+    view_desc.mipLevelCount = 1;
+    view_desc.baseArrayLayer = 0;
+    view_desc.arrayLayerCount = 1;
+    system_font.texture_view = wgpuTextureCreateView(system_font.texture, &view_desc);
+
+    WGPUImageCopyTexture dst = {};
+    dst.texture = system_font.texture;
+
+    WGPUTextureDataLayout layout = {};
+    layout.bytesPerRow = (u32)(width * 4);
+    layout.rowsPerImage = (u32)height;
+
+    WGPUExtent3D extent = {(u32)width, (u32)height, 1};
+    wgpuQueueWriteTexture(webgpu_queue(), &dst, data, (size_t)(width * height * 4), &layout, &extent);
 #endif
 
     return &system_font;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "foundation/simd.h"
+#include "core/simd.h"
 
 typedef struct ui_style {
     f32 line_width, line_feather;

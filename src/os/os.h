@@ -1,11 +1,9 @@
 #pragma once
 
-#include "foundation/global.h"
-#include "foundation/ustring.h"
+#include "core/global.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string>
+#include <string_view>
 
 enum CURSOR_TYPE {
     CURSOR_Default = 0x00036001,
@@ -26,7 +24,7 @@ typedef enum {
 } BUTTON_ACTION;
 
 typedef struct os_window_t {
-    ustring title;
+    std::string title;
     int width;
     int height;
     int framebuffer_width;
@@ -53,7 +51,7 @@ typedef void(*os_on_launch)(os_window_t*);
 typedef void(*os_on_frame)(os_window_t*);
 typedef void(*os_on_terminate)(os_window_t*);
 
-extern os_window_t* os_window_create(ustring title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate);
+extern os_window_t* os_window_create(std::string_view title, int width, int height, os_on_launch on_launch, os_on_frame on_frame, os_on_terminate on_terminate);
 extern void os_window_set_cursor(os_window_t *window, int cursor_type);
 extern void os_window_close(os_window_t *window);
 extern void os_window_capture_require(os_window_t *window);
@@ -65,16 +63,12 @@ extern void os_window_on_mouse_btn(os_window_t *window, MOUSE_BUTTON button, BUT
 extern void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action);
 extern bool os_window_is_key_pressed(os_window_t* window, int key);
 
-extern void os_window_set_clipboard(os_window_t *window, ustring_view text);
-extern ustring os_window_get_clipboard(os_window_t *window);
+extern void os_window_set_clipboard(os_window_t *window, std::string_view text);
+extern std::string os_window_get_clipboard(os_window_t *window);
 
-extern bool os_file_exists(ustring path);
-extern ustring os_cwd();
-extern ustring os_get_bundle_path(ustring path);
+extern bool os_file_exists(std::string_view path);
+extern std::string os_cwd();
+extern std::string os_get_bundle_path(std::string_view path);
 
 extern void os_time_init();
 extern long os_time();
-
-#ifdef __cplusplus
-}
-#endif

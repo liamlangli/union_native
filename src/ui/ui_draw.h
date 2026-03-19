@@ -1,12 +1,10 @@
 #pragma once
 
-#include "foundation/global.h"
+#include "core/global.h"
 #include "ui/ui_renderer.h"
 #include "ui/ui_font.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string_view>
 
 enum UI_PRIMITIVE_TYPE {
     UI_PRIMITIVE_TYPE_RECTANGLE = (1 << 26),
@@ -79,8 +77,4 @@ UN_EXPORT void stroke_round_rect(u32 layer_index, ui_style style, ui_rect rect, 
 UN_EXPORT void stroke_round_rect_pre_corner(u32 layer_index, ui_style style, ui_rect rect, float4 radiusese, u32 clip, u32 triangle_type);
 
 
-UN_EXPORT void draw_glyph(u32 layer_index, float2 origin, ui_font *font, ustring_view text, u32 clip, f32 scale, ui_style style);
-
-#ifdef __cplusplus
-}
-#endif
+UN_EXPORT void draw_glyph(u32 layer_index, float2 origin, ui_font *font, std::string_view text, u32 clip, f32 scale, ui_style style);

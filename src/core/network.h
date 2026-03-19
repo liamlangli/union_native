@@ -1,17 +1,18 @@
 #pragma once
 
-#include "foundation/global.h"
-#include "foundation/udata.h"
-#include "foundation/ustring.h"
+#include "core/global.h"
+
+#include <string>
+#include <string_view>
 
 typedef struct url_t {
     bool valid;
-    ustring_view url;
-    ustring_view protocol;
-    ustring_view host;
+    std::string url;
+    std::string protocol;
+    std::string host;
     i32 port;
-    ustring_view path;
-    ustring_view query;
+    std::string path;
+    std::string query;
 } url_t;
 
 typedef struct net_request_t {
@@ -20,15 +21,16 @@ typedef struct net_request_t {
 } net_request_t;
 
 typedef struct net_response_t {
-    udata data;
     u32 status;
-    u32 content_length, header_length;
     bool header_parsed;
-    ustring_view body, header;
-    ustring_view error;
+    u32 content_length;
+    u32 header_length;
+    std::string body;
+    std::string header;
+    std::string error;
 } net_response_t;
 
-url_t url_parse(ustring_view url);
+url_t url_parse(std::string_view url);
 void url_dump(url_t url);
 
 typedef void(*url_session_cb)(net_request_t request, net_response_t response, void *userdata);

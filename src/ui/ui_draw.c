@@ -459,7 +459,7 @@ void stroke_round_rect_pre_corner(u32 layer_index, ui_style style, ui_rect rect,
 
 #define GLYPH_BATCH_SIZE 32
 
-void draw_glyph(u32 layer_index, float2 origin, ui_font *font, ustring_view text, u32 clip, f32 scale,
+void draw_glyph(u32 layer_index, float2 origin, ui_font *font, std::string_view text, u32 clip, f32 scale,
                 ui_style style) {
     
 
@@ -479,8 +479,8 @@ void draw_glyph(u32 layer_index, float2 origin, ui_font *font, ustring_view text
 
     int prev_id = -1;
     u32 header_offset = GLYPH_BATCH_SIZE;
-    for (int i = 0; i < text.length; ++i) {
-        const int c = (int)text.base.data[i + text.start];
+    for (int i = 0; i < (int)text.size(); ++i) {
+        const int c = (int)text[(size_t)i];
         if (c == 0)
             return;
         const msdf_glyph g = msdf_font_get_glyph(font->font, c);

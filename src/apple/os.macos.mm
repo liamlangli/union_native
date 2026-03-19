@@ -12,9 +12,8 @@
 #import <Metal/Metal.h>
 
 #include "os/os.h"
-#include "foundation/ustring.h"
-#include "foundation/logger.h"
-#include "gpu/gpu.h"
+#include "core/logger.h"
+#include "webgpu_context.h"
 #include "script/script.h"
 #include "ui/ui_keycode.h"
 #include "ui/ui_state.h"
@@ -209,8 +208,8 @@ static int osx_key_map(int k) {
     g_os_window.ui_scale           = 2.0;
     g_os_window.native_window      = (__bridge void*)g_metal_layer;
 
-    if (!gpu_request_device(&g_os_window)) {
-        NSLog(@"[un] gpu_request_device failed — aborting");
+    if (!webgpu_context_init(&g_os_window)) {
+        NSLog(@"[un] webgpu_context_init failed — aborting");
         [NSApp terminate:nil];
         return;
     }
@@ -264,13 +263,13 @@ static void _osx_frame(void) {
 // Public API
 // ---------------------------------------------------------------------------
 
-os_window_t* os_window_create(ustring title, int width, int height,
+os_window_t* os_window_create(std::string_view title, int width, int height,
                                os_on_launch    on_launch,
                                os_on_frame     on_frame,
                                os_on_terminate on_terminate) {
     g_width          = width;
     g_height         = height;
-    g_title          = title.data;
+    g_title          = title.data();
     g_launch_func    = on_launch;
     g_frame_func     = on_frame;
     g_terminate_func = on_terminate;
@@ -291,21 +290,21 @@ os_window_t* os_window_create(ustring title, int width, int height,
     return &g_os_window;
 }
 
-ustring os_window_get_clipboard(os_window_t *window) {
+std::string os_window_get_clipboard(os_window_t *window) {
     (void)window;
     NSPasteboard *pb  = [NSPasteboard generalPasteboard];
     NSString     *str = [pb stringForType:NSPasteboardTypeString];
-    if (!str) return ustring_NULL;
+    if (!str) return {};
     const char *cstr = [str UTF8String];
-    return (ustring){ .data = (char*)cstr, .length = (u32)strlen(cstr) };
+    return cstr != nullptr ? std::string(cstr) : std::string();
 }
 
-void os_window_set_clipboard(os_window_t *window, ustring_view text) {
+void os_window_set_clipboard(os_window_t *window, std::string_view text) {
     (void)window;
     NSPasteboard *pb  = [NSPasteboard generalPasteboard];
     [pb clearContents];
-    NSString *str = [[NSString alloc] initWithBytes:text.base.data + text.start
-                                             length:text.length
+    NSString *str = [[NSString alloc] initWithBytes:text.data()
+                                             length:text.size()
                                            encoding:NSUTF8StringEncoding];
     [pb setString:str forType:NSPasteboardTypeString];
 }
@@ -329,12 +328,10 @@ void os_window_set_cursor(os_window_t *window, int cursor_type) {
     }
 }
 
-ustring os_get_bundle_path(ustring path) {
+std::string os_get_bundle_path(std::string_view path) {
     NSString *res  = [[NSBundle mainBundle] resourcePath];
-    NSString *sub  = [NSString stringWithUTF8String:path.data];
+    NSString *sub  = [NSString stringWithUTF8String:std::string(path).c_str()];
     NSString *full = [res stringByAppendingPathComponent:sub];
     const char *cstr = [full UTF8String];
-    static char buf[1024];
-    strncpy(buf, cstr, sizeof(buf) - 1);
-    return (ustring){ .data = buf, .length = (u32)strlen(buf) };
+    return cstr != nullptr ? std::string(cstr) : std::string();
 }

@@ -1,23 +1,31 @@
 #include "os/os.h"
-#include "foundation/global.h"
-#include "foundation/network.h"
+
+#include "core/global.h"
+#include "core/network.h"
 #include "os.h"
 #include "script/script.h"
 #include "ui/ui_keycode.h"
+#include "webgpu_context.h"
 
+#include <cstring>
+#include <string>
 #include <unistd.h>
 
-void os_setup(int argc, char **argv) {}
+void os_setup(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+}
+
 void os_terminate() {}
 
 static i8 shared_buffer[512];
-ustring os_cwd() {
+
+std::string os_cwd() {
     getcwd(shared_buffer, 512);
-    return (ustring){ .data = shared_buffer, .length = (u32)strlen(shared_buffer) };
+    return std::string(shared_buffer);
 }
 
-void os_window_on_mouse_move(os_window_t* window, f64 x, f64 y) {
-    script_t *ctx = script_shared();
+void os_window_on_mouse_move(os_window_t *window, f64 x, f64 y) {
     ui_state_t *state = ui_state_get();
     state->pointer_location.x = (f32)x;
     state->pointer_location.y = (f32)y;
@@ -26,17 +34,16 @@ void os_window_on_mouse_move(os_window_t* window, f64 x, f64 y) {
     script_mouse_move((f32)x, (f32)y);
 }
 
-void os_window_on_scroll(os_window_t* window, f64 x, f64 y) {
-    script_t *ctx = script_shared();
+void os_window_on_scroll(os_window_t *window, f64 x, f64 y) {
+    (void)window;
     ui_state_t *state = ui_state_get();
     const bool shift = ui_state_is_key_pressed(KEY_LEFT_SHIFT) || ui_state_is_key_pressed(KEY_RIGHT_SHIFT);
     state->pointer_scroll.x = (f32)(x * (shift ? state->smooth_factor : 1.f));
     state->pointer_scroll.y = (f32)(-y * (shift ? state->smooth_factor : 1.f));
 }
 
-void os_window_on_mouse_btn(os_window_t* window, MOUSE_BUTTON button, BUTTON_ACTION action) {
-    script_t *ctx = script_shared();
-    if (ctx == NULL) return;
+void os_window_on_mouse_btn(os_window_t *window, MOUSE_BUTTON button, BUTTON_ACTION action) {
+    if (script_shared() == NULL) return;
 
     if (action == BUTTON_ACTION_PRESS) {
         ui_state_mouse_down(button);
@@ -44,45 +51,46 @@ void os_window_on_mouse_btn(os_window_t* window, MOUSE_BUTTON button, BUTTON_ACT
         ui_state_mouse_up(button);
     }
     script_mouse_button(button, action);
-    ui_state_set_mouse_location(window->mouse_x, window->mouse_y);
+    ui_state_set_mouse_location((f32)window->mouse_x, (f32)window->mouse_y);
 }
 
-void os_window_on_key_action(os_window_t* window, int key, BUTTON_ACTION action) {
-    script_t *ctx = script_shared();
-    if (ctx == NULL) return;
+void os_window_on_key_action(os_window_t *window, int key, BUTTON_ACTION action) {
+    (void)window;
+    if (script_shared() == NULL) return;
 
     if (action == BUTTON_ACTION_PRESS) {
         ui_state_key_press(key);
-        script_key_action(key, BUTTON_ACTION_PRESS);
+        script_key_action((KEYCODE)key, BUTTON_ACTION_PRESS);
     } else if (action == BUTTON_ACTION_RELEASE) {
         ui_state_key_release(key);
-        script_key_action(key, BUTTON_ACTION_RELEASE);
+        script_key_action((KEYCODE)key, BUTTON_ACTION_RELEASE);
     }
 }
 
-bool os_window_is_key_pressed(os_window_t* window, int key) {
-    script_t *ctx = script_shared();
-    if (ctx == NULL) return false;
+bool os_window_is_key_pressed(os_window_t *window, int key) {
+    (void)window;
+    if (script_shared() == NULL) return false;
     return ui_state_is_key_pressed(key);
 }
 
 void os_window_on_resize(os_window_t *window, int width, int height) {
-    script_t *ctx = script_shared();
     window->width = width;
     window->height = height;
-    ui_renderer_set_size(width, height);
-    ui_state_t* state = ui_state_get();
+    webgpu_context_resize(window);
+    ui_renderer_set_size((u32)width, (u32)height);
+
+    ui_state_t *state = ui_state_get();
     state->window_rect = (ui_rect){
         .x = 0.f,
         .y = 0.f,
-        .w = width,
-        .h = height
+        .w = (f32)width,
+        .h = (f32)height,
     };
     script_resize(width, height);
 }
 
 #if !defined(OS_MACOS) && !defined(OS_IOS)
-ustring os_get_bundle_path(ustring path) {
-    return path;
+std::string os_get_bundle_path(std::string_view path) {
+    return std::string(path);
 }
 #endif

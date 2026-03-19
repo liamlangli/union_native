@@ -38,7 +38,7 @@ void ui_scroll_view(ui_scroll_view_t *view, ui_rect rect, u32 layer_index, u32 c
     const f32 scroll_bar_height = MACRO_MIN(1.f, rect.h / content_height) * rect.h;
     ui_rect bar_rect = (ui_rect){
         .x = rect.x + rect.w - (hover || active ? UI_SCROLL_BAR_ACTIVE_WIDTH : UI_SCROLL_BAR_DEFAULT_WIDTH),
-        .y = rect.y + view->offset_y / content_height * rect.h,
+        .y = (f32)(rect.y + view->offset_y / content_height * rect.h),
         .w = UI_SCROLL_BAR_DEFAULT_WIDTH,
         .h = scroll_bar_height};
     
