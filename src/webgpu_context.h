@@ -15,9 +15,9 @@ void webgpu_context_resize(os_window_t *window);
 WGPUDevice webgpu_device(void);
 WGPUQueue webgpu_queue(void);
 WGPUTextureFormat webgpu_surface_format(void);
-WGPURenderPassEncoder webgpu_current_pass_encoder(void);
+WGPUTextureView webgpu_current_texture_view(void);
 
-bool webgpu_begin_frame(WGPULoadOp load_op, WGPUStoreOp store_op, WGPUColor clear_color);
+bool webgpu_begin_frame(void);
 void webgpu_end_frame(void);
 
 #ifdef __cplusplus

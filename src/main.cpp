@@ -32,8 +32,7 @@ extern "C" void on_launch(os_window_t *window) {
 extern "C" void on_frame(os_window_t *window) {
     (void)window;
 
-    WGPUColor clear_color = {0.1, 0.1, 0.1, 1.0};
-    if (!webgpu_begin_frame(WGPULoadOp_Clear, WGPUStoreOp_Store, clear_color)) {
+    if (!webgpu_begin_frame()) {
         return;
     }
 

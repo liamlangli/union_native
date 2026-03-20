@@ -210,13 +210,13 @@ public:
         }
 
         script_t *ctx = script_shared();
-        WGPURenderPassEncoder pass_encoder = webgpu_current_pass_encoder();
-        if (ctx == NULL || pass_encoder == NULL) {
+        WGPUTextureView frame_view = webgpu_current_texture_view();
+        if (ctx == nullptr || frame_view == nullptr) {
             return;
         }
 
         ensure_gpu_capacity(last_primitive_offset_, last_index_offset_);
-        if (uniform_buffer_ == NULL || vertex_id_buffer_ == NULL || primitive_data_texture_ == NULL || binding_ == NULL) {
+        if (uniform_buffer_ == nullptr || vertex_id_buffer_ == nullptr || primitive_data_texture_ == nullptr || binding_ == nullptr) {
             return;
         }
 
@@ -242,18 +242,43 @@ public:
             &layout,
             &extent);
 
+        WGPUCommandEncoderDescriptor enc_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
+        enc_desc.label = "ui_encoder";
+        WGPUCommandEncoder cmd = wgpuDeviceCreateCommandEncoder(webgpu_device(), &enc_desc);
+
+        WGPURenderPassColorAttachment att = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
+        att.view = frame_view;
+        att.loadOp = WGPULoadOp_Load;
+        att.storeOp = WGPUStoreOp_Store;
+
+        WGPURenderPassDescriptor rp_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
+        rp_desc.label = "ui_render_pass";
+        rp_desc.colorAttachmentCount = 1;
+        rp_desc.colorAttachments = &att;
+
+        WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(cmd, &rp_desc);
+
         wgpuRenderPassEncoderSetViewport(
-            pass_encoder,
+            pass,
             0.0f,
             0.0f,
             (float)ctx->window->framebuffer_width,
             (float)ctx->window->framebuffer_height,
             0.0f,
             1.0f);
-        wgpuRenderPassEncoderSetPipeline(pass_encoder, pipeline_);
-        wgpuRenderPassEncoderSetBindGroup(pass_encoder, 0, binding_, 0, NULL);
-        wgpuRenderPassEncoderSetVertexBuffer(pass_encoder, 0, vertex_id_buffer_, 0, WGPU_WHOLE_SIZE);
-        wgpuRenderPassEncoderDraw(pass_encoder, last_index_offset_, 1, 0, 0);
+        wgpuRenderPassEncoderSetPipeline(pass, pipeline_);
+        wgpuRenderPassEncoderSetBindGroup(pass, 0, binding_, 0, nullptr);
+        wgpuRenderPassEncoderSetVertexBuffer(pass, 0, vertex_id_buffer_, 0, WGPU_WHOLE_SIZE);
+        wgpuRenderPassEncoderDraw(pass, last_index_offset_, 1, 0, 0);
+
+        wgpuRenderPassEncoderEnd(pass);
+        wgpuRenderPassEncoderRelease(pass);
+
+        WGPUCommandBufferDescriptor cb_desc = {};
+        WGPUCommandBuffer cb = wgpuCommandEncoderFinish(cmd, &cb_desc);
+        wgpuCommandEncoderRelease(cmd);
+        wgpuQueueSubmit(webgpu_queue(), 1, &cb);
+        wgpuCommandBufferRelease(cb);
 #endif
     }
 

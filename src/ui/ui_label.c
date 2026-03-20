@@ -6,14 +6,9 @@
 void ui_label_init(ui_label_t *label, std::string_view text) {
     ui_element_init(&label->element);
     label->text = text;
-    label->scale = 1.0f;
-    label->cursor_index = 0;
-    label->start_index = 0;
-    label->render_selected = false;
-    memset(label->char_offsets, 0, MAX_CHAR_LENGTH);
+    label->text_style = ui_theme_shared()->text;
     ui_label_compute_size_and_offset(label);
     label->cursor_index = (int)label->text.size();
-    label->text_style = ui_theme_shared()->text;
 }
 
 void ui_label_update_text(ui_label_t *label, std::string_view text) {

@@ -20,8 +20,6 @@ struct WebGpuContextState {
     WGPUSurface surface = nullptr;
     WGPUSwapChain swapchain = nullptr;
 
-    WGPUCommandEncoder command_encoder = nullptr;
-    WGPURenderPassEncoder pass_encoder = nullptr;
     WGPUTextureView frame_view = nullptr;
 
     u32 surface_width = 0;
@@ -30,21 +28,6 @@ struct WebGpuContextState {
 
 static WebGpuContextState g_webgpu = {};
 static constexpr WGPUTextureFormat kSurfaceFormat = WGPUTextureFormat_BGRA8Unorm;
-
-static void webgpu_release_frame_state(void) {
-    if (g_webgpu.pass_encoder != nullptr) {
-        wgpuRenderPassEncoderRelease(g_webgpu.pass_encoder);
-        g_webgpu.pass_encoder = nullptr;
-    }
-    if (g_webgpu.command_encoder != nullptr) {
-        wgpuCommandEncoderRelease(g_webgpu.command_encoder);
-        g_webgpu.command_encoder = nullptr;
-    }
-    if (g_webgpu.frame_view != nullptr) {
-        wgpuTextureViewRelease(g_webgpu.frame_view);
-        g_webgpu.frame_view = nullptr;
-    }
-}
 
 static bool webgpu_recreate_swapchain(void) {
     if (g_webgpu.device == nullptr || g_webgpu.surface == nullptr) {
@@ -146,7 +129,10 @@ bool webgpu_context_init(os_window_t *window) {
 }
 
 void webgpu_context_shutdown(void) {
-    webgpu_release_frame_state();
+    if (g_webgpu.frame_view != nullptr) {
+        wgpuTextureViewRelease(g_webgpu.frame_view);
+        g_webgpu.frame_view = nullptr;
+    }
 
     if (g_webgpu.swapchain != nullptr) {
         wgpuSwapChainRelease(g_webgpu.swapchain);
@@ -194,66 +180,30 @@ WGPUTextureFormat webgpu_surface_format(void) {
     return kSurfaceFormat;
 }
 
-WGPURenderPassEncoder webgpu_current_pass_encoder(void) {
-    return g_webgpu.pass_encoder;
+WGPUTextureView webgpu_current_texture_view(void) {
+    return g_webgpu.frame_view;
 }
 
-bool webgpu_begin_frame(WGPULoadOp load_op, WGPUStoreOp store_op, WGPUColor clear_color) {
+bool webgpu_begin_frame(void) {
     if (g_webgpu.device == nullptr || g_webgpu.swapchain == nullptr) {
         return false;
     }
 
-    webgpu_release_frame_state();
+    if (g_webgpu.frame_view != nullptr) {
+        wgpuTextureViewRelease(g_webgpu.frame_view);
+        g_webgpu.frame_view = nullptr;
+    }
 
     g_webgpu.frame_view = wgpuSwapChainGetCurrentTextureView(g_webgpu.swapchain);
     if (g_webgpu.frame_view == nullptr) {
         ULOG_ERROR("webgpu: failed to acquire frame view");
         return false;
     }
-
-    WGPUCommandEncoderDescriptor encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
-    encoder_desc.label = "frame_encoder";
-    g_webgpu.command_encoder = wgpuDeviceCreateCommandEncoder(g_webgpu.device, &encoder_desc);
-
-    WGPURenderPassColorAttachment color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
-    color_attachment.view = g_webgpu.frame_view;
-    color_attachment.loadOp = load_op;
-    color_attachment.storeOp = store_op;
-    color_attachment.clearValue = clear_color;
-
-    WGPURenderPassDescriptor render_pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    render_pass_desc.label = "main_render_pass";
-    render_pass_desc.colorAttachmentCount = 1;
-    render_pass_desc.colorAttachments = &color_attachment;
-
-    g_webgpu.pass_encoder = wgpuCommandEncoderBeginRenderPass(g_webgpu.command_encoder, &render_pass_desc);
-    return g_webgpu.pass_encoder != nullptr;
+    return true;
 }
 
 void webgpu_end_frame(void) {
-    if (g_webgpu.pass_encoder != nullptr) {
-        wgpuRenderPassEncoderEnd(g_webgpu.pass_encoder);
-        wgpuRenderPassEncoderRelease(g_webgpu.pass_encoder);
-        g_webgpu.pass_encoder = nullptr;
-    }
-
-    if (g_webgpu.command_encoder == nullptr) {
-        if (g_webgpu.frame_view != nullptr) {
-            wgpuTextureViewRelease(g_webgpu.frame_view);
-            g_webgpu.frame_view = nullptr;
-        }
-        return;
-    }
-
-    WGPUCommandBufferDescriptor command_buffer_desc = {};
-    WGPUCommandBuffer command_buffer = wgpuCommandEncoderFinish(g_webgpu.command_encoder, &command_buffer_desc);
-    wgpuCommandEncoderRelease(g_webgpu.command_encoder);
-    g_webgpu.command_encoder = nullptr;
-
-    wgpuQueueSubmit(g_webgpu.queue, 1, &command_buffer);
-    wgpuCommandBufferRelease(command_buffer);
     wgpuSwapChainPresent(g_webgpu.swapchain);
-
     if (g_webgpu.frame_view != nullptr) {
         wgpuTextureViewRelease(g_webgpu.frame_view);
         g_webgpu.frame_view = nullptr;

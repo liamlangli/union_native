@@ -40,7 +40,7 @@ void ui_dev_tool_init(ui_dev_tool_t* dev_tool) {
 
     ui_scroll_view_init(&console_view, 20);
 
-    console_labels = (ui_label_t*)malloc(sizeof(ui_label_t) * 127);
+    console_labels = new ui_label_t[127];
     for (u32 i = console_label_count; i < 127; i++) {
         ui_label_init(&console_labels[i], "");
         console_labels[i].element.constraint.alignment = LEFT | CENTER_VERTICAL;
